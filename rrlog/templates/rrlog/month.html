@@ -1,0 +1,30 @@
+<h1>{{month}}</h1>
+
+<a href="/log/month/{{prev_month}}/">{{prev_month}} &lt;&lt;</a>
+<a href="/log/year/{{year}}/">{{year}}</a>
+<a href="/log/month/{{next_month}}/">&gt;&gt; {{next_month}}</a>
+
+<table border=0>
+<thead>
+<tr>
+ <th>call</th>
+ <th>qsos</th>
+ <th>calls</th>
+ <th>countries</th>
+ <th>band-countries</th>
+ <th>score</th>
+</tr>
+</thead>
+
+{% for station in stations %}
+ <tr>
+ <td><a href="/log/call/{{station.station|urlencode:''}}/">{{station.station}}</a></td>
+ <td>{{station.qsos}}</td>
+ <td>{{station.calls}}</td>
+ <td>{{station.cty}}</td>
+ <td>{{station.band_cty}}</td>
+ <td>{{station.score}}</td>
+ </tr>
+{% endfor %}
+</ul>
+</table>

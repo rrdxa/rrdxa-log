@@ -1,7 +1,7 @@
-<h1>{{call}}</h1>
+<h1>RRDXA</h1>
 
 <div>
-This is the log of {{call}}.
+This is the RRDXA log.
 </div>
 
 <table border=0>
@@ -35,8 +35,8 @@ This is the log of {{call}}.
  <td>{{qso.freq}}</td>
  <td>{{qso.rst_sent}}</td>
  <td>{{qso.rst_rcvd}}</td>
- <td>{% if call != qso.station %}<a href="/log/call/{{qso.station|urlencode:''}}/">{{qso.station}}</a>{% else %}{{qso.station}}{% endif %}</td>
- <td>{% if qso.station != qso.operator %}{% if call != qso.operator %}<a href="/log/call/{{qso.operator|urlencode:''}}/">{{qso.operator}}</a>{% else %}{{qso.operator}}{% endif %}{% endif %}</td>
+ <td><a href="/log/call/{{qso.station|urlencode:''}}/">{{qso.station}}</a></td>
+ <td>{% if qso.station != qso.operator %}<a href="/log/call/{{qso.operator|urlencode:''}}/">{{qso.operator}}</a>{% endif %}</td>
  <td><a href="/log/contest/{{qso.contest|urlencode:''}}/">{{qso.contest}}</a></td>
  </tr>
 {% endfor %}
