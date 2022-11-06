@@ -1,0 +1,22 @@
+{% extends 'rrlog/rrdxa.html' %}
+
+{% block content %}
+<h1>Log Upload</h1>
+
+<div>
+Upload a log
+</div>
+
+{{message}}
+
+<div>
+<form action="/log/upload/" method="POST" enctype="multipart/form-data">
+{% csrf_token %}
+Call: <input name="call"> <br/>
+Operator: <input name="operator"> <br/>
+Logfile: <input type="file" name="logfile"> <br/>
+<button type="submit">Upload</button>
+</form>
+</div>
+
+{% endblock %}

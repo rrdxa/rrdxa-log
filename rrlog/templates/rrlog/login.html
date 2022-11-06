@@ -1,23 +1,19 @@
 {% extends 'rrlog/rrdxa.html' %}
 
 {% block content %}
-<h1>RRDXA</h1>
+<h1>Login</h1>
 
 <div>
-This is the RRDXA log.
+Enter your rrdxa.org password
 </div>
-
-{{message}}
 
 <div>
 <form action="/log/login/" method="POST" enctype="multipart/form-data">
 {% csrf_token %}
 User: <input name="username"> <br/>
 Password: <input type="password" name="password"> <br/>
-<button type="submit">Upload</button>
+<button type="submit">Login</button>
 </form>
 </div>
 
-
-{% include 'rrlog/qsos.html' %}
 {% endblock %}

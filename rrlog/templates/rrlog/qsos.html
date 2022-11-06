@@ -1,0 +1,34 @@
+<table border=0>
+<thead>
+<tr>
+ <th>Time</th>
+ <th>station</th>
+ <th>operator</th>
+ <th>DX call</th>
+ <th>cty</th>
+ <th>band</th>
+ <th>freq</th>
+ <th>mode</th>
+ <th>sent</th>
+ <th>recv</th>
+ <th>contest</th>
+</tr>
+</thead>
+
+{% for qso in qsos %}
+ <tr>
+ <td>{{qso.start_str}}</td>
+ <td><a href="/log/call/{{qso.station_callsign|urlencode:''}}/">{{qso.station_callsign}}</a></td>
+ <td>{% if qso.operator and qso.operator != qso.station_callsign %}<a href="/log/call/{{qso.operator|urlencode:''}}/">{{qso.operator}}</a>{% endif %}</td>
+ <td><a href="/log/call/{{qso.call|urlencode:''}}/">{{qso.call}}</a></td>
+ <td>{% if qso.cty %}<a href="/log/cty/{{qso.cty|urlencode:''}}/">{{qso.cty}}</a>{% endif %}</td>
+ <td>{{qso.band}}</td>
+ <td>{{qso.freq|default_if_none:''}}</td>
+ <td>{{qso.mode}}</td>
+ <td>{{qso.rsttx|default_if_none:''}}</td>
+ <td>{{qso.rstrx|default_if_none:''}}</td>
+ <td>{% if qso.contest %}<a href="/log/contest/{{qso.contest|urlencode:''}}/">{{qso.contest}}</a>{% endif %}</td>
+ </tr>
+{% endfor %}
+</ul>
+</table>
