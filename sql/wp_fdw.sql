@@ -1,3 +1,4 @@
+\ir wp_fdw_vars.sql
 create extension mysql_fdw;
 create server wordpress foreign data wrapper mysql_fdw options ( host :'host' );
 create user mapping for current_user server wordpress options ( username :'user', password :'pass' );

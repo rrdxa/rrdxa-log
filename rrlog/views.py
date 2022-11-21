@@ -1,7 +1,13 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.db import connection
+
+import psycopg2, psycopg2.extras
+psycopg2.extensions.register_adapter(dict, psycopg2.extras.Json)
+
 from collections import namedtuple
+import base64
+from passlib.hash import phpass
 
 from rrlog.log_upload import log_upload
 
@@ -131,15 +137,36 @@ def v_year(request, year):
 #            destination.write(chunk)
 
 def upload(request):
-    #with connection.cursor() as cursor:
-    #    date = f"{year}-01-01"
-    #    cursor.execute(q_year, [date, date])
-    #    rows = namedtuplefetchall(cursor)
-    print("session is", request.session)
+    response = HttpResponse()
+    response.status_code = 401
+    response['WWW-Authenticate'] = 'Basic realm="RRDXA Log Upload"'
+
+    auth_header = request.META.get('HTTP_AUTHORIZATION', '')
+    if not auth_header:
+        print("no auth")
+        return response
+    token_type, _, credentials = auth_header.partition(' ')
+    if token_type.lower() != "basic":
+        print("no basic", token_type)
+        return response
+    username, password = base64.b64decode(credentials).decode("utf-8").split(':')
+    username = username.upper()
+
+    with connection.cursor() as cursor:
+        cursor.execute("select user_pass from wordpress_users where upper(user_login) = %s", [username])
+        user_password, = cursor.fetchone()
+        if not user_password:
+            print("no password")
+            return response
+        if not phpass.verify(password, user_password):
+            print("wrong password")
+            return response
+
+    print("auth is", username, password, user_password)
 
     message = None
     if request.method == 'POST' and 'logfile' in request.FILES:
-        message = log_upload(connection, request, "DF7CB")
+        message = log_upload(connection, request, username)
 
     context = {
         'title': 'Log Upload',

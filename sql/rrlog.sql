@@ -23,7 +23,8 @@ create table rrdxa.upload (
     operator text,
     contest text,
     qsos integer,
-    error text
+    error text,
+    adif text
 );
 
 create table rrdxa.log (
