@@ -64,8 +64,9 @@ def v_cty(request, cty):
 
 q_contest = """
 select *,
-exists (select from station where qsos.callsign = station.call) as known_station
-from qsos where contest = %s order by date desc, time desc limit 100
+to_char(start, 'DD.MM.YYYY HH24:MI') as start_str,
+exists (select from call where log.call = call.call) as known_station
+from log where contest = %s order by start desc limit 100
 """
 
 def v_contest(request, contest):
@@ -131,12 +132,13 @@ def v_year(request, year):
     }
     return render(request, 'rrlog/year.html', context)
 
-#def handle_uploaded_file(f):
-#    data = 
-#        for chunk in f.chunks():
-#            destination.write(chunk)
+q_upload_list = """select id, ts,
+to_char(ts, 'DD.MM.YYYY HH24:MI') as ts_str,
+filename, call, operator, contest, qsos, error
+from upload where person = %s order by id desc"""
 
 def upload(request):
+    # authentication
     response = HttpResponse()
     response.status_code = 401
     response['WWW-Authenticate'] = 'Basic realm="RRDXA Log Upload"'
@@ -164,43 +166,19 @@ def upload(request):
 
     print("auth is", username, password, user_password)
 
+    # actual page
     message = None
     if request.method == 'POST' and 'logfile' in request.FILES:
         message = log_upload(connection, request, username)
 
+    # get list of all uploads (including this one)
+    with connection.cursor() as cursor:
+        cursor.execute(q_upload_list, [username])
+        uploads = namedtuplefetchall(cursor)
+
     context = {
         'title': 'Log Upload',
-        'message': message
+        'message': message,
+        'uploads': uploads,
     }
     return render(request, 'rrlog/upload.html', context)
-
-def v_login(request):
-    message = None
-
-    if 'username' in request.POST and 'password' in request.POST:
-        username = request.POST['username']
-        password = request.POST['password']
-        print(username, password)
-
-        with connection.cursor() as cursor:
-            cursor.execute(q_index, [])
-            rows = namedtuplefetchall(cursor)
-            request.session['user'] = username
-
-        #user = authenticate(request, username=username, password=password)
-        #print(user)
-        #request.session['user'] = username
-        #if user is not None:
-        #    message = user
-        #    login(request, user)
-        #else:
-        #    message = 'not logged in'
-
-    print("session is", request.session.keys())
-
-    context = {
-        'title': 'Login',
-        'message': message
-    }
-    return render(request, 'rrlog/upload.html', context)
-

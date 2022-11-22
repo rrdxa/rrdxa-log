@@ -20,4 +20,33 @@ Logfile: <input type="file" name="logfile"> <br/>
 </form>
 </div>
 
+<h2>Your uploads</h2>
+
+<table border=0>
+<thead>
+<tr>
+ <th>Time</th>
+ <th>filename</th>
+ <th>call</th>
+ <th>operator</th>
+ <th>contest</th>
+ <th>QSOs</th>
+ <th>error</th>
+</tr>
+</thead>
+
+{% for upload in uploads %}
+ <tr>
+ <td>{{upload.ts_str}}</td>
+ <td>{{upload.filename}}</td>
+ <td><a href="/log/call/{{upload.call|urlencode:''}}/">{{upload.call}}</a></td>
+ <td><a href="/log/call/{{upload.operator|urlencode:''}}/">{{upload.operator}}</a></td>
+ <td>{% if upload.contest %}<a href="/log/contest/{{upload.contest|urlencode:''}}/">{{upload.contest}}</a>{% endif %}</td>
+ <td>{{upload.qsos|default_if_none:'-'}}</td>
+ <td>{{upload.error|default_if_none:''}}</td>
+ </tr>
+{% endfor %}
+</ul>
+</table>
+
 {% endblock %}

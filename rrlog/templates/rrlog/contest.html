@@ -1,44 +1,11 @@
+{% extends 'rrlog/rrdxa.html' %}
+
+{% block content %}
 <h1>{{contest}}</h1>
 
 <div>
 This is the log of {{contest}}.
 </div>
 
-<table border=0>
-<thead>
-<tr>
- <th>date</th>
- <th>time</th>
- <th>call</th>
- <th>mode</th>
- <th>band</th>
- <th>freq</th>
- <th>sent</th>
- <th>recv</th>
- <th>station</th>
- <th>op</th>
- <th>contest</th>
-</tr>
-</thead>
-
-{% for qso in qsos %}
- <tr>
- <td>{{qso.date}}</td>
- <td>{{qso.time}}</td>
- {% if qso.known_station %}
- <td><a href="/log/call/{{qso.callsign|urlencode:''}}/">{{qso.callsign}}</a></td>
- {% else %}
- <td>{{qso.callsign}}</td>
- {% endif %}
- <td>{{qso.op_mode}}</td>
- <td>{{qso.band}}</td>
- <td>{{qso.freq}}</td>
- <td>{{qso.rst_sent}}</td>
- <td>{{qso.rst_rcvd}}</td>
- <td><a href="/log/call/{{qso.station|urlencode:''}}/">{{qso.station}}</a></td>
- <td>{% if qso.station != qso.operator %}<a href="/log/call/{{qso.operator|urlencode:''}}/">{{qso.operator}}</a>{% endif %}</td>
- <td>{{qso.contest}}</td>
- </tr>
-{% endfor %}
-</ul>
-</table>
+{% include 'rrlog/qsos.html' %}
+{% endblock %}

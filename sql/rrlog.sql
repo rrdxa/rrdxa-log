@@ -19,6 +19,7 @@ create table rrdxa.upload (
     id serial primary key,
     person text not null references rrdxa.person,
     ts timestamptz not null default now(),
+    filename text,
     call text,
     operator text,
     contest text,

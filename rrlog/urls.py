@@ -10,6 +10,5 @@ urlpatterns = [
     path('month/<int:year>-<int:month>/', views.v_month, name='month'),
     path('year/<int:year>/', views.v_year, name='year'),
     path('upload/', views.upload, name='upload'),
-    path('login/', views.v_login, name='login'),
 ]
 
