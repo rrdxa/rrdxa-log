@@ -5,17 +5,11 @@ from django.db import connection
 import psycopg2, psycopg2.extras
 psycopg2.extensions.register_adapter(dict, psycopg2.extras.Json)
 
-from collections import namedtuple
 import base64
 from passlib.hash import phpass
 
 from rrlog.log_upload import log_upload
-
-def namedtuplefetchall(cursor):
-    "Return all rows from a cursor as a namedtuple"
-    desc = cursor.description
-    nt_result = namedtuple('Result', [col[0] for col in desc])
-    return [nt_result(*row) for row in cursor.fetchall()]
+from rrlog.utils import namedtuplefetchall
 
 q_index = """
 select *,
@@ -29,7 +23,35 @@ def index(request):
         cursor.execute(q_index, [])
         rows = namedtuplefetchall(cursor)
 
-    context = { 'title': 'Logbook', 'qsos': rows }
+        year = 2022
+        month = 11
+        date = f"{year}-{month:02}-01"
+        cursor.execute(q_month, [date, date])
+        current_month = namedtuplefetchall(cursor)
+
+        date = f"{year}-01-01"
+        cursor.execute(q_year, [date, date])
+        current_year = namedtuplefetchall(cursor)
+
+        year = 2022
+        month = 10
+        date = f"{year}-{month:02}-01"
+        cursor.execute(q_month, [date, date])
+        previous_month = namedtuplefetchall(cursor)
+
+        year = 2021
+        date = f"{year}-01-01"
+        cursor.execute(q_year, [date, date])
+        previous_year = namedtuplefetchall(cursor)
+
+    context = {
+            'title': 'Logbook',
+            'current_month': current_month,
+            'current_year': current_year,
+            'previous_month': previous_month,
+            'previous_year': previous_year,
+            'qsos': rows
+            }
     return render(request, 'rrlog/index.html', context)
 
 q_call = """
@@ -44,8 +66,8 @@ def v_call(request, call):
         cursor.execute(q_call, [call, call, call])
         rows = namedtuplefetchall(cursor)
 
-    context = { 'title': call, 'call': call, 'qsos': rows }
-    return render(request, 'rrlog/call.html', context)
+    context = { 'title': f"Log of {call}", 'qsos': rows }
+    return render(request, 'rrlog/log.html', context)
 
 q_cty = """
 select *,
@@ -59,8 +81,8 @@ def v_cty(request, cty):
         cursor.execute(q_cty, [cty])
         rows = namedtuplefetchall(cursor)
 
-    context = { 'title': cty, 'cty': cty, 'qsos': rows }
-    return render(request, 'rrlog/cty.html', context)
+    context = { 'title': f"Log entries from {cty}", 'qsos': rows }
+    return render(request, 'rrlog/log.html', context)
 
 q_contest = """
 select *,
@@ -74,18 +96,18 @@ def v_contest(request, contest):
         cursor.execute(q_contest, [contest])
         rows = namedtuplefetchall(cursor)
 
-    context = { 'contest': contest, 'qsos': rows }
-    return render(request, 'rrlog/contest.html', context)
+    context = { 'title': contest, 'qsos': rows }
+    return render(request, 'rrlog/log.html', context)
 
 q_month = """
 with data as
-(select station,
+(select operator,
   count(*) as qsos,
-  count(distinct callsign) as calls,
-  count(distinct callsign::varchar(2)) as cty,
-  count(distinct (band, callsign::varchar(2))) as band_cty
-from qsos where date >= %s::date and date < %s::date + '1month'::interval
-group by station)
+  count(distinct call) as calls,
+  count(distinct call::varchar(2)) as cty,
+  count(distinct (band, call::varchar(2))) as band_cty
+from log where start >= %s::date and start < %s::date + '1month'::interval
+group by operator)
 select *, qsos * band_cty as score from data
 order by score desc
 """
@@ -101,19 +123,19 @@ def v_month(request, year, month):
         'prev_month': f"{year-1 if month == 1 else year}-{((month-2)%12)+1:02}",
         'next_month': f"{year+1 if month == 12 else year}-{(month%12)+1:02}",
         'year': year,
-        'stations': rows
+        'operators': rows
     }
     return render(request, 'rrlog/month.html', context)
 
 q_year = """
 with data as
-(select station,
+(select operator,
   count(*) as qsos,
-  count(distinct callsign) as calls,
-  count(distinct callsign::varchar(2)) as cty,
-  count(distinct (band, callsign::varchar(2))) as band_cty
-from qsos where date >= %s::date and date < %s::date + '1year'::interval
-group by station)
+  count(distinct call) as calls,
+  count(distinct call::varchar(2)) as cty,
+  count(distinct (band, call::varchar(2))) as band_cty
+from log where start >= %s::date and start < %s::date + '1year'::interval
+group by operator)
 select *, qsos * band_cty as score from data
 order by score desc
 """
@@ -128,43 +150,45 @@ def v_year(request, year):
         'year': year,
         'prev_year': year - 1,
         'next_year': year + 1,
-        'stations': rows
+        'operators': rows
     }
     return render(request, 'rrlog/year.html', context)
 
-q_upload_list = """select id, ts,
+q_upload_list = """select person, id, ts,
 to_char(ts, 'DD.MM.YYYY HH24:MI') as ts_str,
 filename, call, operator, contest, qsos, error
 from upload where person = %s order by id desc"""
 
-def upload(request):
-    # authentication
-    response = HttpResponse()
-    response.status_code = 401
-    response['WWW-Authenticate'] = 'Basic realm="RRDXA Log Upload"'
-
+def basic_auth(request):
     auth_header = request.META.get('HTTP_AUTHORIZATION', '')
     if not auth_header:
-        print("no auth")
-        return response
+        return False, "Login required"
     token_type, _, credentials = auth_header.partition(' ')
     if token_type.lower() != "basic":
-        print("no basic", token_type)
-        return response
+        return False, "Only Basic auth supported"
     username, password = base64.b64decode(credentials).decode("utf-8").split(':')
     username = username.upper()
 
     with connection.cursor() as cursor:
         cursor.execute("select user_pass from wordpress_users where upper(user_login) = %s", [username])
-        user_password, = cursor.fetchone()
+        user_password = cursor.fetchone()
         if not user_password:
-            print("no password")
-            return response
-        if not phpass.verify(password, user_password):
+            print(f"user {username} not found in database")
+            return False, "Login failed"
+        if not phpass.verify(password, user_password[0]):
             print("wrong password")
-            return response
+            return False, "Login failed"
 
-    print("auth is", username, password, user_password)
+    return True, username
+
+def v_upload(request):
+    # authentication
+    status, message = basic_auth(request)
+    if not status:
+        response = render(request, 'rrlog/generic.html', { 'message': message }, status=401)
+        response['WWW-Authenticate'] = 'Basic realm="RRDXA Log Upload"'
+        return response
+    username = message
 
     # actual page
     message = None

@@ -24,6 +24,8 @@ def log_upload(connection, request, person):
         try:
             qsos, adif_headers = adif_io.read_from_string(adif)
             for qso in qsos:
+                qso_station = qso.get('STATION_CALLSIGN') or call
+                qso_operator = qso.get('OPERATOR') or operator
                 rsttx = qso.get('RST_SENT')
                 if 'STX_STRING' in qso:
                     rsttx += ' ' + qso['STX_STRING']
@@ -36,8 +38,8 @@ def log_upload(connection, request, person):
                                "on conflict (station_callsign, call, start) do update set " +
                                "operator = excluded.operator, cty = excluded.cty, band = excluded.band, freq = excluded.freq, mode = excluded.mode, rsttx = excluded.rsttx, rstrx = excluded.rstrx, contest = excluded.contest, upload = excluded.upload",
                                [adif_io.time_on(qso),
-                                qso.get('STATION_CALLSIGN') or call or qso.get('OPERATOR') or operator,
-                                qso.get('OPERATOR') or operator,
+                                qso_station or qso_operator,
+                                qso_operator or qso_station,
                                 qso.get('CALL'),
                                 qso.get('CTY'),
                                 qso.get('BAND'),

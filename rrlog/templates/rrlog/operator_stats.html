@@ -1,0 +1,24 @@
+<table border=0>
+<thead>
+<tr>
+ <th>Operator</th>
+ <th>qsos</th>
+ <th>calls</th>
+ <th>countries</th>
+ <th>band-countries</th>
+ <th>score</th>
+</tr>
+</thead>
+
+{% for op in operators %}
+ <tr>
+ <td><a href="/log/call/{{op.operator|urlencode:''}}/">{{op.operator}}</a></td>
+ <td>{{op.qsos}}</td>
+ <td>{{op.calls}}</td>
+ <td>{{op.cty}}</td>
+ <td>{{op.band_cty}}</td>
+ <td>{{op.score}}</td>
+ </tr>
+{% endfor %}
+</ul>
+</table>

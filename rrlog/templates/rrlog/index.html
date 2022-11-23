@@ -1,23 +1,26 @@
 {% extends 'rrlog/rrdxa.html' %}
 
 {% block content %}
-<h1>RRDXA</h1>
+<h1>RRDXA Logbook</h1>
 
-<div>
-This is the RRDXA log.
-</div>
+<h2>Current month</h2>
 
-{{message}}
+{% include 'rrlog/operator_stats.html' with operators=current_month %}
 
-<div>
-<form action="/log/login/" method="POST" enctype="multipart/form-data">
-{% csrf_token %}
-User: <input name="username"> <br/>
-Password: <input type="password" name="password"> <br/>
-<button type="submit">Upload</button>
-</form>
-</div>
+<h2>Current year</h2>
 
+{% include 'rrlog/operator_stats.html' with operators=current_year %}
+
+<h2>Previous month</h2>
+
+{% include 'rrlog/operator_stats.html' with operators=previous_month %}
+
+<h2>Previous year</h2>
+
+{% include 'rrlog/operator_stats.html' with operators=previous_year %}
+
+<h2>100 most recent QSOs</h2>
 
 {% include 'rrlog/qsos.html' %}
+
 {% endblock %}

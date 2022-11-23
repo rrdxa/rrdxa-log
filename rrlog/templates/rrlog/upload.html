@@ -25,7 +25,8 @@ Logfile: <input type="file" name="logfile"> <br/>
 <table border=0>
 <thead>
 <tr>
- <th>Time</th>
+ <th>uploader</th>
+ <th>time</th>
  <th>filename</th>
  <th>call</th>
  <th>operator</th>
@@ -37,6 +38,7 @@ Logfile: <input type="file" name="logfile"> <br/>
 
 {% for upload in uploads %}
  <tr>
+ <td>{{upload.person}}</td>
  <td>{{upload.ts_str}}</td>
  <td>{{upload.filename}}</td>
  <td><a href="/log/call/{{upload.call|urlencode:''}}/">{{upload.call}}</a></td>
