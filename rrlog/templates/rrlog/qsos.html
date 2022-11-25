@@ -11,6 +11,7 @@
  <th>mode</th>
  <th>sent</th>
  <th>recv</th>
+ <th>grid</th>
  <th>contest</th>
 </tr>
 </thead>
@@ -27,6 +28,7 @@
  <td>{{qso.mode}}</td>
  <td>{{qso.rsttx|default_if_none:''}}</td>
  <td>{{qso.rstrx|default_if_none:''}}</td>
+ <td>{% if qso.gridsquare %}<a href="/log/grid/{{qso.gridsquare}}/">{{qso.gridsquare}}</a>{% endif %}</td>
  <td>{% if qso.contest %}<a href="/log/contest/{{qso.contest|urlencode:''}}/">{{qso.contest}}</a>{% endif %}</td>
  </tr>
 {% endfor %}

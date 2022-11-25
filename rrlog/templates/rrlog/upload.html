@@ -1,22 +1,31 @@
 {% extends 'rrlog/rrdxa.html' %}
 
 {% block content %}
-<h1>Log Upload</h1>
+<h1>RRDXA Log Upload</h1>
 
 <div>
-Upload a log
+{{message|default_if_none:''}}
 </div>
-
-{{message}}
 
 <div>
 <form action="/log/upload/" method="POST" enctype="multipart/form-data">
-{% csrf_token %}
-Call: <input name="call"> <br/>
-Operator: <input name="operator"> <br/>
-Contest: <input name="contest"> <br/>
-Logfile: <input type="file" name="logfile"> <br/>
-<button type="submit">Upload</button>
+<table border=0>
+<tr>
+ <td>Station call:</td> <td><input name="station_callsign"> station callsign used on air (Note: values from this form are only used when not present in logfile)</td>
+</tr>
+<tr>
+ <td>Operator:</td> <td><input name="operator"> station operator if different from station callsign </td>
+</tr>
+<tr>
+ <td>Contest:</td> <td><input name="contest"> contest name for this log </td>
+</tr>
+<tr>
+ <td>ADIF logfile:</td> <td><input type="file" name="logfile"></td>
+</tr>
+<tr>
+ <td></td> <td><button type="submit">Upload</button>
+</tr>
+</table>
 </form>
 </div>
 
@@ -28,24 +37,29 @@ Logfile: <input type="file" name="logfile"> <br/>
  <th>uploader</th>
  <th>time</th>
  <th>filename</th>
- <th>call</th>
+ <th>station callsign</th>
  <th>operator</th>
  <th>contest</th>
  <th>QSOs</th>
- <th>error</th>
+ <th>errors</th>
 </tr>
 </thead>
 
 {% for upload in uploads %}
  <tr>
- <td>{{upload.person}}</td>
+ <td>{{upload.uploader}}</td>
  <td>{{upload.ts_str}}</td>
- <td>{{upload.filename}}</td>
- <td><a href="/log/call/{{upload.call|urlencode:''}}/">{{upload.call}}</a></td>
- <td><a href="/log/call/{{upload.operator|urlencode:''}}/">{{upload.operator}}</a></td>
+ <td><a href="/log/download/{{upload.id}}/">{{upload.filename|default_if_none:'logfile'}}</a></td>
+ <td><a href="/log/call/{{upload.call|urlencode:''}}/">{{upload.call|default_if_none:''}}</a></td>
+ <td><a href="/log/call/{{upload.operator|urlencode:''}}/">{{upload.operator|default_if_none:''}}</a></td>
  <td>{% if upload.contest %}<a href="/log/contest/{{upload.contest|urlencode:''}}/">{{upload.contest}}</a>{% endif %}</td>
  <td>{{upload.qsos|default_if_none:'-'}}</td>
  <td>{{upload.error|default_if_none:''}}</td>
+ <td>
+  <form action="/log/upload/" method="POST">
+     <button name="delete" value="{{upload.id}}" type="submit">delete</button>
+  </form>
+ </td>
  </tr>
 {% endfor %}
 </ul>

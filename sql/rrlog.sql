@@ -1,26 +1,11 @@
 create schema rrdxa;
 
-create table rrdxa.person (
-    person text primary key,
-    last_seen timestamptz
-);
-
-create table rrdxa.call (
-    call text primary key
-);
-
-create table rrdxa.person_call (
-    person text not null references rrdxa.person,
-    call text not null references rrdxa.call,
-    primary key (person, call)
-);
-
 create table rrdxa.upload (
     id serial primary key,
-    person text not null references rrdxa.person,
+    uploader text not null,
     ts timestamptz not null default now(),
     filename text,
-    call text,
+    station_callsign text,
     operator text,
     contest text,
     qsos integer,
@@ -30,8 +15,8 @@ create table rrdxa.upload (
 
 create table rrdxa.log (
     start timestamptz not null,
-    station_callsign text not null references rrdxa.call (call),
-    operator text references rrdxa.call (call),
+    station_callsign text not null,
+    operator text,
     call text not null,
     cty text,
     band band not null,
@@ -39,6 +24,7 @@ create table rrdxa.log (
     mode text not null,
     rsttx text,
     rstrx text,
+    gridsquare varchar(4),
     contest text,
     upload integer not null references rrdxa.upload (id) on delete cascade,
     adif jsonb,
@@ -47,10 +33,11 @@ create table rrdxa.log (
 
 create index on log (call);
 
-create table rrdxa.log_2022
-    partition of rrdxa.log
-    for values from ('2022-01-01') to ('2023-01-01');
+create extension pg_partman with schema public;
 
-create table rrdxa.log_default
-    partition of rrdxa.log
-    default;
+select public.create_parent('rrdxa.log', 'start', 'native', 'yearly',
+    p_premake := 1, p_start_partition := '2000-01-01');
+
+grant usage on schema rrdxa to public;
+grant select on all tables in schema rrdxa to public;
+alter default privileges in schema rrdxa grant select on tables to public;

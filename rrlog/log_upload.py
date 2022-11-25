@@ -1,61 +1,86 @@
+from django.db import transaction
 from rrlog import adif_io
 
-def log_upload(connection, request, person):
+def lower(text):
+    if text == None:
+        return None
+    return text.lower()
+
+def upper(text):
+    if text == None:
+        return None
+    return text.upper()
+
+q_insert_qso = """insert into log
+(start, station_callsign, operator, call, cty, band, freq, mode, rsttx, rstrx, gridsquare, contest, upload, adif)
+values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+on conflict (station_callsign, call, start) do update set
+operator = excluded.operator,
+cty = excluded.cty,
+band = excluded.band,
+freq = excluded.freq,
+mode = excluded.mode,
+rsttx = excluded.rsttx,
+rstrx = excluded.rstrx,
+gridsquare = excluded.gridsquare,
+contest = excluded.contest,
+upload = excluded.upload"""
+
+def log_upload(connection, request, username):
     data = request.POST
     filename = request.FILES['logfile'].name
     adif = request.FILES['logfile'].read().decode(encoding='UTF-8', errors='backslashreplace')
 
-    call = data.get('call') or None
-    operator = data.get('operator') or None
+    station_callsign = upper(data.get('station_callsign'))
+    operator = upper(data.get('operator'))
     contest = data.get('contest') or None
 
     with connection.cursor() as cursor:
-        cursor.execute("insert into person (person, last_seen) values (%s, now()) on conflict (person) do update set last_seen = now()", [person])
-        if call:
-            cursor.execute("insert into call (call) values (%s) on conflict (call) do nothing", [call])
-        if operator:
-            cursor.execute("insert into call (call) values (%s) on conflict (call) do nothing", [operator])
-
-        cursor.execute("insert into upload (person, filename, call, operator, contest, adif) values (%s, %s, %s, %s, %s, %s) returning id",
-                       [person, filename, call, operator, contest, adif])
+        cursor.execute("insert into upload (uploader, filename, station_callsign, operator, contest, adif) values (%s, %s, %s, %s, %s, %s) returning id",
+                       [username, filename, station_callsign, operator, contest, adif])
         upload_id = cursor.fetchone()
-        connection.commit()
 
         try:
-            qsos, adif_headers = adif_io.read_from_string(adif)
-            for qso in qsos:
-                qso_station = qso.get('STATION_CALLSIGN') or call
-                qso_operator = qso.get('OPERATOR') or operator
-                rsttx = qso.get('RST_SENT')
-                if 'STX_STRING' in qso:
-                    rsttx += ' ' + qso['STX_STRING']
-                rstrx = qso.get('RST_RCVD')
-                if 'SRX_STRING' in qso:
-                    rsttx += ' ' + qso['SRX_STRING']
+            with transaction.atomic():
+                qsos, adif_headers = adif_io.read_from_string(adif)
+                for qso in qsos:
+                    start = adif_io.time_on(qso)
+                    qso_station = qso.get('STATION_CALLSIGN') or station_callsign
+                    qso_operator = qso.get('OPERATOR') or operator
 
-                cursor.execute("insert into log (start, station_callsign, operator, call, cty, band, freq, mode, rsttx, rstrx, contest, upload, adif) " +
-                               "values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) " +
-                               "on conflict (station_callsign, call, start) do update set " +
-                               "operator = excluded.operator, cty = excluded.cty, band = excluded.band, freq = excluded.freq, mode = excluded.mode, rsttx = excluded.rsttx, rstrx = excluded.rstrx, contest = excluded.contest, upload = excluded.upload",
-                               [adif_io.time_on(qso),
-                                qso_station or qso_operator,
-                                qso_operator or qso_station,
-                                qso.get('CALL'),
-                                qso.get('CTY'),
-                                qso.get('BAND'),
-                                qso.get('FREQ'),
-                                qso.get('MODE'),
-                                rsttx,
-                                rstrx,
-                                qso.get('CONTEST'),
-                                upload_id,
-                                qso])
-            cursor.execute("update upload set qsos = %s where id = %s", [len(qsos), upload_id])
+                    if not station_callsign and not operator:
+                        raise Exception(f"{start} {qso.get('CALL')}: QSO without STATION_CALLSIGN and OPERATOR found in log, set station and/or operator in upload form")
+
+                    rsttx = upper(qso.get('RST_SENT'))
+                    if 'STX_STRING' in qso:
+                        rsttx += ' ' + upper(qso['STX_STRING'])
+                    rstrx = upper(qso.get('RST_RCVD'))
+                    if 'SRX_STRING' in qso:
+                        rsttx += ' ' + upper(qso['SRX_STRING'])
+
+                    gridsquare = qso['GRIDSQUARE'][:4].upper() \
+                        if 'GRIDSQUARE' in qso else None
+
+                    cursor.execute(q_insert_qso,
+                                   [adif_io.time_on(qso),
+                                    qso_station or qso_operator,
+                                    qso_operator or qso_station,
+                                    upper(qso.get('CALL')),
+                                    upper(qso.get('CTY')),
+                                    lower(qso.get('BAND')),
+                                    qso.get('FREQ'),
+                                    upper(qso.get('MODE')),
+                                    rsttx,
+                                    rstrx,
+                                    gridsquare,
+                                    qso.get('CONTEST'),
+                                    upload_id,
+                                    qso])
+                cursor.execute("update upload set qsos = %s where id = %s", [len(qsos), upload_id])
 
         except Exception as e:
             cursor.execute("update upload set error = %s where id = %s", [str(e), upload_id])
-            connection.commit()
             return e
 
-    return f"Upload stored as id {upload_id}"
+    return f"{len(qsos)} QSOs recorded in database"
 

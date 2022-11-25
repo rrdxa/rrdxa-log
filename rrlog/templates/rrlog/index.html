@@ -3,21 +3,21 @@
 {% block content %}
 <h1>RRDXA Logbook</h1>
 
-<h2>Current month</h2>
+<h2>Current month {{current_month}}</h2>
 
-{% include 'rrlog/operator_stats.html' with operators=current_month %}
+{% include 'rrlog/operator_stats.html' with operators=current_month_stats %}
 
-<h2>Current year</h2>
+<h2>Previous month {{previous_month}}</h2>
 
-{% include 'rrlog/operator_stats.html' with operators=current_year %}
+{% include 'rrlog/operator_stats.html' with operators=previous_month_stats %}
 
-<h2>Previous month</h2>
+<h2>Current year {{current_year}}</h2>
 
-{% include 'rrlog/operator_stats.html' with operators=previous_month %}
+{% include 'rrlog/operator_stats.html' with operators=current_year_stats %}
 
-<h2>Previous year</h2>
+<h2>Previous year {{previous_year}}</h2>
 
-{% include 'rrlog/operator_stats.html' with operators=previous_year %}
+{% include 'rrlog/operator_stats.html' with operators=previous_year_stats %}
 
 <h2>100 most recent QSOs</h2>
 

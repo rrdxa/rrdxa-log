@@ -4,9 +4,11 @@
  <th>Operator</th>
  <th>qsos</th>
  <th>calls</th>
+ <th>band-calls</th>
  <th>countries</th>
  <th>band-countries</th>
- <th>score</th>
+ <th>grids</th>
+ <th>band-grids</th>
 </tr>
 </thead>
 
@@ -15,9 +17,11 @@
  <td><a href="/log/call/{{op.operator|urlencode:''}}/">{{op.operator}}</a></td>
  <td>{{op.qsos}}</td>
  <td>{{op.calls}}</td>
+ <td>{{op.band_calls}}</td>
  <td>{{op.cty}}</td>
  <td>{{op.band_cty}}</td>
- <td>{{op.score}}</td>
+ <td>{{op.grids}}</td>
+ <td>{{op.band_grids}}</td>
  </tr>
 {% endfor %}
 </ul>
