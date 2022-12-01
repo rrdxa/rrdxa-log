@@ -1,11 +1,13 @@
-create type band AS enum (
+create type rrdxa.band AS enum (
     '2190m', '630m', '560m',
     '160m', '80m', '60m', '40m', '30m', '20m', '17m', '15m', '12m', '10m',
     '6m', '4m', '2m', '1.25m',
     '70cm', '33cm', '23cm', '13cm', '9cm', '6cm', '3cm', '1.25cm',
-    '6mm', '4mm', '2.5mm', '2mm', '1mm');
+    '6mm', '4mm', '2.5mm', '2mm', '1mm',
+    'unknown'
+);
 
-create or replace function band(freq numeric) returns band
+create or replace function rrdxa.band(freq numeric) returns band
 language sql
 return case
     when freq between 0.136 and 0.137       then '2190m'::band
@@ -38,7 +40,7 @@ return case
     when freq between 119980.0 and 120020.0 then '2.5mm'
     when freq between 142000.0 and 149000.0 then '2mm'
     when freq between 241000.0 and 250000.0 then '1mm'
+    else 'unknown'
 end;
 
 create cast (numeric as band) with function band as assignment;
-

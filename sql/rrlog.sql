@@ -1,5 +1,3 @@
-create schema rrdxa;
-
 create table rrdxa.upload (
     id serial primary key,
     uploader text not null,
@@ -28,16 +26,12 @@ create table rrdxa.log (
     contest text,
     upload integer not null references rrdxa.upload (id) on delete cascade,
     adif jsonb,
-    primary key (station_callsign, call, start)
+    primary key (station_callsign, call, band, mode, start)
 ) partition by range (start);
 
-create index on log (call);
+create index on rrdxa.log (call);
 
 create extension pg_partman with schema public;
 
 select public.create_parent('rrdxa.log', 'start', 'native', 'yearly',
     p_premake := 1, p_start_partition := '2000-01-01');
-
-grant usage on schema rrdxa to public;
-grant select on all tables in schema rrdxa to public;
-alter default privileges in schema rrdxa grant select on tables to public;

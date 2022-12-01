@@ -13,8 +13,8 @@ def upper(text):
 
 q_insert_qso = """insert into log
 (start, station_callsign, operator, call, cty, band, freq, mode, rsttx, rstrx, gridsquare, contest, upload, adif)
-values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-on conflict (station_callsign, call, start) do update set
+values (%s, %s, %s, %s, %s, %s, %s, major_mode(%s), %s, %s, %s, %s, %s, %s)
+on conflict on constraint log_pkey do update set
 operator = excluded.operator,
 cty = excluded.cty,
 band = excluded.band,
