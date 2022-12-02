@@ -30,6 +30,9 @@ create table rrdxa.log (
     primary key (station_callsign, call, band, major_mode, start)
 ) partition by range (start);
 
+grant select, insert, update, delete on rrdxa.upload, rrdxa.log to "www-data";
+grant usage on rrdxa.upload_id_seq to "www-data";
+
 create index on rrdxa.log (start);
 create index on rrdxa.log (operator);
 create index on rrdxa.log (call);
