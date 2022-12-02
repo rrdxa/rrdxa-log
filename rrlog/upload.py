@@ -1,5 +1,5 @@
 from django.db import transaction
-from rrlog import adif_io
+from rrlog import adif_io, country
 
 def lower(text):
     if text == None:
@@ -12,13 +12,14 @@ def upper(text):
     return text.upper()
 
 q_insert_qso = """insert into log
-(start, station_callsign, operator, call, cty, band, freq, mode, rsttx, rstrx, gridsquare, contest, upload, adif)
-values (%s, %s, %s, %s, %s, %s, %s, major_mode(%s), %s, %s, %s, %s, %s, %s)
+(start, station_callsign, operator, call, dxcc, band, freq, major_mode, mode, rsttx, rstrx, gridsquare, contest, upload, adif)
+values (%s, %s, %s, %s, %s, coalesce(%s::band, %s::numeric::band), %s, major_mode(%s), %s, %s, %s, %s, %s, %s, %s)
 on conflict on constraint log_pkey do update set
 operator = excluded.operator,
-cty = excluded.cty,
+dxcc = excluded.dxcc,
 band = excluded.band,
 freq = excluded.freq,
+major_mode = excluded.major_mode,
 mode = excluded.mode,
 rsttx = excluded.rsttx,
 rstrx = excluded.rstrx,
@@ -51,25 +52,34 @@ def log_upload(connection, request, username):
                     if not station_callsign and not operator:
                         raise Exception(f"{start} {qso.get('CALL')}: QSO without STATION_CALLSIGN and OPERATOR found in log, set station and/or operator in upload form")
 
+                    call = upper(qso.get('CALL'))
+                    if 'DXCC' in qso:
+                        dxcc = qso.get('DXCC')
+                    else:
+                        dxcc = country.lookup(call, start)
+
                     rsttx = upper(qso.get('RST_SENT'))
-                    if 'STX_STRING' in qso:
-                        rsttx += ' ' + upper(qso['STX_STRING'])
+                    if 'STX' in qso: rsttx += ' ' + upper(qso['STX'])
+                    if 'STX_STRING' in qso: rsttx += ' ' + upper(qso['STX_STRING'])
                     rstrx = upper(qso.get('RST_RCVD'))
-                    if 'SRX_STRING' in qso:
-                        rsttx += ' ' + upper(qso['SRX_STRING'])
+                    if 'SRX' in qso: rstrx += ' ' + upper(qso['SRX'])
+                    if 'SRX_STRING' in qso: rstrx += ' ' + upper(qso['SRX_STRING'])
+
+                    freq = qso.get('FREQ')
+                    mode = upper(qso.get('MODE')),
 
                     gridsquare = qso['GRIDSQUARE'][:4].upper() \
                         if 'GRIDSQUARE' in qso else None
 
                     cursor.execute(q_insert_qso,
-                                   [adif_io.time_on(qso),
+                                   [start,
                                     qso_station or qso_operator,
                                     qso_operator or qso_station,
-                                    upper(qso.get('CALL')),
-                                    upper(qso.get('CTY')),
+                                    call,
+                                    dxcc,
                                     lower(qso.get('BAND')),
-                                    qso.get('FREQ'),
-                                    upper(qso.get('MODE')),
+                                    freq, freq,
+                                    mode, mode,
                                     rsttx,
                                     rstrx,
                                     gridsquare,

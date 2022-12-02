@@ -10,13 +10,15 @@ from passlib.hash import phpass
 
 import datetime
 
-from rrlog.log_upload import log_upload
+from rrlog.upload import log_upload
 from rrlog.utils import namedtuplefetchall
 
-q_index = """
-select *,
+q_log = """
+select log.*, dxcc.country,
 to_char(start, 'DD.MM.YYYY HH24:MI') as start_str
-from log order by start desc limit 100
+from log
+left join dxcc on log.dxcc = dxcc.dxcc
+{} order by start desc limit 500
 """
 
 q_operator_stats = """
@@ -24,35 +26,36 @@ select operator,
   count(*) as qsos,
   count(distinct call) as calls,
   count(distinct (band, call)) as band_calls,
-  count(distinct call::varchar(2)) as cty,
-  count(distinct (band, call::varchar(2))) as band_cty,
+  count(distinct dxcc) as dxccs,
+  count(distinct (band, dxcc)) as band_dxccs,
   count(distinct gridsquare) as grids,
   count(distinct (band, gridsquare)) as band_grids
 from log where start >= %s::date and start < %s::date + %s::interval
 group by operator
 order by qsos desc
+limit %s
 """
 
 def index(request):
     with connection.cursor() as cursor:
-        cursor.execute(q_index, [])
+        cursor.execute(q_log.format(''), [])
         rows = namedtuplefetchall(cursor)
 
         today = datetime.date.today()
         date = f"{today.year}-{today.month:02}-01"
-        cursor.execute(q_operator_stats, [date, date, '1 month'])
+        cursor.execute(q_operator_stats, [date, date, '1 month', 20])
         current_month_stats = namedtuplefetchall(cursor)
 
         date = f"{today.year-1 if today.month==1 else today.year}-{12 if today.month==1 else today.month-1:02}-01"
-        cursor.execute(q_operator_stats, [date, date, '1 month'])
+        cursor.execute(q_operator_stats, [date, date, '1 month', 20])
         previous_month_stats = namedtuplefetchall(cursor)
 
         date = f"{today.year}-01-01"
-        cursor.execute(q_operator_stats, [date, date, '1 year'])
+        cursor.execute(q_operator_stats, [date, date, '1 year', 20])
         current_year_stats = namedtuplefetchall(cursor)
 
         date = f"{today.year-1}-01-01"
-        cursor.execute(q_operator_stats, [date, date, '1 year'])
+        cursor.execute(q_operator_stats, [date, date, '1 year', 20])
         previous_year_stats = namedtuplefetchall(cursor)
 
     context = {
@@ -69,66 +72,35 @@ def index(request):
             }
     return render(request, 'rrlog/index.html', context)
 
-q_call = """
-select *,
-to_char(start, 'DD.MM.YYYY HH24:MI') as start_str
-from log where station_callsign = %s or operator = %s or call = %s order by start desc limit 100
-"""
+def generic_view(request, title, where, arg):
+    with connection.cursor() as cursor:
+        cursor.execute(q_log.format(where), arg)
+        rows = namedtuplefetchall(cursor)
+
+    context = { 'title': title, 'qsos': rows }
+    return render(request, 'rrlog/log.html', context)
 
 def v_call(request, call):
-    with connection.cursor() as cursor:
-        cursor.execute(q_call, [call, call, call])
-        rows = namedtuplefetchall(cursor)
+    return generic_view(request, f"Log of {call}",
+                        'where station_callsign = %s or operator = %s or call = %s',
+                        [call, call, call])
 
-    context = { 'title': f"Log of {call}", 'qsos': rows }
-    return render(request, 'rrlog/log.html', context)
-
-q_cty = """
-select *,
-to_char(start, 'DD.MM.YYYY HH24:MI') as start_str
-from log where cty = %s order by start desc limit 100
-"""
-
-def v_cty(request, cty):
-    with connection.cursor() as cursor:
-        cursor.execute(q_cty, [cty])
-        rows = namedtuplefetchall(cursor)
-
-    context = { 'title': f"Log entries from {cty}", 'qsos': rows }
-    return render(request, 'rrlog/log.html', context)
-
-q_grid = """
-select *,
-to_char(start, 'DD.MM.YYYY HH24:MI') as start_str
-from log where gridsquare = %s order by start desc limit 100
-"""
+def v_dxcc(request, dxcc):
+    return generic_view(request, f"Log entries from {dxcc}", 'where country = %s', [dxcc])
 
 def v_grid(request, grid):
-    with connection.cursor() as cursor:
-        cursor.execute(q_grid, [grid])
-        rows = namedtuplefetchall(cursor)
-
-    context = { 'title': f"Log entries from {grid}", 'qsos': rows }
-    return render(request, 'rrlog/log.html', context)
-
-q_contest = """
-select *,
-to_char(start, 'DD.MM.YYYY HH24:MI') as start_str
-from log where contest = %s order by start desc limit 100
-"""
+    return generic_view(request, f"Log entries from gridsquare {grid}", 'where gridsquare = %s', [grid])
 
 def v_contest(request, contest):
-    with connection.cursor() as cursor:
-        cursor.execute(q_contest, [contest])
-        rows = namedtuplefetchall(cursor)
+    return generic_view(request, f"Log entries from {contest}", 'where contest = %s', [contest])
 
-    context = { 'title': contest, 'qsos': rows }
-    return render(request, 'rrlog/log.html', context)
+def v_log(request, log):
+    return generic_view(request, f"QSOs in upload {log}", 'where upload = %s', [log])
 
 def v_month(request, year, month):
     with connection.cursor() as cursor:
         date = f"{year}-{month:02}-01"
-        cursor.execute(q_operator_stats, [date, date, '1 month'])
+        cursor.execute(q_operator_stats, [date, date, '1 month', 200])
         rows = namedtuplefetchall(cursor)
 
     context = {
@@ -143,7 +115,7 @@ def v_month(request, year, month):
 def v_year(request, year):
     with connection.cursor() as cursor:
         date = f"{year}-01-01"
-        cursor.execute(q_operator_stats, [date, date, '1 year'])
+        cursor.execute(q_operator_stats, [date, date, '1 year', 200])
         rows = namedtuplefetchall(cursor)
 
     context = {
@@ -188,27 +160,28 @@ def v_upload(request):
         response = render(request, 'rrlog/generic.html', { 'message': message }, status=401)
         response['WWW-Authenticate'] = 'Basic realm="RRDXA Log Upload"'
         return response
-    username = message
+    uploader = message
 
     # actual page
     message = None
     if request.method == 'POST' and 'logfile' in request.FILES:
-        message = log_upload(connection, request, username)
+        message = log_upload(connection, request, uploader)
     elif request.method == 'POST' and 'delete' in request.POST:
         id = request.POST['delete']
         with connection.cursor() as cursor:
-            cursor.execute("delete from upload where id = %s and uploader = %s", [id, username])
+            cursor.execute("delete from upload where id = %s and uploader = %s", [id, uploader])
             message = f"Upload {id} deleted"
 
     # get list of all uploads (including this one)
     with connection.cursor() as cursor:
-        cursor.execute(q_upload_list, [username])
+        cursor.execute(q_upload_list, [uploader])
         uploads = namedtuplefetchall(cursor)
 
     context = {
         'title': 'Log Upload',
         'message': message,
         'uploads': uploads,
+        'uploader': uploader,
     }
     return render(request, 'rrlog/upload.html', context)
 

@@ -11,7 +11,7 @@
 <form action="/log/upload/" method="POST" enctype="multipart/form-data">
 <table border=0>
 <tr>
- <td>Station call:</td> <td><input name="station_callsign"> station callsign used on air (Note: values from this form are only used when not present in logfile)</td>
+ <td>Station call:</td> <td><input name="station_callsign" value="{{uploader|urlencode:''}}"> station callsign used on air (Note: values from this form are only used when not present in logfile)</td>
 </tr>
 <tr>
  <td>Operator:</td> <td><input name="operator"> station operator if different from station callsign </td>
@@ -36,13 +36,14 @@
 <tr>
  <th>uploader</th>
  <th>time</th>
+ <th>QSOs</th>
+ <th></th>
  <th>filename</th>
+ <th></th>
  <th>station callsign</th>
  <th>operator</th>
  <th>contest</th>
- <th>QSOs</th>
  <th>errors</th>
- <th></th>
 </tr>
 </thead>
 
@@ -50,17 +51,22 @@
  <tr>
  <td>{{upload.uploader}}</td>
  <td>{{upload.ts_str}}</td>
- <td><a href="/log/download/{{upload.id}}/">{{upload.filename|default_if_none:'logfile'}}</a></td>
- <td><a href="/log/call/{{upload.call|urlencode:''}}/">{{upload.call|default_if_none:''}}</a></td>
- <td><a href="/log/call/{{upload.operator|urlencode:''}}/">{{upload.operator|default_if_none:''}}</a></td>
- <td>{% if upload.contest %}<a href="/log/contest/{{upload.contest|urlencode:''}}/">{{upload.contest}}</a>{% endif %}</td>
  <td>{{upload.qsos|default_if_none:'-'}}</td>
- <td>{{upload.error|default_if_none:''}}</td>
+ <td>
+  <form action="/log/log/{{upload.id}}/" method="GET">
+     <button type="submit">view</button>
+  </form>
+ </td>
+ <td><a href="/log/download/{{upload.id}}/">{{upload.filename|default_if_none:'logfile'}}</a></td>
  <td>
   <form action="/log/upload/" method="POST">
      <button name="delete" value="{{upload.id}}" type="submit">delete</button>
   </form>
  </td>
+ <td><a href="/log/call/{{upload.station_callsign|urlencode:''}}/">{{upload.station_callsign|default_if_none:''}}</a></td>
+ <td><a href="/log/call/{{upload.operator|urlencode:''}}/">{{upload.operator|default_if_none:''}}</a></td>
+ <td>{% if upload.contest %}<a href="/log/contest/{{upload.contest|urlencode:''}}/">{{upload.contest}}</a>{% endif %}</td>
+ <td>{{upload.error|default_if_none:''}}</td>
  </tr>
 {% endfor %}
 </ul>

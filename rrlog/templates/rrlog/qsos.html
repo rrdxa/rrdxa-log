@@ -5,7 +5,7 @@
  <th>station</th>
  <th>operator</th>
  <th>DX call</th>
- <th>cty</th>
+ <th>DXCC</th>
  <th>band</th>
  <th>freq</th>
  <th>mode</th>
@@ -22,7 +22,7 @@
  <td><a href="/log/call/{{qso.station_callsign|urlencode:''}}/">{{qso.station_callsign}}</a></td>
  <td>{% if qso.operator and qso.operator != qso.station_callsign %}<a href="/log/call/{{qso.operator|urlencode:''}}/">{{qso.operator}}</a>{% endif %}</td>
  <td><a href="/log/call/{{qso.call|urlencode:''}}/">{{qso.call}}</a></td>
- <td>{% if qso.cty %}<a href="/log/cty/{{qso.cty|urlencode:''}}/">{{qso.cty}}</a>{% endif %}</td>
+ <td>{% if qso.country %}<a href="/log/dxcc/{{qso.country|urlencode:''}}/">{{qso.country}}</a>{% endif %}</td>
  <td>{{qso.band}}</td>
  <td>{{qso.freq|default_if_none:''}}</td>
  <td>{{qso.mode}}</td>

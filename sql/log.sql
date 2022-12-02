@@ -16,9 +16,10 @@ create table rrdxa.log (
     station_callsign text not null,
     operator text,
     call text not null,
-    cty text,
+    dxcc smallint,
     band band not null,
     freq numeric,
+    major_mode text not null,
     mode text not null,
     rsttx text,
     rstrx text,
@@ -26,12 +27,18 @@ create table rrdxa.log (
     contest text,
     upload integer not null references rrdxa.upload (id) on delete cascade,
     adif jsonb,
-    primary key (station_callsign, call, band, mode, start)
+    primary key (station_callsign, call, band, major_mode, start)
 ) partition by range (start);
 
+create index on rrdxa.log (start);
+create index on rrdxa.log (operator);
 create index on rrdxa.log (call);
+create index on rrdxa.log (dxcc);
+create index on rrdxa.log (gridsquare);
+create index on rrdxa.log (contest);
 
-create extension pg_partman with schema public;
+create extension if not exists pg_partman with schema public;
 
+delete from public.part_config where parent_table = 'rrdxa.log';
 select public.create_parent('rrdxa.log', 'start', 'native', 'yearly',
-    p_premake := 1, p_start_partition := '2000-01-01');
+    p_premake := 1, p_start_partition := '2010-01-01');
