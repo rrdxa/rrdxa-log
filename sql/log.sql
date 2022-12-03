@@ -16,7 +16,7 @@ create table rrdxa.log (
     station_callsign text not null,
     operator text,
     call text not null,
-    dxcc smallint,
+    dxcc smallint references rrdxa.dxcc (dxcc),
     band band not null,
     freq numeric,
     major_mode text not null,
@@ -28,7 +28,7 @@ create table rrdxa.log (
     upload integer not null references rrdxa.upload (id) on delete cascade,
     adif jsonb,
     primary key (station_callsign, call, band, major_mode, start)
-) partition by range (start);
+);
 
 grant select, insert, update, delete on rrdxa.upload, rrdxa.log to "www-data";
 grant usage on rrdxa.upload_id_seq to "www-data";
@@ -40,9 +40,3 @@ create index on rrdxa.log (dxcc);
 create index on rrdxa.log (gridsquare);
 create index on rrdxa.log (contest);
 create index on rrdxa.log (upload);
-
-create extension if not exists pg_partman with schema public;
-
-delete from public.part_config where parent_table = 'rrdxa.log';
-select public.create_parent('rrdxa.log', 'start', 'native', 'yearly',
-    p_premake := 1, p_start_partition := '2010-01-01');
