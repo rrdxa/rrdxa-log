@@ -13,7 +13,7 @@ def upper(text):
 
 q_insert_qso = """insert into log
 (start, station_callsign, operator, call, dxcc, band, freq, major_mode, mode, rsttx, rstrx, gridsquare, contest, upload, adif)
-values (%s, %s, %s, %s, %s, coalesce(%s::band, %s::numeric::band), %s, major_mode(%s), %s, %s, %s, %s, %s, %s, %s)
+values (%s, %s, nullif(%s, %s), %s, %s, coalesce(%s::band, %s::numeric::band), %s, major_mode(%s), %s, %s, %s, %s, %s, %s, %s)
 on conflict on constraint log_pkey do update set
 operator = excluded.operator,
 dxcc = excluded.dxcc,
@@ -74,7 +74,7 @@ def log_upload(connection, request, username):
                     cursor.execute(q_insert_qso,
                                    [start,
                                     qso_station or qso_operator,
-                                    qso_operator or qso_station,
+                                    qso_operator or qso_station, qso_operator or qso_station,
                                     call,
                                     dxcc,
                                     lower(qso.get('BAND')),

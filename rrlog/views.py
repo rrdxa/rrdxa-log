@@ -22,7 +22,7 @@ left join dxcc on log.dxcc = dxcc.dxcc
 """
 
 q_operator_stats = """
-select operator,
+select coalesce(operator, station_callsign) as operator,
   count(*) as qsos,
   count(distinct call) as calls,
   count(distinct (band, call)) as band_calls,
@@ -31,7 +31,7 @@ select operator,
   count(distinct gridsquare) as grids,
   count(distinct (band, gridsquare)) as band_grids
 from log where start >= %s::date and start < %s::date + %s::interval
-group by operator
+group by coalesce(operator, station_callsign)
 order by qsos desc
 limit %s
 """
