@@ -13,7 +13,7 @@ def upper(text):
 
 q_insert_qso = """insert into log
 (start, station_callsign, operator, call, dxcc, band, freq, major_mode, mode, rsttx, rstrx, gridsquare, contest, upload, adif)
-values (%s, %s, nullif(%s, %s), %s, %s, coalesce(%s::band, %s::numeric::band), %s, major_mode(%s), %s, %s, %s, %s, %s, %s, %s)
+values (date_trunc('minute', %s), %s, nullif(%s, %s), %s, %s, coalesce(%s::band, %s::numeric::band), %s, major_mode(%s), %s, %s, %s, %s, %s, %s, %s)
 on conflict on constraint log_pkey do update set
 operator = excluded.operator,
 dxcc = excluded.dxcc,
@@ -58,12 +58,10 @@ def log_upload(connection, request, username):
                     else:
                         dxcc = country.lookup(call, start)
 
-                    rsttx = upper(qso.get('RST_SENT'))
-                    if 'STX' in qso: rsttx += ' ' + upper(qso['STX'])
-                    if 'STX_STRING' in qso: rsttx += ' ' + upper(qso['STX_STRING'])
-                    rstrx = upper(qso.get('RST_RCVD'))
-                    if 'SRX' in qso: rstrx += ' ' + upper(qso['SRX'])
-                    if 'SRX_STRING' in qso: rstrx += ' ' + upper(qso['SRX_STRING'])
+                    tx_rpts = [upper(qso.get('RST_SENT')), upper(qso.get('STX')), upper(qso.get('STX_STRING'))]
+                    rsttx = ' '.join(filter(None, tx_rpts)) or None
+                    rx_rpts = [upper(qso.get('RST_RCVD')), upper(qso.get('SRX')), upper(qso.get('SRX_STRING'))]
+                    rstrx = ' '.join(filter(None, rx_rpts)) or None
 
                     freq = qso.get('FREQ')
                     mode = upper(qso.get('MODE')),
