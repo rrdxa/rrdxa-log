@@ -39,6 +39,7 @@ create index on rrdxa.log (call);
 create index on rrdxa.log (dxcc);
 create index on rrdxa.log (gridsquare);
 create index on rrdxa.log (contest);
+create index on rrdxa.log (upload);
 
 create extension if not exists pg_partman with schema public;
 
