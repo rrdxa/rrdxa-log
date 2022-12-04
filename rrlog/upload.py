@@ -32,8 +32,8 @@ def log_upload(connection, request, username):
     filename = request.FILES['logfile'].name
     adif = request.FILES['logfile'].read().decode(encoding='UTF-8', errors='backslashreplace')
 
-    station_callsign = upper(data.get('station_callsign'))
-    operator = upper(data.get('operator'))
+    station_callsign = upper(data.get('station_callsign')) or None
+    operator = upper(data.get('operator')) or None
     contest = data.get('contest') or None
 
     with connection.cursor() as cursor:
@@ -81,7 +81,7 @@ def log_upload(connection, request, username):
                                     rsttx,
                                     rstrx,
                                     gridsquare,
-                                    qso.get('CONTEST'),
+                                    qso.get('CONTEST_ID') or contest,
                                     upload_id,
                                     ])
                 cursor.execute("update upload set qsos = %s where id = %s", [len(qsos), upload_id])
