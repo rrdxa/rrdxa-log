@@ -32,3 +32,15 @@ rrdxa =# \i sql/00import.sql
 $ psql rrdxa
 rrdxa =# drop schema rrdxa, wordpress cascade;
 ```
+
+## Log upload using curl
+
+```
+curl -fsS --output /dev/null \
+  --user DL1ABC:rrdxaorgpassword \
+  --form station_callsign=DL0ABC \
+  --form operator=DL1ABC \
+  --form contest=CQ-WW-DX \
+  --form logfile=@cqwwdx_dl0abc_dl1abc.adif \
+  https://logbook.rrdxa.org/log/upload/
+```
