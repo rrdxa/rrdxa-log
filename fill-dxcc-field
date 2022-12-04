@@ -9,8 +9,11 @@ cur = conn.cursor()
 i = 0
 
 while True:
-    cur.execute('select start, call from log where dxcc is null limit 1')
-    start, call = cur.fetchone()
+    cur.execute("select start, call from log where dxcc is null limit 1")
+    try:
+        start, call = cur.fetchone()
+    except:
+        break
     dxcc = country.lookup(call, start)
     print(start, call, dxcc)
     cur.execute("update log set dxcc = %s where start between %s-'1 week'::interval and %s+'1 week'::interval and call = %s",
@@ -18,3 +21,5 @@ while True:
     i += 1
     if i % 100 == 0:
         conn.commit()
+
+conn.commit()
