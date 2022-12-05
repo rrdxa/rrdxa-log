@@ -2,13 +2,13 @@
 <thead>
 <tr>
  <th>Operator</th>
- <th>qsos</th>
- <th>calls</th>
- <th>band-calls</th>
- <th>countries</th>
- <th>band-countries</th>
- <th>grids</th>
- <th>band-grids</th>
+ <th>QSOs</th>
+ <th>unique calls</th>
+ <th>unique calls/band+mode</th>
+ <th>unique countries</th>
+ <th>unique countries/band+mode</th>
+ <th>unique grids</th>
+ <th>unique grids/band+mode</th>
 </tr>
 </thead>
 
@@ -17,11 +17,11 @@
  <td><a href="/log/call/{{op.operator|urlencode:''}}/">{{op.operator}}</a></td>
  <td>{{op.qsos}}</td>
  <td>{{op.calls}}</td>
- <td>{{op.band_calls}}</td>
+ <td>{{op.calls_band_mode}}</td>
  <td>{{op.dxccs}}</td>
- <td>{{op.band_dxccs}}</td>
+ <td>{{op.dxccs_band_mode}}</td>
  <td>{{op.grids}}</td>
- <td>{{op.band_grids}}</td>
+ <td>{{op.grids_band_mode}}</td>
  </tr>
 {% endfor %}
 </ul>
