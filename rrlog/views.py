@@ -216,6 +216,6 @@ def v_download(request, id):
         cursor.execute(q_download, [id, username])
         adif, filename = cursor.fetchone()
 
-    return HttpResponse(adif, content_type='text/plain', headers={
-        'Content-Disposition': f'attachment; filename="{filename}"',
-        })
+    response = HttpResponse(adif, content_type='text/plain')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
