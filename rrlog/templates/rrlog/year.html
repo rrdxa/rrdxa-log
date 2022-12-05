@@ -18,6 +18,16 @@
 <a href="/log/month/{{year}}-12/">Dec</a>
 <a href="/log/year/{{next_year}}/">&gt;&gt; {{next_year}}</a>
 
+<h2>All modes</h2>
 {% include 'rrlog/operator_stats.html' %}
+
+<h2>CW</h2>
+{% include 'rrlog/operator_stats.html' with operators=cw_operators %}
+
+<h2>PHONE</h2>
+{% include 'rrlog/operator_stats.html' with operators=phone_operators %}
+
+<h2>DIGI</h2>
+{% include 'rrlog/operator_stats.html' with operators=digi_operators %}
 
 {% endblock %}

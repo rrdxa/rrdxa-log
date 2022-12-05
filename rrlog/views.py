@@ -30,7 +30,7 @@ select coalesce(operator, station_callsign) as operator,
   count(distinct (dxcc, band, major_mode)) filter (where band <> 'unknown' and dxcc between 1 and 900) as dxccs_band_mode,
   count(distinct gridsquare) as grids,
   count(distinct (gridsquare, band, major_mode)) filter (where band <> 'unknown' and gridsquare is not null) as grids_band_mode
-from log where start >= %s::date and start < %s::date + %s::interval
+from log where start >= %s::date and start < %s::date + %s::interval {}
 group by coalesce(operator, station_callsign)
 order by qsos desc
 limit %s
@@ -43,19 +43,19 @@ def index(request):
 
         today = datetime.date.today()
         date = f"{today.year}-{today.month:02}-01"
-        cursor.execute(q_operator_stats, [date, date, '1 month', 20])
+        cursor.execute(q_operator_stats.format(''), [date, date, '1 month', 20])
         current_month_stats = namedtuplefetchall(cursor)
 
         date = f"{today.year-1 if today.month==1 else today.year}-{12 if today.month==1 else today.month-1:02}-01"
-        cursor.execute(q_operator_stats, [date, date, '1 month', 20])
+        cursor.execute(q_operator_stats.format(''), [date, date, '1 month', 20])
         previous_month_stats = namedtuplefetchall(cursor)
 
         date = f"{today.year}-01-01"
-        cursor.execute(q_operator_stats, [date, date, '1 year', 20])
+        cursor.execute(q_operator_stats.format(''), [date, date, '1 year', 20])
         current_year_stats = namedtuplefetchall(cursor)
 
         date = f"{today.year-1}-01-01"
-        cursor.execute(q_operator_stats, [date, date, '1 year', 20])
+        cursor.execute(q_operator_stats.format(''), [date, date, '1 year', 20])
         previous_year_stats = namedtuplefetchall(cursor)
 
     context = {
@@ -100,29 +100,45 @@ def v_log(request, log):
 def v_month(request, year, month):
     with connection.cursor() as cursor:
         date = f"{year}-{month:02}-01"
-        cursor.execute(q_operator_stats, [date, date, '1 month', 200])
-        rows = namedtuplefetchall(cursor)
+        cursor.execute(q_operator_stats.format(''), [date, date, '1 month', 200])
+        operators = namedtuplefetchall(cursor)
+
+        by_mode = {}
+        for major_mode in 'CW', 'PHONE', 'DIGI':
+            cursor.execute(q_operator_stats.format(f" and major_mode = '{major_mode}'"), [date, date, '1 month', 200])
+            by_mode[major_mode] = namedtuplefetchall(cursor)
 
     context = {
         'month': f"{year}-{month:02}",
         'prev_month': f"{year-1 if month == 1 else year}-{((month-2)%12)+1:02}",
         'next_month': f"{year+1 if month == 12 else year}-{(month%12)+1:02}",
         'year': year,
-        'operators': rows
+        'operators': operators,
+        'cw_operators': by_mode['CW'],
+        'phone_operators': by_mode['PHONE'],
+        'digi_operators': by_mode['DIGI'],
     }
     return render(request, 'rrlog/month.html', context)
 
 def v_year(request, year):
     with connection.cursor() as cursor:
         date = f"{year}-01-01"
-        cursor.execute(q_operator_stats, [date, date, '1 year', 200])
-        rows = namedtuplefetchall(cursor)
+        cursor.execute(q_operator_stats.format(''), [date, date, '1 year', 200])
+        operators = namedtuplefetchall(cursor)
+
+        by_mode = {}
+        for major_mode in 'CW', 'PHONE', 'DIGI':
+            cursor.execute(q_operator_stats.format(f" and major_mode = '{major_mode}'"), [date, date, '1 year', 200])
+            by_mode[major_mode] = namedtuplefetchall(cursor)
 
     context = {
         'year': year,
         'prev_year': year - 1,
         'next_year': year + 1,
-        'operators': rows
+        'operators': operators,
+        'cw_operators': by_mode['CW'],
+        'phone_operators': by_mode['PHONE'],
+        'digi_operators': by_mode['DIGI'],
     }
     return render(request, 'rrlog/year.html', context)
 

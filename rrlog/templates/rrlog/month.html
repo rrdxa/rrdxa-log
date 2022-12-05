@@ -7,6 +7,16 @@
 <a href="/log/year/{{year}}/">{{year}}</a>
 <a href="/log/month/{{next_month}}/">&gt;&gt; {{next_month}}</a>
 
+<h2>All modes</h2>
 {% include 'rrlog/operator_stats.html' %}
+
+<h2>CW</h2>
+{% include 'rrlog/operator_stats.html' with operators=cw_operators %}
+
+<h2>PHONE</h2>
+{% include 'rrlog/operator_stats.html' with operators=phone_operators %}
+
+<h2>DIGI</h2>
+{% include 'rrlog/operator_stats.html' with operators=digi_operators %}
 
 {% endblock %}
