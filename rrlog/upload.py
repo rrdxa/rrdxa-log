@@ -13,7 +13,7 @@ def upper(text):
 
 q_insert_qso = """insert into log
 (start, station_callsign, operator, call, dxcc, band, freq, major_mode, mode, rsttx, rstrx, gridsquare, contest, upload)
-values (date_trunc('minute', %s), %s, nullif(%s, %s), %s, %s, coalesce(%s::band, %s::numeric::band), %s, major_mode(%s), %s, %s, %s, %s, %s, %s)
+values (date_trunc('minute', %s), %s, %s, %s, %s, coalesce(%s::band, %s::numeric::band), %s, major_mode(%s), %s, %s, %s, %s, %s, %s)
 on conflict on constraint log_pkey do update set
 operator = excluded.operator,
 dxcc = excluded.dxcc,
@@ -46,8 +46,12 @@ def log_upload(connection, request, username):
                 qsos, adif_headers = adif_io.read_from_string(adif)
                 for qso in qsos:
                     start = adif_io.time_on(qso)
-                    qso_station = qso.get('STATION_CALLSIGN') or station_callsign
-                    qso_operator = qso.get('OPERATOR') or operator
+                    qso_station = qso.get('STATION_CALLSIGN') or station_callsign \
+                            or qso.get('OPERATOR') or operator
+                    qso_operator = qso.get('OPERATOR') or operator \
+                            or qso.get('STATION_CALLSIGN') or station_callsign
+                    if qso_station == qso_operator:
+                        qso_operator = None
 
                     if not station_callsign and not operator:
                         raise Exception(f"{start} {qso.get('CALL')}: QSO without STATION_CALLSIGN and OPERATOR found in log, set station and/or operator in upload form")
@@ -71,8 +75,8 @@ def log_upload(connection, request, username):
 
                     cursor.execute(q_insert_qso,
                                    [start,
-                                    qso_station or qso_operator,
-                                    qso_operator or qso_station, qso_station or qso_operator,
+                                    qso_station,
+                                    qso_operator,
                                     call,
                                     dxcc,
                                     lower(qso.get('BAND')),
