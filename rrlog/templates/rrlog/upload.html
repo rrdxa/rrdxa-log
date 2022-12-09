@@ -11,13 +11,13 @@
 <form action="/log/upload/" method="POST" enctype="multipart/form-data">
 <table border=0>
 <tr>
- <td>Station callsign used on air:</td> <td><input name="station_callsign" value="{{uploader|urlencode:''}}"></td>
+ <td>Station callsign used on air:</td> <td><input name="station_callsign" value="{{uploader|urlencode:''}}"> (only used when not specified in logfile)</td>
 </tr>
 <tr>
- <td>Operator callsign:</td> <td><input name="operator" value="{{uploader|urlencode:''}}"></td>
+ <td>Operator callsign:</td> <td><input name="operator" value="{{uploader|urlencode:''}}"> (only used when not specified in logfile)</td>
 </tr>
 <tr>
- <td>Contest ID:</td> <td><input name="contest"></td>
+ <td>Contest ID:</td> <td><input name="contest"> (leave blank for non-contest or mixed logfiles)</td>
 </tr>
 <tr>
  <td>ADIF logfile:</td> <td><input type="file" name="logfile"></td>
