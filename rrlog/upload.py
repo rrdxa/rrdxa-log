@@ -72,7 +72,7 @@ def log_upload(connection, request, username):
                     cursor.execute(q_insert_qso,
                                    [start,
                                     qso_station or qso_operator,
-                                    qso_operator or qso_station, qso_operator or qso_station,
+                                    qso_operator or qso_station, qso_station or qso_operator,
                                     call,
                                     dxcc,
                                     lower(qso.get('BAND')),
