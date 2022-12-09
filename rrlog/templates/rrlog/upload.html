@@ -11,13 +11,13 @@
 <form action="/log/upload/" method="POST" enctype="multipart/form-data">
 <table border=0>
 <tr>
- <td>Station call:</td> <td><input name="station_callsign" value="{{uploader|urlencode:''}}"> station callsign used on air (Note: values from this form are only used when not present in logfile)</td>
+ <td>Station callsign used on air:</td> <td><input name="station_callsign" value="{{uploader|urlencode:''}}"></td>
 </tr>
 <tr>
- <td>Operator:</td> <td><input name="operator" value="{{uploader|urlencode:''}}"> operator callsign</td>
+ <td>Operator callsign:</td> <td><input name="operator" value="{{uploader|urlencode:''}}"></td>
 </tr>
 <tr>
- <td>Contest:</td> <td><input name="contest"> contest name for this log</td>
+ <td>Contest ID:</td> <td><input name="contest"></td>
 </tr>
 <tr>
  <td>ADIF logfile:</td> <td><input type="file" name="logfile"></td>
@@ -71,5 +71,47 @@
 {% endfor %}
 </ul>
 </table>
+
+<h2>Notes</h2>
+
+<ul>
+<li>
+ADIF fields used are:
+<a href="https://www.adif.org/314/ADIF_314.htm#Band_Enumeration">BAND</a>,
+CALL,
+<a href="https://www.adif.org/314/ADIF_314.htm#Contest_ID">CONTEST_ID</a>,
+DXCC (<a href="https://www.adif.org/314/ADIF_314.htm#DXCC_Entity_Code_Enumeration">numeric country identifier</a>),
+FREQ,
+GRIDSQUARE (first 4 chars),
+MODE,
+OPERATOR,
+QSO_DATE,
+RST_RCVD,
+RST_SENT,
+SRX,
+SRX_STRING,
+STATION_CALLSIGN,
+STX,
+STX_STRING,
+TIME_ON (truncated to minute precision).
+</li>
+
+<li>
+The statistics on this website count <b>QSOs by operator</b>, so make sure the
+logfile records properly contain the station callsign (the callsign used on
+air) and the operator callsign. If any of these are missing in a QSO record,
+they will be taken from the values provided in the upload form above. The
+values given above will <em>not</em> override the callsigns in the logfile.
+</li>
+
+<li>
+Feel free to upload overlapping logfiles or to re-upload logfiles when some of
+the contents have changed. The new logfile will be merged into the database,
+replacing any already existing QSOs. QSOs are identified by matching time
+stamp, station callsign, DX callsign, band and major mode (CW, PHONE, DIGI).
+QSOs are associated with the last upload that contained them; deleting an
+upload will only delete the QSOs still associated with it.
+</li>
+</ul>
 
 {% endblock %}
