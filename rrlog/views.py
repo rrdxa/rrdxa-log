@@ -145,7 +145,7 @@ def v_year(request, year):
 q_upload_list = """select uploader, id, ts,
 to_char(ts, 'DD.MM.YYYY HH24:MI') as ts_str,
 filename, station_callsign, operator, contest, qsos, error
-from upload where uploader = %s order by id desc"""
+from upload where uploader = %s or %s = 'DF7CB' order by id desc"""
 
 def basic_auth(request):
     auth_header = request.META.get('HTTP_AUTHORIZATION', '')
@@ -190,7 +190,7 @@ def v_upload(request):
 
     # get list of all uploads (including this one)
     with connection.cursor() as cursor:
-        cursor.execute(q_upload_list, [uploader])
+        cursor.execute(q_upload_list, [uploader, uploader])
         uploads = namedtuplefetchall(cursor)
 
     context = {
@@ -201,7 +201,7 @@ def v_upload(request):
     }
     return render(request, 'rrlog/upload.html', context)
 
-q_download = """select adif, filename from upload where id = %s and uploader = %s"""
+q_download = """select adif, filename from upload where id = %s and (uploader = %s or %s = 'DF7CB')"""
 
 def v_download(request, id):
     # authentication
@@ -213,7 +213,7 @@ def v_download(request, id):
     username = message
 
     with connection.cursor() as cursor:
-        cursor.execute(q_download, [id, username])
+        cursor.execute(q_download, [id, username, username])
         adif, filename = cursor.fetchone()
 
     response = HttpResponse(adif, content_type='text/plain')
