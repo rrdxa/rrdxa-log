@@ -25,12 +25,13 @@ q_operator_stats = """
 select coalesce(operator, station_callsign) as operator,
   count(*) as qsos,
   count(distinct call) as calls,
-  count(distinct (call, band, major_mode)) filter (where band <> 'unknown') as calls_band_mode,
-  count(distinct dxcc) filter (where band <> 'unknown' and dxcc between 1 and 900) as dxccs,
-  count(distinct (dxcc, band, major_mode)) filter (where band <> 'unknown' and dxcc between 1 and 900) as dxccs_band_mode,
+  count(distinct (call, band, major_mode)) as calls_band_mode,
+  count(distinct dxcc)                           filter (where dxcc between 1 and 900) as dxccs,
+  count(distinct (dxcc, band, major_mode))       filter (where dxcc between 1 and 900) as dxccs_band_mode,
   count(distinct gridsquare) as grids,
-  count(distinct (gridsquare, band, major_mode)) filter (where band <> 'unknown' and gridsquare is not null) as grids_band_mode
-from log where start >= %s::date and start < %s::date + %s::interval {}
+  count(distinct (gridsquare, band, major_mode)) filter (where gridsquare is not null) as grids_band_mode
+from log
+where start >= %s::date and start < %s::date + %s::interval and band <> 'unknown' and major_mode <> 'unknown' {}
 group by coalesce(operator, station_callsign)
 order by qsos desc
 limit %s

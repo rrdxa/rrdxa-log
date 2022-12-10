@@ -20,7 +20,7 @@ create table rrdxa.log (
     band band not null,
     freq numeric,
     major_mode text not null,
-    mode text not null,
+    mode text,
     rsttx text,
     rstrx text,
     gridsquare varchar(4),
