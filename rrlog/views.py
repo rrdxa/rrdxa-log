@@ -24,6 +24,7 @@ left join dxcc on log.dxcc = dxcc.dxcc
 q_operator_stats = """
 select coalesce(operator, station_callsign) as operator,
   count(*) as qsos,
+  count(distinct start::date) as days_active,
   count(distinct call) as calls,
   count(distinct (call, band, major_mode)) as calls_band_mode,
   count(distinct dxcc)                           filter (where dxcc between 1 and 900) as dxccs,
