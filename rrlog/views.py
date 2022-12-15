@@ -147,7 +147,7 @@ def v_year(request, year):
 q_upload_list = """select uploader, id, ts,
 to_char(ts, 'DD.MM.YYYY HH24:MI') as ts_str,
 filename, station_callsign, operator, contest, qsos, error
-from upload where uploader = %s or %s = 'DF7CB' order by id desc"""
+from upload where uploader = %s or %s in ('DF7CB', 'DF7EE', 'DK2DQ') order by id desc"""
 
 def basic_auth(request):
     auth_header = request.META.get('HTTP_AUTHORIZATION', '')
@@ -203,7 +203,7 @@ def v_upload(request):
     }
     return render(request, 'rrlog/upload.html', context)
 
-q_download = """select adif, filename from upload where id = %s and (uploader = %s or %s = 'DF7CB')"""
+q_download = """select adif, filename from upload where id = %s and (uploader = %s or %s in ('DF7CB', 'DF7EE', 'DK2DQ'))"""
 
 def v_download(request, id):
     # authentication
