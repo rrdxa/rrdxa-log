@@ -57,7 +57,7 @@ def log_upload(connection, request, username):
                         raise Exception(f"{start} {qso.get('CALL')}: QSO without STATION_CALLSIGN and OPERATOR found in log, set station and/or operator in upload form")
 
                     call = upper(qso.get('CALL'))
-                    if 'DXCC' in qso:
+                    if 'DXCC' in qso and qso.get('DXCC').strip() != '':
                         dxcc = qso.get('DXCC')
                     else:
                         dxcc = country.lookup(call, start)
