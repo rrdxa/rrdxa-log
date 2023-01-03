@@ -2,8 +2,10 @@
 <thead>
 <tr>
  <th>Operator</th>
- <th>QSOs</th>
  <th>days active</th>
+ <th>QSOs</th>
+ <th>contest QSOs</th>
+ <th><b>RRDXA score</b></th>
  <th>unique calls</th>
  <th>calls/band+mode</th>
  <th>countries</th>
@@ -16,8 +18,10 @@
 {% for op in operators %}
  <tr>
  <td><a href="/log/call/{{op.operator|urlencode:''}}/">{{op.operator}}</a></td>
- <td>{{op.qsos}}</td>
  <td>{{op.days_active}}</td>
+ <td>{{op.qsos}}</td>
+ <td>{{op.contest_qsos}}</td>
+ <td><b>{{op.points}}</b></td>
  <td>{{op.calls}}</td>
  <td>{{op.calls_band_mode}}</td>
  <td>{{op.dxccs}}</td>
