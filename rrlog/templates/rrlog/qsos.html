@@ -25,7 +25,7 @@
  <td>{% if qso.country %}<a href="/log/dxcc/{{qso.country|urlencode:''}}/">{{qso.country}}</a>{% endif %}</td>
  <td>{{qso.band}}</td>
  <td>{{qso.freq|default_if_none:''}}</td>
- <td>{{qso.mode}}{% if qso.submode %}/{{qso.submode}}{% endif %}</td>
+ <td>{{qso.major_mode}}{% if qso.major_mode != qso.mode %} ({{qso.mode}}{% if qso.submode %}/{{qso.submode}}{% endif %}){% endif %}</td>
  <td>{{qso.rsttx|default_if_none:''}}</td>
  <td>{{qso.rstrx|default_if_none:''}}</td>
  <td>{% if qso.gridsquare %}<a href="/log/grid/{{qso.gridsquare}}/">{{qso.gridsquare}}</a>{% endif %}</td>
