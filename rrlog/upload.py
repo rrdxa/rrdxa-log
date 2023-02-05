@@ -47,8 +47,12 @@ def log_upload(connection, request, username):
         try:
             with transaction.atomic():
                 qsos, adif_headers = adif_io.read_from_string(adif)
+                upload_start, upload_stop = None, None
                 for qso in qsos:
                     start = adif_io.time_on(qso)
+                    upload_start = min(upload_start, start) if upload_start else start
+                    upload_stop = max(upload_stop, start) if upload_stop else start
+
                     qso_station = qso.get('STATION_CALLSIGN') or station_callsign \
                             or qso.get('OPERATOR') or operator
                     qso_operator = qso.get('OPERATOR') or operator \
@@ -93,7 +97,7 @@ def log_upload(connection, request, username):
                                     upload_id,
                                     qso,
                                     ])
-                cursor.execute("update upload set qsos = %s where id = %s", [len(qsos), upload_id])
+                cursor.execute("update upload set qsos = %s, start = %s, stop = %s where id = %s", [len(qsos), upload_start, upload_stop, upload_id])
 
         except Exception as e:
             cursor.execute("update upload set error = %s where id = %s", [str(e), upload_id])

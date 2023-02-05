@@ -2,6 +2,8 @@ create table rrdxa.upload (
     id serial primary key,
     uploader text not null,
     ts timestamptz(0) not null default now(),
+    start timestamptz(0),
+    stop timestamptz(0),
     filename text,
     station_callsign text,
     operator text,

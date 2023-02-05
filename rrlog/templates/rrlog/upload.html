@@ -37,13 +37,14 @@
  <th>uploader</th>
  <th>time</th>
  <th>QSOs</th>
- <th></th>
+ <th>timespan</th>
  <th>filename</th>
  <th></th>
  <th>station callsign</th>
  <th>operator</th>
  <th>contest</th>
  <th>errors</th>
+ <th></th>
 </tr>
 </thead>
 
@@ -52,21 +53,22 @@
  <td>{{upload.uploader}}</td>
  <td>{{upload.ts_str}}</td>
  <td>{{upload.qsos|default_if_none:'-'}}</td>
+ <td>{{upload.start_str|default_if_none:''}}-{{upload.stop_str|default_if_none:''}}</td>
+ <td><a href="/log/download/{{upload.id}}/">{{upload.filename|default_if_none:'logfile'}}</a></td>
  <td>
   <form action="/log/log/{{upload.id}}/" method="GET">
      <button type="submit">view</button>
-  </form>
- </td>
- <td><a href="/log/download/{{upload.id}}/">{{upload.filename|default_if_none:'logfile'}}</a></td>
- <td>
-  <form action="/log/upload/" method="POST">
-     <button name="delete" value="{{upload.id}}" type="submit">delete</button>
   </form>
  </td>
  <td><a href="/log/call/{{upload.station_callsign|urlencode:''}}/">{{upload.station_callsign|default_if_none:''}}</a></td>
  <td><a href="/log/call/{{upload.operator|urlencode:''}}/">{{upload.operator|default_if_none:''}}</a></td>
  <td>{% if upload.contest %}<a href="/log/contest/{{upload.contest|urlencode:''}}/">{{upload.contest}}</a>{% endif %}</td>
  <td>{{upload.error|default_if_none:''}}</td>
+ <td>
+  <form action="/log/upload/" method="POST">
+     <button name="delete" value="{{upload.id}}" type="submit">delete</button>
+  </form>
+ </td>
  </tr>
 {% endfor %}
 </ul>
