@@ -12,8 +12,8 @@ def upper(text):
     return text.upper()
 
 q_insert_qso = """insert into log
-(start, station_callsign, operator, call, dxcc, band, freq, major_mode, mode, rsttx, rstrx, gridsquare, contest, upload)
-values (date_trunc('minute', %s), %s, %s, %s, %s, coalesce(%s::band, %s::numeric::band), %s, major_mode(%s), %s, %s, %s, %s, %s, %s)
+(start, station_callsign, operator, call, dxcc, band, freq, major_mode, mode, submode, rsttx, rstrx, gridsquare, contest, upload)
+values (date_trunc('minute', %s), %s, %s, %s, %s, coalesce(%s::band, %s::numeric::band), %s, major_mode(%s, %s), %s, %s, %s, %s, %s, %s, %s)
 on conflict on constraint log_pkey do update set
 operator = excluded.operator,
 dxcc = excluded.dxcc,
@@ -21,6 +21,7 @@ band = excluded.band,
 freq = excluded.freq,
 major_mode = excluded.major_mode,
 mode = excluded.mode,
+submode = excluded.submode,
 rsttx = excluded.rsttx,
 rstrx = excluded.rstrx,
 gridsquare = excluded.gridsquare,
@@ -68,7 +69,8 @@ def log_upload(connection, request, username):
                     rstrx = ' '.join(filter(None, rx_rpts)) or None
 
                     freq = qso.get('FREQ')
-                    mode = upper(qso.get('MODE')),
+                    mode = upper(qso.get('MODE'))
+                    submode = upper(qso.get('SUBMODE'))
 
                     gridsquare = qso['GRIDSQUARE'][:4].upper() \
                         if 'GRIDSQUARE' in qso else None
@@ -81,7 +83,7 @@ def log_upload(connection, request, username):
                                     dxcc,
                                     lower(qso.get('BAND')),
                                     freq, freq,
-                                    mode, mode,
+                                    mode, submode, mode, submode,
                                     rsttx,
                                     rstrx,
                                     gridsquare,

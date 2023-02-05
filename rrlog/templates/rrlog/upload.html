@@ -84,6 +84,7 @@ DXCC (<a href="https://www.adif.org/314/ADIF_314.htm#DXCC_Entity_Code_Enumeratio
 FREQ,
 GRIDSQUARE (first 4 chars),
 MODE,
+SUBMODE,
 OPERATOR,
 QSO_DATE,
 RST_RCVD,
@@ -105,10 +106,20 @@ values given above will <em>not</em> override the callsigns in the logfile.
 </li>
 
 <li>
+Statistics are grouped by major mode:
+  <ul>
+  <li>CW</li>
+  <li>PHONE: SSB, FM, AM, DMR</li>
+  <li>FT8: FT8, FT4</li>
+  <li>DIGI: RTTY, PSK, HELL, SSTV, everything else</li>
+  </ul>
+</li>
+
+<li>
 Feel free to upload overlapping logfiles or to re-upload logfiles when some of
 the contents have changed. The new logfile will be merged into the database,
 replacing any already existing QSOs. QSOs are identified by matching time
-stamp, station callsign, DX callsign, band and major mode (CW, PHONE, DIGI).
+stamp, station callsign, DX callsign, band and major mode (CW, PHONE, DIGI, FT8).
 QSOs are associated with the last upload that contained them; deleting an
 upload will only delete the QSOs still associated with it.
 </li>

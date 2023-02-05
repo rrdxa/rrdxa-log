@@ -108,7 +108,7 @@ def v_month(request, year, month):
         operators = namedtuplefetchall(cursor)
 
         by_mode = {}
-        for major_mode in 'CW', 'PHONE', 'DIGI':
+        for major_mode in 'CW', 'PHONE', 'DIGI', 'FT8':
             cursor.execute(q_operator_stats.format(f" and major_mode = '{major_mode}'"), [date, date, '1 month', 200])
             by_mode[major_mode] = namedtuplefetchall(cursor)
 
@@ -121,6 +121,7 @@ def v_month(request, year, month):
         'cw_operators': by_mode['CW'],
         'phone_operators': by_mode['PHONE'],
         'digi_operators': by_mode['DIGI'],
+        'ft8_operators': by_mode['FT8'],
     }
     return render(request, 'rrlog/month.html', context)
 
@@ -131,7 +132,7 @@ def v_year(request, year):
         operators = namedtuplefetchall(cursor)
 
         by_mode = {}
-        for major_mode in 'CW', 'PHONE', 'DIGI':
+        for major_mode in 'CW', 'PHONE', 'DIGI', 'FT8':
             cursor.execute(q_operator_stats.format(f" and major_mode = '{major_mode}'"), [date, date, '1 year', 200])
             by_mode[major_mode] = namedtuplefetchall(cursor)
 
@@ -143,6 +144,7 @@ def v_year(request, year):
         'cw_operators': by_mode['CW'],
         'phone_operators': by_mode['PHONE'],
         'digi_operators': by_mode['DIGI'],
+        'ft8_operators': by_mode['FT8'],
     }
     return render(request, 'rrlog/year.html', context)
 
