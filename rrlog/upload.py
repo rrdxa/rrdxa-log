@@ -12,8 +12,8 @@ def upper(text):
     return text.upper()
 
 q_insert_qso = """insert into log
-(start, station_callsign, operator, call, dxcc, band, freq, major_mode, mode, submode, rsttx, rstrx, gridsquare, contest, upload)
-values (date_trunc('minute', %s), %s, %s, %s, %s, coalesce(%s::band, %s::numeric::band), %s, major_mode(%s, %s), %s, %s, %s, %s, %s, %s, %s)
+(start, station_callsign, operator, call, dxcc, band, freq, major_mode, mode, submode, rsttx, rstrx, gridsquare, contest, upload, adif)
+values (date_trunc('minute', %s), %s, %s, %s, %s, coalesce(%s::band, %s::numeric::band), %s, major_mode(%s, %s), %s, %s, %s, %s, %s, %s, %s, %s)
 on conflict on constraint log_pkey do update set
 operator = excluded.operator,
 dxcc = excluded.dxcc,
@@ -26,7 +26,9 @@ rsttx = excluded.rsttx,
 rstrx = excluded.rstrx,
 gridsquare = excluded.gridsquare,
 contest = excluded.contest,
-upload = excluded.upload"""
+upload = excluded.upload,
+adif = excluded.adif
+"""
 
 def log_upload(connection, request, username):
     data = request.POST
@@ -89,6 +91,7 @@ def log_upload(connection, request, username):
                                     gridsquare,
                                     qso.get('CONTEST_ID') or contest,
                                     upload_id,
+                                    qso,
                                     ])
                 cursor.execute("update upload set qsos = %s where id = %s", [len(qsos), upload_id])
 
