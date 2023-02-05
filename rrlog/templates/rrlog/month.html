@@ -3,23 +3,28 @@
 {% block content %}
 <h1>{{month}}</h1>
 
-<a href="/log/month/{{prev_month}}/">{{prev_month}} &lt;&lt;</a>
-<a href="/log/year/{{year}}/">{{year}}</a>
-<a href="/log/month/{{next_month}}/">&gt;&gt; {{next_month}}</a>
+<table border="0">
+<tr>
+<td><a href="/log/month/{{prev_month}}/">{{prev_month}} &lt;&lt;</a></td>
+<td><a href="/log/year/{{year}}/">{{year}}</a></td>
+<td><a href="/log/month/{{next_month}}/">&gt;&gt; {{next_month}}</a></td>
+<td><a href="/log/">return to main page</a></td>
+</tr>
+</table>
 
-<h2>All modes</h2>
+<h2><a href="/log/logbook/?{{qual}}">All modes</a></h2>
 {% include 'rrlog/operator_stats.html' %}
 
-<h2>CW</h2>
-{% include 'rrlog/operator_stats.html' with operators=cw_operators %}
+<h2><a href="/log/logbook/?{{qual}}&major_mode=CW">CW</a></h2>
+{% include 'rrlog/operator_stats.html' with major_mode='CW' operators=cw_operators %}
 
-<h2>PHONE</h2>
-{% include 'rrlog/operator_stats.html' with operators=phone_operators %}
+<h2><a href="/log/logbook/?{{qual}}&major_mode=PHONE">PHONE</a></h2>
+{% include 'rrlog/operator_stats.html' with major_mode='PHONE' operators=phone_operators %}
 
-<h2>DIGI</h2>
-{% include 'rrlog/operator_stats.html' with operators=digi_operators %}
+<h2><a href="/log/logbook/?{{qual}}&major_mode=DIGI">DIGI</a></h2>
+{% include 'rrlog/operator_stats.html' with major_mode='DIGI' operators=digi_operators %}
 
-<h2>FT8/FT4</h2>
-{% include 'rrlog/operator_stats.html' with operators=ft8_operators %}
+<h2><a href="/log/logbook/?{{qual}}&major_mode=FT8">FT8/FT4</a></h2>
+{% include 'rrlog/operator_stats.html' with major_mode='FT8' operators=ft8_operators %}
 
 {% endblock %}

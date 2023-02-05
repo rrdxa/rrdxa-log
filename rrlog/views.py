@@ -9,6 +9,7 @@ import base64
 from passlib.hash import phpass
 
 import datetime
+import re
 
 from rrlog.upload import log_upload
 from rrlog.utils import namedtuplefetchall
@@ -72,7 +73,8 @@ def index(request):
             'current_year_stats': current_year_stats,
             'previous_year': today.year - 1,
             'previous_year_stats': previous_year_stats,
-            'qsos': rows
+            'qsos': rows,
+            'urlpath': '/log/logbook/',
             }
     return render(request, 'rrlog/index.html', context)
 
@@ -81,8 +83,36 @@ def generic_view(request, title, where, arg):
         cursor.execute(q_log.format(where), arg)
         rows = namedtuplefetchall(cursor)
 
-    context = { 'title': title, 'qsos': rows }
+    context = { 'title': title, 'qsos': rows, 'show_main_link': True }
     return render(request, 'rrlog/log.html', context)
+
+def v_logbook(request):
+    title, quals, params = "Logbook", [], []
+
+    for key in request.GET:
+        param = request.GET[key]
+        if key == 'call':
+            title += f" for {param}"
+            quals.append("(station_callsign = %s or operator = %s or call = %s)")
+            params += [param, param, param]
+        elif key == 'dxcc':
+            quals.append("log.dxcc = %s") # ambiguous column name
+            params += [param]
+        elif key == 'year' and re.match('\d{4}$', param):
+            quals.append("start >= %s and start < %s")
+            params += [f"{param}-01-01", f"{int(param)+1}-01-01"]
+        elif key == 'month' and re.match('\d{4}-\d{1,2}$', param):
+            quals.append("start >= %s and start < %s::timestamptz + '1 month'::interval")
+            params += [f"{param}-01", f"{param}-01"]
+        elif key in ('station_callsign', 'operator', 'call', 'country',
+                     'band', 'major_mode', 'mode', 'submode', 'rsttx', 'rstrx',
+                     'gridsquare', 'contest',
+                     'upload'):
+            quals.append(f"{key} = %s")
+            params += [param]
+
+    qual = ('where ' + ' and '.join(quals)) if quals else ''
+    return generic_view(request, title, qual, params)
 
 def v_call(request, call):
     return generic_view(request, f"Log of {call}",
@@ -122,6 +152,7 @@ def v_month(request, year, month):
         'phone_operators': by_mode['PHONE'],
         'digi_operators': by_mode['DIGI'],
         'ft8_operators': by_mode['FT8'],
+        'qual': f"month={year}-{month:02}",
     }
     return render(request, 'rrlog/month.html', context)
 
@@ -145,6 +176,7 @@ def v_year(request, year):
         'phone_operators': by_mode['PHONE'],
         'digi_operators': by_mode['DIGI'],
         'ft8_operators': by_mode['FT8'],
+        'qual': f"year={year}",
     }
     return render(request, 'rrlog/year.html', context)
 

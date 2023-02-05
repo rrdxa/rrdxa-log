@@ -1,3 +1,32 @@
+{% load templatehelpers %}
+
+<table border="0">
+<tr>
+{% if request.GET %}
+{% for key, value in request.GET.items %}
+{% spaceless %}
+<td>
+<form action="/log/logbook/">
+  {% for key2, value2 in request.GET.items %}
+    {% if key2 != key %}
+    <input type="hidden" name="{{key2}}" value="{{value2}}" />
+    {% endif %}
+  {% endfor %}
+  <button type="submit">{{key}}: {{value}}</button>
+</form>
+</td>
+{% endspaceless %}
+{% endfor %}
+<td>click to remove filter</td>
+{% endif %}
+{% if show_main_link %}
+<td><a href="/log/">return to main page</a></td>
+{% endif %}
+</tr>
+</table>
+
+<br>
+
 <table border=0>
 <thead>
 <tr>
@@ -19,17 +48,26 @@
 {% for qso in qsos %}
  <tr>
  <td>{{qso.start_str}}</td>
- <td><a href="/log/call/{{qso.station_callsign|urlencode:''}}/">{{qso.station_callsign}}</a></td>
- <td>{% if qso.operator and qso.operator != qso.station_callsign %}<a href="/log/call/{{qso.operator|urlencode:''}}/">{{qso.operator}}</a>{% endif %}</td>
- <td><a href="/log/call/{{qso.call|urlencode:''}}/">{{qso.call}}</a></td>
- <td>{% if qso.country %}<a href="/log/dxcc/{{qso.country|urlencode:''}}/">{{qso.country}}</a>{% endif %}</td>
- <td>{{qso.band}}</td>
+ <td><a href="{{urlpath}}{% relative_url 'call' qso.station_callsign request.GET.urlencode %}">{{qso.station_callsign}}</a></td>
+ <td>{% if qso.operator and qso.operator != qso.station_callsign %}<a href="{{urlpath}}{% relative_url 'call' qso.operator request.GET.urlencode %}">{{qso.operator}}</a>{% endif %}</td>
+ <td><a href="{{urlpath}}{% relative_url 'call' qso.call request.GET.urlencode %}">{{qso.call}}</a></td>
+ <td>{% if qso.country %}<a href="{{urlpath}}{% relative_url 'country' qso.country request.GET.urlencode %}">{{qso.country}}</a>{% endif %}</td>
+ <td><a href="{{urlpath}}{% relative_url 'band' qso.band request.GET.urlencode %}">{{qso.band}}</a></td>
  <td>{{qso.freq|default_if_none:''}}</td>
- <td>{{qso.major_mode}}{% if qso.major_mode != qso.mode %} ({{qso.mode}}{% if qso.submode %}/{{qso.submode}}{% endif %}){% endif %}</td>
+ <td>{% spaceless %}
+     <a href="{{urlpath}}{% relative_url 'major_mode' qso.major_mode request.GET.urlencode %}">{{qso.major_mode}}</a>
+     {% if qso.major_mode != qso.mode %}
+       {% if qso.submode %}
+         (<a href="{{urlpath}}{% relative_url 'submode' qso.submode request.GET.urlencode %}">{{qso.mode}}/{{qso.submode}}</a>)
+       {% else %}
+         (<a href="{{urlpath}}{% relative_url 'mode' qso.mode request.GET.urlencode %}">{{qso.mode}}</a>)
+       {% endif %}
+     {% endif %}
+ {% endspaceless %}</td>
  <td>{{qso.rsttx|default_if_none:''}}</td>
  <td>{{qso.rstrx|default_if_none:''}}</td>
- <td>{% if qso.gridsquare %}<a href="/log/grid/{{qso.gridsquare}}/">{{qso.gridsquare}}</a>{% endif %}</td>
- <td>{% if qso.contest %}<a href="/log/contest/{{qso.contest|urlencode:''}}/">{{qso.contest}}</a>{% endif %}</td>
+ <td>{% if qso.gridsquare %}<a href="{{urlpath}}{% relative_url 'gridsquare' qso.gridsquare request.GET.urlencode %}">{{qso.gridsquare}}</a>{% endif %}</td>
+ <td>{% if qso.contest %}<a href="{{urlpath}}{% relative_url 'contest' qso.contest request.GET.urlencode %}">{{qso.contest}}</a>{% endif %}</td>
  </tr>
 {% endfor %}
 </ul>

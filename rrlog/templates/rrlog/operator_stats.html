@@ -17,7 +17,7 @@
 
 {% for op in operators %}
  <tr>
- <td><a href="/log/call/{{op.operator|urlencode:''}}/">{{op.operator}}</a></td>
+ <td><a href="/log/logbook/?{{qual}}{% if major_mode %}&major_mode={{major_mode}}{% endif %}&call={{op.operator|urlencode:''}}">{{op.operator}}</a></td>
  <td>{{op.days_active}}</td>
  <td>{{op.qsos}}</td>
  <td>{{op.contest_qsos}}</td>
