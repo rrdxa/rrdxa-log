@@ -1,107 +1,37 @@
-from django.db import transaction
-from rrlog import adif_io, country
-
-def lower(text):
-    if text == None:
-        return None
-    return text.lower()
-
-def upper(text):
-    if text == None:
-        return None
-    return text.upper()
-
-q_insert_qso = """insert into log
-(start, station_callsign, operator, call, dxcc, band, freq, major_mode, mode, submode, rsttx, rstrx, gridsquare, contest, upload, adif)
-values (date_trunc('minute', %s), %s, %s, %s, %s, coalesce(%s::band, %s::numeric::band), %s, major_mode(%s, %s), %s, %s, %s, %s, %s, %s, %s, %s)
-on conflict on constraint log_pkey do update set
-operator = excluded.operator,
-dxcc = excluded.dxcc,
-band = excluded.band,
-freq = excluded.freq,
-major_mode = excluded.major_mode,
-mode = excluded.mode,
-submode = excluded.submode,
-rsttx = excluded.rsttx,
-rstrx = excluded.rstrx,
-gridsquare = excluded.gridsquare,
-contest = excluded.contest,
-upload = excluded.upload,
-adif = excluded.adif
-"""
+from rrlog.utils import upper
+from rrlog.adif_upload import adif_upload
+from rrlog.cabrillo_upload import cabrillo_upload
 
 def log_upload(connection, request, username):
     data = request.POST
     filename = request.FILES['logfile'].name
-    adif = request.FILES['logfile'].read().decode(encoding='UTF-8', errors='backslashreplace')
+    content = request.FILES['logfile'].read().decode(encoding='UTF-8', errors='backslashreplace')
 
     station_callsign = upper(data.get('station_callsign')) or None
     operator = upper(data.get('operator')) or None
     contest = data.get('contest') or None
 
+    upper_content = upper(content)
+    if '<EOR>' in upper_content:
+        logtype = 'adif'
+    elif 'START-OF-LOG' in upper_content:
+        logtype = 'cabrillo'
+    else:
+        return "Supported log types are ADIF and Cabrillo, this seems like neither of them"
+
     with connection.cursor() as cursor:
         cursor.execute("insert into upload (uploader, filename, station_callsign, operator, contest, adif) values (%s, %s, %s, %s, %s, %s) returning id",
-                       [username, filename, station_callsign, operator, contest, adif])
+                       [username, filename, station_callsign, operator, contest, content])
         upload_id = cursor.fetchone()
 
         try:
-            with transaction.atomic():
-                qsos, adif_headers = adif_io.read_from_string(adif)
-                upload_start, upload_stop = None, None
-                for qso in qsos:
-                    start = adif_io.time_on(qso)
-                    upload_start = min(upload_start, start) if upload_start else start
-                    upload_stop = max(upload_stop, start) if upload_stop else start
-
-                    qso_station = qso.get('STATION_CALLSIGN') or station_callsign \
-                            or qso.get('OPERATOR') or operator
-                    qso_operator = qso.get('OPERATOR') or operator \
-                            or qso.get('STATION_CALLSIGN') or station_callsign
-                    if qso_station == qso_operator:
-                        qso_operator = None
-
-                    if not station_callsign and not operator:
-                        raise Exception(f"{start} {qso.get('CALL')}: QSO without STATION_CALLSIGN and OPERATOR found in log, set station and/or operator in upload form")
-
-                    call = upper(qso.get('CALL'))
-                    if 'DXCC' in qso and qso.get('DXCC').strip() != '':
-                        dxcc = qso.get('DXCC')
-                    else:
-                        dxcc = country.lookup(call, start)
-
-                    tx_rpts = [upper(qso.get('RST_SENT')), upper(qso.get('STX')), upper(qso.get('STX_STRING'))]
-                    rsttx = ' '.join(filter(None, tx_rpts)) or None
-                    rx_rpts = [upper(qso.get('RST_RCVD')), upper(qso.get('SRX')), upper(qso.get('SRX_STRING'))]
-                    rstrx = ' '.join(filter(None, rx_rpts)) or None
-
-                    freq = qso.get('FREQ')
-                    mode = upper(qso.get('MODE'))
-                    submode = upper(qso.get('SUBMODE'))
-
-                    gridsquare = qso['GRIDSQUARE'][:4].upper() \
-                        if 'GRIDSQUARE' in qso else None
-
-                    cursor.execute(q_insert_qso,
-                                   [start,
-                                    qso_station,
-                                    qso_operator,
-                                    call,
-                                    dxcc,
-                                    lower(qso.get('BAND')),
-                                    freq, freq,
-                                    mode, submode, mode, submode,
-                                    rsttx,
-                                    rstrx,
-                                    gridsquare,
-                                    qso.get('CONTEST_ID') or contest,
-                                    upload_id,
-                                    qso,
-                                    ])
-                cursor.execute("update upload set qsos = %s, start = %s, stop = %s where id = %s", [len(qsos), upload_start, upload_stop, upload_id])
-
+            if logtype == 'adif':
+                num_qsos = adif_upload(cursor, content, station_callsign, operator, contest, upload_id)
+            elif logtype == 'cabrillo':
+                num_qsos = cabrillo_upload(cursor, content, station_callsign, operator, contest, upload_id)
         except Exception as e:
             cursor.execute("update upload set error = %s where id = %s", [str(e), upload_id])
+            raise
             return e
 
-    return f"{len(qsos)} QSOs recorded in database"
-
+    return f"{num_qsos} QSOs recorded in database"

@@ -5,3 +5,13 @@ def namedtuplefetchall(cursor):
     desc = cursor.description
     nt_result = namedtuple('Result', [col[0] for col in desc])
     return [nt_result(*row) for row in cursor.fetchall()]
+
+def lower(text):
+    if text == None:
+        return None
+    return text.lower()
+
+def upper(text):
+    if text == None:
+        return None
+    return text.upper()
