@@ -83,6 +83,47 @@ def cabrillo_upload(cursor, content, station_callsign, operator, contest, upload
                             contest,
                             upload_id,
                             ])
-        cursor.execute("update upload set qsos = %s, start = %s, stop = %s where id = %s", [len(qsos), upload_start, upload_stop, upload_id])
+
+        cursor.execute("""update upload set
+qsos = %s,
+start = %s,
+stop = %s,
+contest = %s,
+operators = %s,
+club = %s,
+category_operator = %s,
+category_assisted = %s,
+category_band = %s,
+category_mode = %s,
+category_overlay = %s,
+category_power = %s,
+category_station = %s,
+category_time = %s,
+category_transmitter = %s,
+location = %s,
+grid_locator = %s,
+soapbox = %s,
+claimed_score = %s
+where id = %s""",
+                       [len(qsos),
+                        upload_start,
+                        upload_stop,
+                        contest,
+                        data.get('OPERATORS'),
+                        data.get('CLUB'),
+                        data.get('CATEGORY-OPERATOR'),
+                        data.get('CATEGORY-ASSISTED'),
+                        data.get('CATEGORY-BAND'),
+                        data.get('CATEGORY-MODE'),
+                        data.get('CATEGORY-OVERLAY'),
+                        data.get('CATEGORY-POWER'),
+                        data.get('CATEGORY-STATION'),
+                        data.get('CATEGORY-TIME'),
+                        data.get('CATEGORY-TRANSMITTER'),
+                        data.get('LOCATION'),
+                        data.get('GRID-LOCATOR'),
+                        data.get('SOAPBOX'),
+                        data.get('CLAIMED-SCORE'),
+                        upload_id])
 
     return len(qsos)

@@ -11,6 +11,24 @@ create table rrdxa.upload (
     qsos integer,
     error text,
     adif text
+    -- cabrillo fields
+    operators text,
+    club text,
+    category_operator text,
+    category_assisted text,
+    category_band text,
+    category_mode text,
+    category_overlay text,
+    category_power text,
+    category_station text,
+    category_time text,
+    category_transmitter text,
+    location text,
+    grid_locator text,
+    soapbox text,
+    claimed_score integer,
+    computed_score integer,
+    contest_number integer
 );
 
 create table rrdxa.log (
