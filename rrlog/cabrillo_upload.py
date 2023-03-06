@@ -3,17 +3,17 @@ import re
 from rrlog import cabrillo, country
 
 q_insert_qso = """insert into log
-(start, station_callsign, operator, call, dxcc, band, freq, major_mode, mode, rsttx, rstrx, contest, upload)
-values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+(start, station_callsign, operator, call, dxcc, band, freq, major_mode, mode, rsttx, extx, rstrx, exrx, contest, upload)
+values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
 on conflict on constraint log_pkey do update set
 operator = excluded.operator,
-dxcc = excluded.dxcc,
-band = excluded.band,
-freq = excluded.freq,
-major_mode = excluded.major_mode,
-mode = excluded.mode,
+dxcc = coalesce(excluded.dxcc, log.dxcc),
+freq = coalesce(excluded.freq, log.freq),
+mode = coalesce(excluded.mode, log.mode),
 rsttx = excluded.rsttx,
+extx = excluded.extx,
 rstrx = excluded.rstrx,
+exrx = excluded.exrx,
 contest = excluded.contest,
 upload = excluded.upload
 """
@@ -43,9 +43,6 @@ def cabrillo_upload(cursor, content, station_callsign, operator, contest, upload
             call = qso['call'].upper()
             dxcc = country.lookup(call, start)
 
-            rsttx = qso['rsttx'] + ' ' + qso['extx']
-            rstrx = qso['rstrx'] + ' ' + qso['exrx']
-
             freq = qso['freq'] / 1000
             if qso['band'] >= 2:
                 band = str(int(qso['band'])) + 'm'
@@ -70,7 +67,7 @@ def cabrillo_upload(cursor, content, station_callsign, operator, contest, upload
                 mode = 'RTTY'
             elif major_mode == 'DG':
                 major_mode = 'DIGI'
-                mode = 'DIGI'
+                mode = None
 
             cursor.execute(q_insert_qso,
                            [start,
@@ -79,7 +76,8 @@ def cabrillo_upload(cursor, content, station_callsign, operator, contest, upload
                             dxcc,
                             band, freq,
                             major_mode, mode,
-                            rsttx, rstrx,
+                            qso['rsttx'], qso['extx'],
+                            qso['rstrx'], qso['exrx'],
                             contest,
                             upload_id,
                             ])

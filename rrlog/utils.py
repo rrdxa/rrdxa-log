@@ -15,3 +15,6 @@ def upper(text):
     if text == None:
         return None
     return text.upper()
+
+def concat(strings):
+    return ' '.join(filter(None, strings)) or None

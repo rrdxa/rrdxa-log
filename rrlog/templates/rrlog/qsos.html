@@ -64,8 +64,8 @@
        {% endif %}
      {% endif %}
  {% endspaceless %}</td>
- <td>{{qso.rsttx|default_if_none:''}}</td>
- <td>{{qso.rstrx|default_if_none:''}}</td>
+ <td>{{qso.rsttx|default_if_none:''}} {{qso.extx|default_if_none:''}}</td>
+ <td>{{qso.rstrx|default_if_none:''}} {{qso.exrx|default_if_none:''}}</td>
  <td>{% if qso.gridsquare %}<a href="{{urlpath}}{% relative_url 'gridsquare' qso.gridsquare request.GET.urlencode %}">{{qso.gridsquare}}</a>{% endif %}</td>
  <td>{% if qso.contest %}<a href="{{urlpath}}{% relative_url 'contest' qso.contest request.GET.urlencode %}">{{qso.contest}}</a>{% endif %}</td>
  </tr>

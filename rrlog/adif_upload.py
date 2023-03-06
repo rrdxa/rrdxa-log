@@ -1,22 +1,22 @@
 from django.db import transaction
 from rrlog import adif_io, country
-from rrlog.utils import lower, upper
+from rrlog.utils import lower, upper, concat
 
 q_insert_qso = """insert into log
-(start, station_callsign, operator, call, dxcc, band, freq, major_mode, mode, submode, rsttx, rstrx, gridsquare, contest, upload, adif)
-values (date_trunc('minute', %s), %s, %s, %s, %s, coalesce(%s::band, %s::numeric::band), %s, major_mode(%s, %s), %s, %s, %s, %s, %s, %s, %s, %s)
+(start, station_callsign, operator, call, dxcc, band, freq, major_mode, mode, submode, rsttx, extx, rstrx, exrx, gridsquare, contest, upload, adif)
+values (date_trunc('minute', %s), %s, %s, %s, %s, coalesce(%s::band, %s::numeric::band), %s, major_mode(%s, %s), %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
 on conflict on constraint log_pkey do update set
-operator = excluded.operator,
-dxcc = excluded.dxcc,
-band = excluded.band,
-freq = excluded.freq,
-major_mode = excluded.major_mode,
-mode = excluded.mode,
-submode = excluded.submode,
-rsttx = excluded.rsttx,
-rstrx = excluded.rstrx,
-gridsquare = excluded.gridsquare,
-contest = excluded.contest,
+operator =   coalesce(excluded.operator, log.operator),
+dxcc =       coalesce(excluded.dxcc, log.dxcc),
+freq =       coalesce(excluded.freq, log.freq),
+mode =       coalesce(excluded.mode, log.mode),
+submode =    coalesce(excluded.submode, log.submode),
+rsttx =      coalesce(excluded.rsttx, log.rsttx),
+extx =       coalesce(excluded.extx, log.extx),
+rstrx =      coalesce(excluded.rstrx, log.rstrx),
+exrx =       coalesce(excluded.exrx, log.exrx),
+gridsquare = coalesce(excluded.gridsquare, log.gridsquare),
+contest =    coalesce(excluded.contest, log.contest),
 upload = excluded.upload,
 adif = excluded.adif
 """
@@ -47,11 +47,6 @@ def adif_upload(cursor, content, station_callsign, operator, contest, upload_id)
             else:
                 dxcc = country.lookup(call, start)
 
-            tx_rpts = [upper(qso.get('RST_SENT')), upper(qso.get('STX')), upper(qso.get('STX_STRING'))]
-            rsttx = ' '.join(filter(None, tx_rpts)) or None
-            rx_rpts = [upper(qso.get('RST_RCVD')), upper(qso.get('SRX')), upper(qso.get('SRX_STRING'))]
-            rstrx = ' '.join(filter(None, rx_rpts)) or None
-
             freq = qso.get('FREQ')
             mode = upper(qso.get('MODE'))
             submode = upper(qso.get('SUBMODE'))
@@ -68,8 +63,10 @@ def adif_upload(cursor, content, station_callsign, operator, contest, upload_id)
                             lower(qso.get('BAND')),
                             freq, freq,
                             mode, submode, mode, submode,
-                            rsttx,
-                            rstrx,
+                            upper(qso.get('RST_SENT')),
+                            concat([upper(qso.get('STX')), upper(qso.get('STX_STRING'))]),
+                            upper(qso.get('RST_RCVD')),
+                            concat([upper(qso.get('SRX')), upper(qso.get('SRX_STRING'))]),
                             gridsquare,
                             qso.get('CONTEST_ID') or contest,
                             upload_id,
