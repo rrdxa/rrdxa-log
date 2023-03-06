@@ -6,16 +6,16 @@ q_insert_qso = """insert into log
 (start, station_callsign, operator, call, dxcc, band, freq, major_mode, mode, rsttx, extx, rstrx, exrx, contest, upload)
 values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
 on conflict on constraint log_pkey do update set
-operator = excluded.operator,
-dxcc = coalesce(excluded.dxcc, log.dxcc),
-freq = coalesce(excluded.freq, log.freq),
-mode = coalesce(excluded.mode, log.mode),
-rsttx = excluded.rsttx,
-extx = excluded.extx,
-rstrx = excluded.rstrx,
-exrx = excluded.exrx,
-contest = excluded.contest,
-upload = excluded.upload
+operator = coalesce(excluded.operator, log.operator),
+dxcc =     coalesce(excluded.dxcc, log.dxcc),
+freq =     coalesce(excluded.freq, log.freq),
+mode =     coalesce(excluded.mode, log.mode),
+rsttx =    excluded.rsttx,
+extx =     excluded.extx,
+rstrx =    excluded.rstrx,
+exrx =     excluded.exrx,
+contest =  excluded.contest,
+upload =   excluded.upload
 """
 
 def cabrillo_upload(cursor, content, station_callsign, operator, contest, upload_id):
