@@ -16,7 +16,7 @@ from rrlog.utils import namedtuplefetchall
 
 q_log = """
 select log.*, dxcc.country,
-to_char(start, 'DD.MM.YYYY HH24:MI') as start_str
+to_char(start, 'DD.MM.YYYY') as start_str
 from log
 left join dxcc on log.dxcc = dxcc.dxcc
 {} order by start desc limit 500
