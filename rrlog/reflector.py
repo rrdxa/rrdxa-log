@@ -26,26 +26,45 @@ claimed_score
 from upload where id = %s
 """
 
-# operating time is computed as follows: each QSO is assigned the aligned
-# 10-minute interval in which it took place, and then the number of distinct
-# intervals is counted. Since multiple bands can be used within an interval,
-# the total op time will usually be less than the sum of the band times.
+# operating time is computed as follows: each QSO is assigned a time range
+# around its start time. If the time distance to the QSO before/after is at
+# most 15min, then the range starts/ends at half that distance. Otherwise, the
+# range border is 1min before/after. (This treats the first/last QSO the same
+# as the first/last after/before a break, which could also use different
+# numbers.)
 
-q_qso_summary = """with data as (
+q_qso_summary = """
+with log_with_op_time as (
+    select band, mode, dxcc,
+        tstzrange(
+        case
+            --when lag(start) over (order by start) is null then start - '1 min'::interval
+            when lag(start) over (order by start) >= start - '15 min'::interval then
+                start - (start - lag(start) over (order by start))/2
+            else start - '1 min'::interval
+        end,
+        case
+            --when lead(start) over (order by start) is null then start + '1 min'::interval
+            when lead(start) over (order by start) <= start + '15 min'::interval then
+                start + (lead(start) over (order by start) - start)/2
+            else start + '1 min'::interval
+        end, '[]') qso_op_time
+    from log where upload = %s
+),
+data as (
     select
         band::text,
         mode::text,
         count(*) as qsos,
         count(distinct dxcc) as dxccs,
-        range_agg(qso_time_interval(start, '10 min'::interval)) as time_intervals
-    from log
-    where upload = %s
+        op_time(range_agg(qso_op_time))
+    from log_with_op_time
     group by band, mode
-    order by band desc, mode
+    order by band::band desc, mode
 )
-select band, mode, qsos, dxccs, op_time(time_intervals)::text from data
+select band, mode, qsos, dxccs, op_time::text, round(3600 * qsos / extract(epoch from op_time)) as rate from data
 union all
-select '', '', sum(qsos), sum(dxccs), op_time(range_agg(time_intervals))::text from data
+select '', '', sum(qsos), sum(dxccs), sum(op_time)::text, round(3600 * sum(qsos) / extract(epoch from sum(op_time))) from data
 """
 
 def post_summary(cursor, upload_id, send=True):
@@ -83,9 +102,9 @@ def post_summary(cursor, upload_id, send=True):
     if data.category_assisted:    mail += f"Assisted:    {data.category_assisted}\n"
     mail += "\n"
 
-    mail += "Band  Mode  QSOs  DXCCs  Time\n"
+    mail += "Band  Mode  QSOs  DXCCs  Time   Rate\n"
     for b in summary:
-        mail += f"{b.band:4}  {b.mode:4}  {b.qsos:4}  {b.dxccs:5}  {b.op_time[:-3]}\n"
+        mail += f"{b.band:4}  {b.mode:4}  {b.qsos:4}  {b.dxccs:5}  {b.op_time[:-3]:5}  {b.rate:4}\n"
     mail += "\n"
 
     if data.claimed_score: mail += f"Claimed score: {data.claimed_score}\n\n"
