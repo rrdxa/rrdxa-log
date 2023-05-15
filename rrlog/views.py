@@ -184,7 +184,8 @@ q_upload_list = """select uploader, id, ts,
 to_char(ts, 'DD.MM.YYYY HH24:MI') as ts_str,
 qsos, to_char(start, 'DD.MM.YYYY') as start_str, to_char(stop, 'DD.MM.YYYY') as stop_str,
 filename, station_callsign, operator, contest, error
-from upload where uploader = %s or %s in ('DF7CB', 'DF7EE', 'DK2DQ') order by id desc"""
+from upload where uploader = %s or %s in ('DF7CB', 'DF7EE', 'DK2DQ')
+order by id desc limit 100"""
 
 def basic_auth(request):
     auth_header = request.META.get('HTTP_AUTHORIZATION', '')
