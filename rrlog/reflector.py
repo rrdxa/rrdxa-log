@@ -26,15 +26,26 @@ claimed_score
 from upload where id = %s
 """
 
+# operating time is computed as follows: each QSO is assigned the aligned
+# 10-minute interval in which it took place, and then the number of distinct
+# intervals is counted. Since multiple bands can be used within an interval,
+# the total op time will usually be less than the sum of the band times.
+
 q_qso_summary = """with data as (
-    select band::text, mode::text, count(*) as qsos, count(distinct dxcc) as dxccs from log
+    select
+        band::text,
+        mode::text,
+        count(*) as qsos,
+        count(distinct dxcc) as dxccs,
+        range_agg(qso_time_interval(start, '10 min'::interval)) as time_intervals
+    from log
     where upload = %s
     group by band, mode
     order by band desc, mode
 )
-select * from data
+select band, mode, qsos, dxccs, op_time(time_intervals)::text from data
 union all
-select '', '', sum(qsos), sum(dxccs) from data
+select '', '', sum(qsos), sum(dxccs), op_time(range_agg(time_intervals))::text from data
 """
 
 def post_summary(cursor, upload_id):
@@ -66,9 +77,9 @@ def post_summary(cursor, upload_id):
     if data.category_transmitter: mail += f"Transmitter: {data.category_transmitter}\n"
     mail += "\n"
 
-    mail += "Band  Mode  QSOs  DXCCs\n"
+    mail += "Band  Mode  QSOs  DXCCs  Time\n"
     for b in summary:
-        mail += f"{b.band:4}  {b.mode:4}  {b.qsos:4}  {b.dxccs:5}\n"
+        mail += f"{b.band:4}  {b.mode:4}  {b.qsos:4}  {b.dxccs:5}  {b.op_time[:-3]}\n"
     mail += "\n"
 
     if data.claimed_score: mail += f"Claimed score: {data.claimed_score}\n\n"
