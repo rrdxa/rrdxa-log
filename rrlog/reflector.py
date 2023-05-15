@@ -48,19 +48,24 @@ union all
 select '', '', sum(qsos), sum(dxccs), op_time(range_agg(time_intervals))::text from data
 """
 
-def post_summary(cursor, upload_id):
+def post_summary(cursor, upload_id, send=True):
     cursor.execute(q_upload_data, [upload_id])
     data = namedtuplefetchall(cursor)[0]
-    cursor.execute(q_qso_summary, upload_id)
+    cursor.execute(q_qso_summary, [upload_id])
     summary = namedtuplefetchall(cursor)
 
-    # build content
-    subject = f"{data.station_callsign} {data.contest}"
+    # build subject
+    subject = f"{data.station_callsign} {data.contest} {data.category_operator}"
+    if data.category_band and data.category_band != 'ALL': subject += f" {data.category_band}"
+    if data.category_mode and data.category_mode != 'ALL': subject += f" {data.category_mode}"
+    if data.category_assisted: subject += f" {data.category_power} {data.category_assisted}"
 
+    # build content
     mail = f"{subject}\n\n"
 
     mail +=                               f"Callsign:    {data.station_callsign}\n"
-    if data.operators:            mail += f"Operators:   {data.operators}\n"
+    if data.operators and data.operators != data.station_callsign:
+                                  mail += f"Operators:   {data.operators}\n"
     if data.club:                 mail += f"Club:        {data.club}\n"
     if data.location:             mail += f"Location:    {data.location}\n"
     if data.grid_locator:         mail += f"Locator:     {data.grid_locator}\n"
@@ -68,13 +73,14 @@ def post_summary(cursor, upload_id):
 
     if data.contest:              mail += f"Contest:     {data.contest}\n"
     if data.category_operator:    mail += f"Category:    {data.category_operator}\n"
-    if data.category_mode:        mail += f"Mode:        {data.category_mode}\n"
     if data.category_band:        mail += f"Band:        {data.category_band}\n"
+    if data.category_mode:        mail += f"Mode:        {data.category_mode}\n"
     if data.category_power:       mail += f"Power:       {data.category_power}\n"
-    if data.category_assisted:    mail += f"Assisted:    {data.category_assisted}\n"
     if data.category_overlay:     mail += f"Overlay:     {data.category_overlay}\n"
     if data.category_time:        mail += f"Time:        {data.category_time}\n"
-    if data.category_transmitter: mail += f"Transmitter: {data.category_transmitter}\n"
+    if data.category_transmitter and data.category_transmitter != 'ONE':
+                                  mail += f"Transmitter: {data.category_transmitter}\n"
+    if data.category_assisted:    mail += f"Assisted:    {data.category_assisted}\n"
     mail += "\n"
 
     mail += "Band  Mode  QSOs  DXCCs  Time\n"
@@ -85,16 +91,19 @@ def post_summary(cursor, upload_id):
     if data.claimed_score: mail += f"Claimed score: {data.claimed_score}\n\n"
 
     if data.soapbox:
-        mail += f"Soapbox:\n\n{data.soapbox}\n"
+        mail += f"Soapbox:\n\n{data.soapbox}\n\n"
 
     # send it
-    msg = EmailMessage()
-    msg['Message-Id'] = f"<cabrillo-upload-{upload_id}@rrdxa.org>"
-    msg['From'] = f"{data.uploader} via rrdxa.org <logbook@rrdxa.org>"
-    msg['To'] = f"{data.contest} score <rrdxa@mailman.qth.net>"
-    msg['Subject'] = subject
-    msg['X-Callsign'] = data.station_callsign
-    msg['X-Contest'] = data.contest
-    msg.set_content(mail)
-    with smtplib.SMTP('localhost') as smtp:
-        smtp.send_message(msg)
+    if send:
+        msg = EmailMessage()
+        msg['Message-Id'] = f"<cabrillo-upload-{upload_id}@rrdxa.org>"
+        msg['From'] = f"{data.uploader} via rrdxa.org <logbook@rrdxa.org>"
+        msg['To'] = f"{data.contest} score submission <rrdxa@mailman.qth.net>"
+        msg['Subject'] = subject
+        msg['X-Callsign'] = data.station_callsign
+        msg['X-Contest'] = data.contest
+        msg.set_content(mail)
+        with smtplib.SMTP('localhost') as smtp:
+            smtp.send_message(msg)
+
+    return mail

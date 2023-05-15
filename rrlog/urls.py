@@ -15,5 +15,6 @@ urlpatterns = [
 
     path('upload/', views.v_upload, name='upload'),
     path('download/<int:id>/', views.v_download, name='download'),
+    path('summary/<int:id>/', views.v_summary, name='summary'),
 ]
 

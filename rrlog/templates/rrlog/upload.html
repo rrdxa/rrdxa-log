@@ -52,6 +52,7 @@ A summary of QSOs and DXCCs by band is computed from the log."></textarea></td>
  <th>timespan</th>
  <th>filename</th>
  <th></th>
+ <th></th>
  <th>station callsign</th>
  <th>operator</th>
  <th>contest</th>
@@ -72,6 +73,13 @@ A summary of QSOs and DXCCs by band is computed from the log."></textarea></td>
      <input type="hidden" name="upload" value="{{upload.id}}" />
      <button type="submit">view</button>
   </form>
+ </td>
+ <td>
+  {% if upload.category_operator %}
+  <form action="/log/summary/{{upload.id}}/" method="GET">
+     <button type="submit">summary</button>
+  </form>
+  {% endif %}
  </td>
  <td><a href="/log/logbook/?call={{upload.station_callsign|urlencode:''}}">{{upload.station_callsign|default_if_none:''}}</a></td>
  <td><a href="/log/logbook/?call={{upload.operator|urlencode:''}}">{{upload.operator|default_if_none:''}}</a></td>

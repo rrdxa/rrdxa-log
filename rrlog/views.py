@@ -13,6 +13,7 @@ import re
 
 from rrlog.upload import log_upload
 from rrlog.utils import namedtuplefetchall
+from rrlog.reflector import post_summary
 
 q_log = """
 select log.*, dxcc.country,
@@ -183,7 +184,7 @@ def v_year(request, year):
 q_upload_list = """select uploader, id, ts,
 to_char(ts, 'DD.MM.YYYY HH24:MI') as ts_str,
 qsos, to_char(start, 'DD.MM.YYYY') as start_str, to_char(stop, 'DD.MM.YYYY') as stop_str,
-filename, station_callsign, operator, contest, error
+filename, station_callsign, operator, contest, category_operator, error
 from upload where uploader = %s or %s in ('DF7CB', 'DF7EE', 'DK2DQ')
 order by id desc limit 100"""
 
@@ -258,4 +259,11 @@ def v_download(request, id):
 
     response = HttpResponse(adif, content_type='text/plain')
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
+def v_summary(request, id):
+    with connection.cursor() as cursor:
+        mail = post_summary(cursor, id, send=False)
+
+    response = HttpResponse(mail, content_type='text/plain')
     return response
