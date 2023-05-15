@@ -1,6 +1,7 @@
 from rrlog.utils import upper
 from rrlog.adif_upload import adif_upload
 from rrlog.cabrillo_upload import cabrillo_upload
+from rrlog.reflector import post_summary
 
 def log_upload(connection, request, username):
     data = request.POST
@@ -29,6 +30,17 @@ def log_upload(connection, request, username):
                 num_qsos = adif_upload(cursor, content, station_callsign, operator, contest, upload_id)
             elif logtype == 'cabrillo':
                 num_qsos = cabrillo_upload(cursor, content, station_callsign, operator, contest, upload_id)
+
+                # prepend soapbox from form to soapbox in cabrillo file
+                soapbox = data.get('soapbox') or None
+                if soapbox:
+                    cursor.execute("update upload set soapbox = concat_ws(E'\n\n', %s, soapbox) where id = %s", [soapbox, upload_id])
+
+                # post summary to reflector
+                reflector = data.get('reflector') or None
+                if reflector:
+                    post_summary(cursor, upload_id)
+
         except Exception as e:
             cursor.execute("update upload set error = %s where id = %s", [str(e), upload_id])
             raise
