@@ -69,7 +69,10 @@ select '', '', sum(qsos), sum(dxccs), sum(op_time)::text, round(3600 * sum(qsos)
 
 def post_summary(cursor, upload_id, send=True):
     cursor.execute(q_upload_data, [upload_id])
-    data = namedtuplefetchall(cursor)[0]
+    data_arr = namedtuplefetchall(cursor)
+    if len(data_arr) == 0:
+        return "No data found"
+    data = data_arr[0]
     cursor.execute(q_qso_summary, [upload_id])
     summary = namedtuplefetchall(cursor)
 
@@ -102,10 +105,13 @@ def post_summary(cursor, upload_id, send=True):
     if data.category_assisted:    mail += f"Assisted:    {data.category_assisted}\n"
     mail += "\n"
 
-    mail += "Band  Mode  QSOs  DXCCs  Time   Rate\n"
-    for b in summary:
-        mail += f"{b.band:4}  {b.mode:4}  {b.qsos:4}  {b.dxccs:5}  {b.op_time[:-3]:5}  {b.rate:4}\n"
-    mail += "\n"
+    if len(summary) > 1: # skip table if it doesn't have band data
+        mail += "Band  Mode  QSOs  DXCCs  Time   Rate\n"
+        for b in summary:
+            mail += f"{b.band:4}  {b.mode:4}  {b.qsos:4}  {b.dxccs:5}  {b.op_time[:-3]:5}  {b.rate:4}\n"
+        mail += "\n"
+    else:
+        mail += "No QSO data found\n\n"
 
     if data.claimed_score: mail += f"Claimed score: {data.claimed_score}\n\n"
 
