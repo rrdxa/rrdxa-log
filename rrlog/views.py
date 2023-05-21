@@ -257,7 +257,7 @@ def v_download(request, id):
         cursor.execute(q_download, [id, username, username])
         adif, filename = cursor.fetchone()
 
-    response = HttpResponse(adif, content_type='text/plain')
+    response = HttpResponse(adif, content_type='text/plain; charset=utf-8')
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
     return response
 
@@ -265,5 +265,5 @@ def v_summary(request, id):
     with connection.cursor() as cursor:
         mail = post_summary(cursor, id, send=False)
 
-    response = HttpResponse(mail, content_type='text/plain')
+    response = HttpResponse(mail, content_type='text/plain; charset=utf-8')
     return response
