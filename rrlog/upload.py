@@ -23,7 +23,7 @@ def log_upload(connection, request, username):
     with connection.cursor() as cursor:
         cursor.execute("insert into upload (uploader, filename, station_callsign, operator, contest, adif) values (%s, %s, %s, %s, %s, %s) returning id",
                        [username, filename, station_callsign, operator, contest, content])
-        upload_id = cursor.fetchone()
+        (upload_id,) = cursor.fetchone()
 
         try:
             if logtype == 'adif':
