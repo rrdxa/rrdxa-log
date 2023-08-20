@@ -1,0 +1,10 @@
+#!/bin/sh
+
+set -eux
+
+APIKEY=$(cat ~/.priv/pw/clublog-api-key)
+
+mkdir -p data
+
+curl -f -o data/clublog.xml.gz https://cdn.clublog.org/cty.php?api=$APIKEY
+gunzip -f data/clublog.xml.gz
