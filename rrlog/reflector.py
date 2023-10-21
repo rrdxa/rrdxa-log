@@ -55,7 +55,7 @@ data as (
     select
         band::text,
         mode::text,
-        count(*) as qsos,
+        count(distinct call) as qsos,
         count(distinct dxcc) as dxccs,
         op_time(range_agg(qso_op_time))
     from log_with_op_time
