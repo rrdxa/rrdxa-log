@@ -35,7 +35,7 @@ from upload where id = %s
 
 q_qso_summary = """
 with log_with_op_time as (
-    select band, mode, dxcc,
+    select call, band, mode, dxcc,
         tstzrange(
         case
             --when lag(start) over (order by start) is null then start - '1 min'::interval
