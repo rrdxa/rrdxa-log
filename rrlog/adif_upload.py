@@ -17,7 +17,6 @@ rstrx =      coalesce(excluded.rstrx, log.rstrx),
 exrx =       coalesce(excluded.exrx, log.exrx),
 gridsquare = coalesce(excluded.gridsquare, log.gridsquare),
 contest =    coalesce(excluded.contest, log.contest),
-upload = excluded.upload,
 adif = excluded.adif
 """
 
