@@ -28,7 +28,7 @@ create table rrdxa.upload (
     soapbox text,
     claimed_score integer,
     computed_score integer,
-    contest_number integer
+    event_id integer references event(event_id)
 );
 
 create table rrdxa.log (
