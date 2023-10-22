@@ -58,6 +58,7 @@ Summary and soapbox will be mailed to the RRDXA reflector."></textarea></td>
  <th>station callsign</th>
  <th>operator</th>
  <th>contest</th>
+ <th>event</th>
  <th>errors</th>
  <th></th>
 </tr>
@@ -86,6 +87,7 @@ Summary and soapbox will be mailed to the RRDXA reflector."></textarea></td>
  <td><a href="/log/logbook/?call={{upload.station_callsign|urlencode:''}}">{{upload.station_callsign|default_if_none:''}}</a></td>
  <td><a href="/log/logbook/?call={{upload.operator|urlencode:''}}">{{upload.operator|default_if_none:''}}</a></td>
  <td>{% if upload.contest %}<a href="/log/logbook/?contest={{upload.contest|urlencode:''}}">{{upload.contest}}</a>{% endif %}</td>
+ <td>{% if upload.event_id %}<a href="/log/event/{{upload.event|urlencode:''}}">{{upload.event}}</a>{% endif %}</td>
  <td>{{upload.error|default_if_none:''}}</td>
  <td>
   <form action="/log/upload/" method="POST">

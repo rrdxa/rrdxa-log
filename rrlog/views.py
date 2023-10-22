@@ -129,6 +129,24 @@ def v_grid(request, grid):
 def v_contest(request, contest):
     return generic_view(request, f"Log entries from {contest}", 'where contest = %s', [contest])
 
+q_event = """
+select station_callsign, operators, contest, qsos, claimed_score
+from upload u join event e on u.event_id = e.event_id
+where e.event = %s
+order by claimed_score desc, qsos asc
+"""
+
+def v_event(request, event):
+    with connection.cursor() as cursor:
+        cursor.execute(q_operator_stats, [event])
+        entries = namedtuplefetchall(cursor)
+
+    context = {
+        'event': event,
+        'entries': entries,
+    }
+    return render(request, 'rrlog/event.html', context)
+
 def v_log(request, log):
     return generic_view(request, f"QSOs in upload {log}", 'where upload = %s', [log])
 
@@ -184,8 +202,11 @@ def v_year(request, year):
 q_upload_list = """select uploader, id, ts,
 to_char(ts, 'DD.MM.YYYY HH24:MI') as ts_str,
 qsos, to_char(start, 'DD.MM.YYYY') as start_str, to_char(stop, 'DD.MM.YYYY') as stop_str,
-filename, station_callsign, operator, contest, category_operator, error
-from upload where uploader = %s or %s in ('DF7CB', 'DF7EE', 'DK2DQ')
+filename, category_operator,
+station_callsign, operator, contest, e.event_id, event,
+error
+from upload u left join event e on u.event_id = e.event_id
+where uploader = %s or %s in ('DF7CB', 'DF7EE', 'DK2DQ')
 order by id desc limit 100"""
 
 def basic_auth(request):

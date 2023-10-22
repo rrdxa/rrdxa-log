@@ -1,0 +1,66 @@
+{% extends 'rrlog/rrdxa.html' %}
+
+{% block content %}
+<h1>RRDXA entries in {% event %}</h1>
+
+<div>
+<b>{{message|default_if_none:''}}</b>
+</div>
+
+<h2>Your uploads</h2>
+
+<table border=0>
+<thead>
+<tr>
+ <th>Uploader</th>
+ <th>time</th>
+ <th>QSOs</th>
+ <th>timespan</th>
+ <th>filename</th>
+ <th></th>
+ <th></th>
+ <th>station callsign</th>
+ <th>operator</th>
+ <th>contest</th>
+ <th>event</th>
+ <th>errors</th>
+ <th></th>
+</tr>
+</thead>
+
+{% for upload in entries %}
+ <tr>
+ <td>{{upload.uploader}}</td>
+ <td>{{upload.ts_str}}</td>
+ <td>{{upload.qsos|default_if_none:'-'}}</td>
+ <td>{{upload.start_str|default_if_none:''}}-{{upload.stop_str|default_if_none:''}}</td>
+ <td><a href="/log/download/{{upload.id}}/">{{upload.filename|default_if_none:'logfile'}}</a></td>
+ <td>
+  <form action="/log/logbook/" method="GET">
+     <input type="hidden" name="upload" value="{{upload.id}}" />
+     <button type="submit">view</button>
+  </form>
+ </td>
+ <td>
+  {% if upload.category_operator %}
+  <form action="/log/summary/{{upload.id}}/" method="GET">
+     <button type="submit">summary</button>
+  </form>
+  {% endif %}
+ </td>
+ <td><a href="/log/logbook/?call={{upload.station_callsign|urlencode:''}}">{{upload.station_callsign|default_if_none:''}}</a></td>
+ <td><a href="/log/logbook/?call={{upload.operator|urlencode:''}}">{{upload.operator|default_if_none:''}}</a></td>
+ <td>{% if upload.contest %}<a href="/log/logbook/?contest={{upload.contest|urlencode:''}}">{{upload.contest}}</a>{% endif %}</td>
+ <td>{% if upload.event_id %}<a href="/log/event/{{upload.event|urlencode:''}}">{{upload.event}}</a>{% endif %}</td>
+ <td>{{upload.error|default_if_none:''}}</td>
+ <td>
+  <form action="/log/upload/" method="POST">
+     <button name="delete" value="{{upload.id}}" type="submit">delete</button>
+  </form>
+ </td>
+ </tr>
+{% endfor %}
+</ul>
+</table>
+
+{% endblock %}
