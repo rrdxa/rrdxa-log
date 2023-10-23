@@ -7,7 +7,7 @@
 <table border=0>
 <thead>
 <tr>
- <th>Station callsign</th>
+ <th>Station</th>
  <th>exch</th>
  <th>QSOs</th>
  <th>score</th>
@@ -22,7 +22,7 @@
 {% for entry in entries %}
  <tr>
  <td>
-  <a href="/log/logbook/?upload={{entry.upload_id}}">{{entry.station_callsign|default_if_none:'-'}}</a>
+  <a href="/log/logbook/?upload={{entry.upload_id}}"><b>{{entry.station_callsign|default_if_none:'-'}}</b></a>
   {% if entry.operators %}
    ({{entry.operators}})
   {% endif %}

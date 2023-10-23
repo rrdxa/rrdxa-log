@@ -20,7 +20,7 @@
 
 {% for event in events %}
  <tr>
- <td><a href="/log/event/{{event.event|urlencode:''}}/">{{event.event}}</a></td>
+ <td><a href="/log/event/{{event.event|urlencode:''}}/"><b>{{event.event}}</b></a></td>
  <td>{{event.start_str}}-{{event.stop_str}}</td>
  <td>{{event.count}}</td>
  </tr>
