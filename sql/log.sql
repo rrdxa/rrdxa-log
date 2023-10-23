@@ -28,7 +28,8 @@ create table rrdxa.upload (
     soapbox text,
     claimed_score integer,
     computed_score integer,
-    event_id integer references event(event_id)
+    event_id integer references event(event_id),
+    exchange text
 );
 
 create table rrdxa.log (

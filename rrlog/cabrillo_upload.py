@@ -102,7 +102,8 @@ category_transmitter = %s,
 location = %s,
 grid_locator = %s,
 soapbox = %s,
-claimed_score = %s
+claimed_score = %s,
+exchange = %s
 where id = %s""",
                        [len(qsos),
                         upload_start,
@@ -124,6 +125,7 @@ where id = %s""",
                         data.get('GRID-LOCATOR'),
                         data.get('SOAPBOX'),
                         data.get('CLAIMED-SCORE'),
+                        qsos[0]['extx'] if len(qsos) > 0 else None,
                         upload_id])
 
     return len(qsos)

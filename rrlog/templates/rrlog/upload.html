@@ -1,10 +1,15 @@
 {% extends 'rrlog/rrdxa.html' %}
+{% load humanize %}
 
 {% block content %}
 <h1>RRDXA Log Upload</h1>
 
 <div>
 <b>{{message|default_if_none:''}}</b>
+</div>
+
+<div>
+<a href="/log/">Go to logbook</a>
 </div>
 
 <div>
@@ -68,7 +73,7 @@ Summary and soapbox will be mailed to the RRDXA reflector."></textarea></td>
  <tr>
  <td>{{upload.uploader}}</td>
  <td>{{upload.ts_str}}</td>
- <td>{{upload.qsos|default_if_none:'-'}}</td>
+ <td style="text-align: right;">{{upload.qsos|default_if_none:'-'|intcomma}}</td>
  <td>{{upload.start_str|default_if_none:''}}-{{upload.stop_str|default_if_none:''}}</td>
  <td><a href="/log/download/{{upload.id}}/">{{upload.filename|default_if_none:'logfile'}}</a></td>
  <td>
@@ -87,7 +92,7 @@ Summary and soapbox will be mailed to the RRDXA reflector."></textarea></td>
  <td><a href="/log/logbook/?call={{upload.station_callsign|urlencode:''}}">{{upload.station_callsign|default_if_none:''}}</a></td>
  <td><a href="/log/logbook/?call={{upload.operator|urlencode:''}}">{{upload.operator|default_if_none:''}}</a></td>
  <td>{% if upload.contest %}<a href="/log/logbook/?contest={{upload.contest|urlencode:''}}">{{upload.contest}}</a>{% endif %}</td>
- <td>{% if upload.event_id %}<a href="/log/event/{{upload.event|urlencode:''}}">{{upload.event}}</a>{% endif %}</td>
+ <td>{% if upload.event %}<a href="/log/event/{{upload.event|urlencode:''}}/">{{upload.event}}</a>{% endif %}</td>
  <td>{{upload.error|default_if_none:''}}</td>
  <td>
   <form action="/log/upload/" method="POST">

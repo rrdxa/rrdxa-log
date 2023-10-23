@@ -3,6 +3,30 @@
 {% block content %}
 <h1>RRDXA Logbook</h1>
 
+<div>
+<a href="/log/upload/">Upload a logfile</a>
+</div>
+
+<h2>Contests and Events</h2>
+
+<table border=0>
+<thead>
+<tr>
+ <th>Event</th>
+ <th>time</th>
+ <th>logs</th>
+</tr>
+</thead>
+
+{% for event in events %}
+ <tr>
+ <td><a href="/log/event/{{event.event|urlencode:''}}/">{{event.event}}</a></td>
+ <td>{{event.start_str}}-{{event.stop_str}}</td>
+ <td>{{event.count}}</td>
+ </tr>
+{% endfor %}
+</table>
+
 <h2>Current month {{current_month}} [<a href="/log/month/{{current_month}}/">view</a>]</h2>
 
 {% include 'rrlog/operator_stats.html' with operators=current_month_stats %}

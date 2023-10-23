@@ -23,6 +23,17 @@ left join dxcc on log.dxcc = dxcc.dxcc
 {} order by start desc limit 500
 """
 
+q_events = """
+select event,
+to_char(lower(period), 'DD.MM.YYYY HH24:MI') as start_str, to_char(upper(period), 'DD.MM.YYYY HH24:MI') as stop_str,
+count(*)
+from event e join upload u on e.event_id = u.event_id
+where lower(period) >= now() - '1 year'::interval
+group by e.event_id
+order by upper(period) desc
+limit 30
+"""
+
 q_operator_stats = """
 select coalesce(operator, station_callsign) as operator,
   count(distinct start::date) as days_active,
@@ -44,8 +55,8 @@ limit %s
 
 def index(request):
     with connection.cursor() as cursor:
-        cursor.execute(q_log.format(''), [])
-        rows = namedtuplefetchall(cursor)
+        cursor.execute(q_events, [])
+        events = namedtuplefetchall(cursor)
 
         today = datetime.date.today()
         date = f"{today.year}-{today.month:02}-01"
@@ -64,8 +75,12 @@ def index(request):
         cursor.execute(q_operator_stats.format(''), [date, date, '1 year', 20])
         previous_year_stats = namedtuplefetchall(cursor)
 
+        cursor.execute(q_log.format(''), [])
+        qsos = namedtuplefetchall(cursor)
+
     context = {
             'title': 'Logbook',
+            'events': events,
             'current_month': f"{today.year}-{today.month:02}",
             'current_month_stats': current_month_stats,
             'previous_month': f"{today.year-1 if today.month==1 else today.year}-{12 if today.month==1 else today.month-1:02}",
@@ -74,7 +89,7 @@ def index(request):
             'current_year_stats': current_year_stats,
             'previous_year': today.year - 1,
             'previous_year_stats': previous_year_stats,
-            'qsos': rows,
+            'qsos': qsos,
             'urlpath': '/log/logbook/',
             }
     return render(request, 'rrlog/index.html', context)
@@ -130,15 +145,28 @@ def v_contest(request, contest):
     return generic_view(request, f"Log entries from {contest}", 'where contest = %s', [contest])
 
 q_event = """
-select station_callsign, operators, contest, qsos, claimed_score
+select station_callsign,
+    id as upload_id,
+    nullif(operators, station_callsign) operators,
+    contest,
+    qsos,
+    claimed_score,
+    category_assisted,
+    category_band,
+    category_mode,
+    category_overlay,
+    category_power,
+    category_station,
+    category_time,
+    exchange
 from upload u join event e on u.event_id = e.event_id
 where e.event = %s
-order by claimed_score desc, qsos asc
+order by qsos desc nulls last, claimed_score desc nulls last
 """
 
 def v_event(request, event):
     with connection.cursor() as cursor:
-        cursor.execute(q_operator_stats, [event])
+        cursor.execute(q_event, [event])
         entries = namedtuplefetchall(cursor)
 
     context = {
@@ -203,7 +231,7 @@ q_upload_list = """select uploader, id, ts,
 to_char(ts, 'DD.MM.YYYY HH24:MI') as ts_str,
 qsos, to_char(start, 'DD.MM.YYYY') as start_str, to_char(stop, 'DD.MM.YYYY') as stop_str,
 filename, category_operator,
-station_callsign, operator, contest, e.event_id, event,
+station_callsign, operator, contest, event,
 error
 from upload u left join event e on u.event_id = e.event_id
 where uploader = %s or %s in ('DF7CB', 'DF7EE', 'DK2DQ')
