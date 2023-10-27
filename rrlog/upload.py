@@ -1,7 +1,7 @@
 from rrlog.utils import upper
 from rrlog.adif_upload import adif_upload
 from rrlog.cabrillo_upload import cabrillo_upload
-from rrlog.reflector import post_summary
+from rrlog.summary import post_summary
 
 def log_upload(connection, request, username):
     data = request.POST

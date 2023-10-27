@@ -13,7 +13,7 @@ import re
 
 from rrlog.upload import log_upload
 from rrlog.utils import namedtuplefetchall
-from rrlog.reflector import post_summary
+from rrlog.summary import post_summary
 
 q_log = """
 select log.*, dxcc.country,
