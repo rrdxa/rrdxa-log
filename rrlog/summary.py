@@ -22,8 +22,12 @@ category_transmitter,
 location,
 grid_locator,
 soapbox,
-claimed_score
-from upload where id = %s
+claimed_score,
+exchange,
+event
+from upload
+left join event on upload.event_id = event.event_id
+where id = %s
 """
 
 # operating time is computed as follows: each QSO is assigned a time range
@@ -67,14 +71,23 @@ union all
 select '', '', sum(qsos), sum(dxccs), sum(op_time)::text, round(3600 * sum(qsos) / extract(epoch from sum(op_time))) from data
 """
 
-def post_summary(cursor, upload_id, send=True):
+def get_summary(cursor, upload_id):
     cursor.execute(q_upload_data, [upload_id])
     data_arr = namedtuplefetchall(cursor)
     if len(data_arr) == 0:
-        return "No data found"
+        return None, None
     data = data_arr[0]
+
     cursor.execute(q_qso_summary, [upload_id])
     summary = namedtuplefetchall(cursor)
+
+    return data, summary
+
+def post_summary(cursor, upload_id, send=True):
+    data, summary = get_summary(cursor, upload_id)
+
+    if data is None:
+        return "No data found"
 
     # build subject
     subject = f"{data.station_callsign} {data.contest} {data.category_operator}"
@@ -93,6 +106,7 @@ def post_summary(cursor, upload_id, send=True):
     if data.grid_locator:         mail += f"Locator:     {data.grid_locator}\n"
     mail += "\n"
 
+    if data.event:                mail += f"Event:       {data.event}\n"
     if data.contest:              mail += f"Contest:     {data.contest}\n"
     if data.category_operator:    mail += f"Category:    {data.category_operator}\n"
     if data.category_band:        mail += f"Band:        {data.category_band}\n"
@@ -103,6 +117,7 @@ def post_summary(cursor, upload_id, send=True):
     if data.category_transmitter and data.category_transmitter != 'ONE':
                                   mail += f"Transmitter: {data.category_transmitter}\n"
     if data.category_assisted:    mail += f"Assisted:    {data.category_assisted}\n"
+    if data.exchange:             mail += f"Exchange:    {data.exchange}\n"
     mail += "\n"
 
     if len(summary) > 1: # skip table if it doesn't have band data

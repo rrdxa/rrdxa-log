@@ -13,7 +13,7 @@ import re
 
 from rrlog.upload import log_upload
 from rrlog.utils import namedtuplefetchall
-from rrlog.summary import post_summary
+from rrlog.summary import get_summary
 
 q_log = """
 select log.*, dxcc.country,
@@ -97,9 +97,9 @@ def index(request):
 def generic_view(request, title, where, arg):
     with connection.cursor() as cursor:
         cursor.execute(q_log.format(where), arg)
-        rows = namedtuplefetchall(cursor)
+        qsos = namedtuplefetchall(cursor)
 
-    context = { 'title': title, 'qsos': rows, 'show_main_link': True }
+    context = { 'title': title, 'qsos': qsos, 'show_main_link': True }
     return render(request, 'rrlog/log.html', context)
 
 def v_logbook(request):
@@ -293,7 +293,7 @@ def v_upload(request):
 
 q_download = """select adif, filename from upload where id = %s and (uploader = %s or %s in ('DF7CB', 'DF7EE', 'DK2DQ'))"""
 
-def v_download(request, id):
+def v_download(request, upload_id):
     # authentication
     status, message = basic_auth(request)
     if not status:
@@ -310,9 +310,16 @@ def v_download(request, id):
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
     return response
 
-def v_summary(request, id):
+def v_summary(request, upload_id):
     with connection.cursor() as cursor:
-        mail = post_summary(cursor, id, send=False)
+        cursor.execute(q_log.format('where upload = %s'), [upload_id])
+        qsos = namedtuplefetchall(cursor)
+        data, summary = get_summary(cursor, upload_id)
 
-    response = HttpResponse(mail, content_type='text/plain; charset=utf-8')
-    return response
+    context = {
+        'title': f"{data.station_callsign} {data.contest} {data.category_operator}",
+        'data': data,
+        'summary': summary,
+        'qsos': qsos,
+    }
+    return render(request, 'rrlog/summary.html', context)

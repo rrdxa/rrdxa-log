@@ -1,0 +1,75 @@
+{% extends 'rrlog/rrdxa.html' %}
+{% load humanize %}
+
+{% block content %}
+<h1>{{title}}</h1>
+
+<ul>
+
+                                 <li>Callsign:    {{data.station_callsign}}
+ {% if data.operators and data.operators != data.station_callsign %}
+                                 <li>Operators:   {{data.operators}}</li>{% endif %}
+ {% if data.club %}              <li>Club:        {{data.club}}</li>{% endif %}
+ {% if data.location %}          <li>Location:    {{data.location}}</li>{% endif %}
+ {% if data.grid_locator %}      <li>Locator:     {{data.grid_locator}}</li>{% endif %}
+ <br>
+
+ {% if data.event %}             <li>Event:       <a href="/log/event/{{data.event|urlencode:''}}/">{{data.event}}</a></li>{% endif %}
+ {% if data.contest %}           <li>Contest:     {{data.contest}}</li>{% endif %}
+ {% if data.category_operator %} <li>Category:    {{data.category_operator}}</li>{% endif %}
+ {% if data.category_band %}     <li>Band:        {{data.category_band}}</li>{% endif %}
+ {% if data.category_mode %}     <li>Mode:        {{data.category_mode}}</li>{% endif %}
+ {% if data.category_power %}    <li>Power:       {{data.category_power}}</li>{% endif %}
+ {% if data.category_overlay %}  <li>Overlay:     {{data.category_overlay}}</li>{% endif %}
+ {% if data.category_time %}     <li>Time:        {{data.category_time}}</li>{% endif %}
+ {% if data.category_transmitter and data.category_transmitter != 'ONE' %}
+                                 <li>Transmitter: {{data.category_transmitter}}</li>{% endif %}
+ {% if data.category_assisted %} <li>Assisted:    {{data.category_assisted}}</li>{% endif %}
+ {% if data.exchange %}          <li>Exchange:    {{data.exchange}}</li>{% endif %}
+</li>
+<br>
+
+{% if summary %}
+<li>
+<table>
+<tr>
+ <th>Band</th>
+ <th>Mode</th>
+ <th>QSOs</th>
+ <th>DXCCs</th>
+ <th>Time</th>
+ <th>Rate</th>
+</tr>
+
+{% for b in summary %}
+<tr>
+ <td>{{b.band}}</td>
+ <td>{{b.mode}}</td>
+ <td style="text-align: right;">{{b.qsos|intcomma}}</td>
+ <td style="text-align: right;">{{b.dxccs|intcomma}}</td>
+ <td>{{b.op_time}}</td>
+ <td style="text-align: right;">{{b.rate}}</td>
+</tr>
+{% endfor %}
+</table>
+</li>
+
+{% else %}
+No QSO data found
+{% endif %}
+
+{% if data.claimed_score %}
+<br>
+<li><b>Claimed score: {{data.claimed_score|intcomma}}</b></li>
+{% endif %}
+
+{% if data.soapbox %}
+<br>
+<li>Soapbox:<br>
+<pre style="white-space: pre-wrap;">{{data.soapbox}}</pre>
+{% endif %}
+
+</ul>
+
+{% include 'rrlog/qsos.html' %}
+{% endblock %}
