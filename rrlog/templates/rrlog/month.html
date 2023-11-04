@@ -12,19 +12,19 @@
 </tr>
 </table>
 
-<h2><a href="/log/logbook/?{{qual}}">All modes</a></h2>
+<h2><a href="/log/logbook/?month={{month}}">All modes</a></h2>
 {% include 'rrlog/operator_stats.html' %}
 
-<h2><a href="/log/logbook/?{{qual}}&major_mode=CW">CW</a></h2>
+<h2><a href="/log/logbook/?month={{month}}&major_mode=CW">CW</a></h2>
 {% include 'rrlog/operator_stats.html' with major_mode='CW' operators=cw_operators %}
 
-<h2><a href="/log/logbook/?{{qual}}&major_mode=PHONE">PHONE</a></h2>
+<h2><a href="/log/logbook/?month={{month}}&major_mode=PHONE">PHONE</a></h2>
 {% include 'rrlog/operator_stats.html' with major_mode='PHONE' operators=phone_operators %}
 
-<h2><a href="/log/logbook/?{{qual}}&major_mode=DIGI">DIGI</a></h2>
+<h2><a href="/log/logbook/?month={{month}}&major_mode=DIGI">DIGI</a></h2>
 {% include 'rrlog/operator_stats.html' with major_mode='DIGI' operators=digi_operators %}
 
-<h2><a href="/log/logbook/?{{qual}}&major_mode=FT8">FT8/FT4</a></h2>
+<h2><a href="/log/logbook/?month={{month}}&major_mode=FT8">FT8/FT4</a></h2>
 {% include 'rrlog/operator_stats.html' with major_mode='FT8' operators=ft8_operators %}
 
 {% endblock %}

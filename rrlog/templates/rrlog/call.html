@@ -2,12 +2,15 @@
 {% load humanize %}
 
 {% block content %}
-<h1>RRDXA entries in {{event}}</h1>
+<h1>{{title}}</h1>
+
+<h2>Contests and Events</h2>
 
 <table border=0>
 <thead>
 <tr>
- <th>Station</th>
+ <th>Event</th>
+ <th>station</th>
  <th>exch</th>
  <th>QSOs</th>
  <th>score</th>
@@ -21,6 +24,7 @@
 
 {% for entry in entries %}
  <tr>
+ <td>{{entry.event|default_if_none:''}}</td>
  <td>
   <a href="/log/summary/{{entry.upload_id}}/"><b>{{entry.station_callsign|default_if_none:''}}</b></a>
   {% if entry.operators %}
@@ -43,4 +47,5 @@
 </ul>
 </table>
 
+{% include 'rrlog/qsos.html' %}
 {% endblock %}

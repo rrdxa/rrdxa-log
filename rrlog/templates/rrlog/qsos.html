@@ -6,7 +6,7 @@
 {% for key, value in request.GET.items %}
 {% spaceless %}
 <td>
-<form action="/log/logbook/">
+<form action=".">
   {% for key2, value2 in request.GET.items %}
     {% if key2 != key %}
     <input type="hidden" name="{{key2}}" value="{{value2}}" />

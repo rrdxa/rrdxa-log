@@ -94,21 +94,10 @@ def index(request):
             }
     return render(request, 'rrlog/index.html', context)
 
-def generic_view(request, title, where, arg):
-    with connection.cursor() as cursor:
-        cursor.execute(q_log.format(where), arg)
-        qsos = namedtuplefetchall(cursor)
-
-    context = { 'title': title, 'qsos': qsos, 'show_main_link': True }
-    return render(request, 'rrlog/log.html', context)
-
-def v_logbook(request):
-    title, quals, params = "Logbook", [], []
-
+def get_request_qsos(request, quals, params):
     for key in request.GET:
         param = request.GET[key]
         if key == 'call':
-            title += f" for {param}"
             quals.append("(station_callsign = %s or operator = %s or call = %s)")
             params += [param, param, param]
         elif key == 'dxcc':
@@ -127,24 +116,69 @@ def v_logbook(request):
             quals.append(f"{key} = %s")
             params += [param]
 
-    qual = ('where ' + ' and '.join(quals)) if quals else ''
-    return generic_view(request, title, qual, params)
+    where = ('where ' + ' and '.join(quals)) if quals else ''
 
-def v_call(request, call):
-    return generic_view(request, f"Log of {call}",
-                        'where station_callsign = %s or operator = %s or call = %s',
-                        [call, call, call])
+    with connection.cursor() as cursor:
+        cursor.execute(q_log.format(where), params)
+        qsos = namedtuplefetchall(cursor)
+
+    return qsos
+
+def generic_view(request, title, quals, params):
+    qsos = get_request_qsos(request, quals, params)
+    context = { 'title': title, 'qsos': qsos, 'show_main_link': True }
+    return render(request, 'rrlog/log.html', context)
+
+def v_logbook(request):
+    return generic_view(request, "Logbook", [], [])
 
 def v_dxcc(request, dxcc):
-    return generic_view(request, f"Log entries from {dxcc}", 'where country = %s', [dxcc])
+    return generic_view(request, f"Log entries from {dxcc}", ['country = %s'], [dxcc])
 
 def v_grid(request, grid):
-    return generic_view(request, f"Log entries from gridsquare {grid}", 'where gridsquare = %s', [grid])
+    return generic_view(request, f"Log entries from gridsquare {grid}", ['gridsquare = %s'], [grid])
 
 def v_contest(request, contest):
-    return generic_view(request, f"Log entries from {contest}", 'where contest = %s', [contest])
+    return generic_view(request, f"Log entries from {contest}", ['contest = %s'], [contest])
+
+q_call_events = """
+select station_callsign,
+    id as upload_id,
+    nullif(operators, station_callsign) operators,
+    contest,
+    qsos,
+    claimed_score,
+    category_assisted,
+    category_band,
+    category_mode,
+    category_overlay,
+    category_power,
+    category_station,
+    category_time,
+    exchange,
+    e.event
+from upload u left join event e on u.event_id = e.event_id
+where station_callsign = %s
+    and category_operator is not null
+order by u.start desc
+"""
+
+def v_call(request, call):
+    with connection.cursor() as cursor:
+        cursor.execute(q_call_events, [call])
+        entries = namedtuplefetchall(cursor)
+    qsos = get_request_qsos(request, ['(station_callsign = %s or operator = %s)'], [call, call])
+
+    context = {
+        'title': f"Logbook for {call}",
+        'qsos': qsos,
+        'entries': entries,
+        'show_main_link': True
+    }
+    return render(request, 'rrlog/call.html', context)
 
 q_event = """
+with events as (
 select station_callsign,
     id as upload_id,
     nullif(operators, station_callsign) operators,
@@ -162,6 +196,10 @@ select station_callsign,
 from upload u join event e on u.event_id = e.event_id
 where e.event = %s
 order by qsos desc nulls last, claimed_score desc nulls last
+)
+select * from events
+union all
+select null, null, null, null, sum(qsos), sum(claimed_score), null, null, null, null, null, null, null, null from events
 """
 
 def v_event(request, event):
@@ -170,6 +208,7 @@ def v_event(request, event):
         entries = namedtuplefetchall(cursor)
 
     context = {
+        'title': event,
         'event': event,
         'entries': entries,
     }
@@ -199,7 +238,6 @@ def v_month(request, year, month):
         'phone_operators': by_mode['PHONE'],
         'digi_operators': by_mode['DIGI'],
         'ft8_operators': by_mode['FT8'],
-        'qual': f"month={year}-{month:02}",
     }
     return render(request, 'rrlog/month.html', context)
 
@@ -223,7 +261,6 @@ def v_year(request, year):
         'phone_operators': by_mode['PHONE'],
         'digi_operators': by_mode['DIGI'],
         'ft8_operators': by_mode['FT8'],
-        'qual': f"year={year}",
     }
     return render(request, 'rrlog/year.html', context)
 
