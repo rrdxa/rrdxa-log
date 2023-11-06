@@ -74,7 +74,7 @@ def parse(cbr):
             data['qsos'].append(parse_qso(value))
         elif field == 'X-QSO':
             if 'X-QSO' not in data:
-                data['X-QSO'] = []
+                data['x-qsos'] = []
             data['x-qsos'].append(parse_qso(value))
         if field in data:
             data[field] += '\n' + value
