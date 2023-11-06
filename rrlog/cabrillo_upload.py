@@ -65,6 +65,9 @@ def cabrillo_upload(cursor, content, station_callsign, operator, contest, upload
             elif major_mode == 'RY':
                 major_mode = 'DIGI'
                 mode = 'RTTY'
+            elif major_mode == 'PS':
+                major_mode = 'DIGI'
+                mode = 'PSK'
             elif major_mode == 'DG':
                 major_mode = 'DIGI'
                 mode = None
