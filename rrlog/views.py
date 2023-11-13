@@ -360,3 +360,27 @@ def v_summary(request, upload_id):
         'qsos': qsos,
     }
     return render(request, 'rrlog/summary.html', context)
+
+def v_members(request):
+    with connection.cursor() as cursor:
+        cursor.execute("select call, callsigns from members where call ~ '\d' order by call")
+        members = namedtuplefetchall(cursor)
+
+    if 'csv' in request.GET:
+        csv = ''
+        for member in members:
+            csv += member.call
+            if member.callsigns:
+                for call in member.callsigns:
+                    csv += f",{call}"
+            csv += "\n"
+
+        response = HttpResponse(csv, content_type='text/plain; charset=utf-8')
+        response['Content-Disposition'] = f'attachment; filename="rrdxa-members.csv"'
+        return response
+
+    context = {
+        'title': "RRDXA members",
+        'members': members,
+    }
+    return render(request, 'rrlog/members.html', context)
