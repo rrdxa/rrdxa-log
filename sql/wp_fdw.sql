@@ -26,14 +26,19 @@ select
     upper(user_login) as call,
     regexp_split_to_array(upper(x_callsigns.value), '[\s,]+') as callsigns,
     display_name,
+    m_firstname.meta_value as first_name,
+    m_lastname.meta_value as last_name,
+    m_nickname.meta_value as nickname,
+    user_email,
     user_pass
 from wordpress."L7l2a_users" u
 left join wordpress."L7l2a_bp_xprofile_data" x_callsigns on u."ID" = x_callsigns.user_id and x_callsigns.field_id = 2
+left join wordpress."L7l2a_usermeta" m_firstname on u."ID" = m_firstname.user_id and m_firstname.meta_key = 'first_name'
+left join wordpress."L7l2a_usermeta" m_lastname on u."ID" = m_lastname.user_id and m_lastname.meta_key = 'last_name'
+left join wordpress."L7l2a_usermeta" m_nickname on u."ID" = m_nickname.user_id and m_nickname.meta_key = 'nickname'
 order by user_login;
 
 create index on rrdxa.members (call);
 analyze rrdxa.members;
-
--- select user_id, meta_key, meta_value from wordpress."L7l2a_usermeta" where meta_key in ('nickname', 'first_name', 'last_name', 'last_activity') \crosstabview
 
 commit;

@@ -47,7 +47,7 @@ create table rrdxa.log (
     extx text,
     rstrx text,
     exrx text,
-    gridsquare varchar(4),
+    gridsquare varchar(6),
     contest text,
     upload integer not null references rrdxa.upload (id) on delete cascade,
     adif jsonb,
