@@ -1,12 +1,12 @@
 {% extends 'rrlog/rrdxa.html' %}
 
 {% block content %}
-<div>
-Download: <a href="?csv"><b>rrdxa-members.csv</b></a>
-</div>
 
 <ul>
-<li><b>Call</b> - weitere persönliche Rufzeichen </li> <br>
+<li>Download: <a href="?csv"><b>rrdxa-members.csv</b></a> </li>
+<br>
+<li><b>Call</b> - weitere persönliche Rufzeichen </li>
+<br>
 {% for member in members %}
 <li><a href="/log/call/{{member.call|urlencode:''}}/"><b>{{member.call}}</b></a>
 {% for call in member.callsigns %}  <a href="/log/call/{{call|urlencode:''}}/">{{call}}</a>{% endfor %}
