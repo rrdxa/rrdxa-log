@@ -24,7 +24,7 @@ analyze rrdxa.wordpress_users;
 create materialized view rrdxa.members as
 select
     upper(user_login) as call,
-    regexp_split_to_array(upper(x_callsigns.value), '[\s,]+') as callsigns,
+    regexp_split_to_array(upper(x_callsigns.value), '([\s,-]|&amp;)+', 'i') as callsigns,
     display_name,
     m_firstname.meta_value as first_name,
     m_lastname.meta_value as last_name,
