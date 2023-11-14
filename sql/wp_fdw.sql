@@ -1,4 +1,12 @@
-\ir wp_fdw_vars.sql
+begin;
+
+\set host rrdxa.org
+\set user xxx
+\set pass xxx
+\set usertable L7l2a_users
+
+create schema wordpress;
+set local search_path = wordpress;
 
 create extension if not exists mysql_fdw;
 create server if not exists wordpress foreign data wrapper mysql_fdw options ( host :'host' );
@@ -27,3 +35,5 @@ create index on rrdxa.members (call);
 analyze rrdxa.members;
 
 -- select user_id, meta_key, meta_value from wordpress."L7l2a_usermeta" where meta_key in ('nickname', 'first_name', 'last_name', 'last_activity') \crosstabview
+
+commit;

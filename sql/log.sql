@@ -10,7 +10,7 @@ create table rrdxa.upload (
     contest text,
     qsos integer,
     error text,
-    adif text
+    adif text,
     -- cabrillo fields
     operators text,
     club text,
@@ -38,9 +38,9 @@ create table rrdxa.log (
     operator text,
     call text not null,
     dxcc smallint references rrdxa.dxcc (dxcc),
-    band band not null,
+    band rrdxa.band not null,
     freq numeric,
-    major_mode mode_t not null,
+    major_mode rrdxa.mode_t not null,
     mode text,
     submode text,
     rsttx text,

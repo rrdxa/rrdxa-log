@@ -1,8 +1,11 @@
+begin;
 \ir schema.sql
-\ir wp_fdw.sql
-
+\ir functions.sql
 \ir band.sql
 \ir dxcc.sql
 \ir mode.sql
 \ir contest.sql
 \ir log.sql
+commit;
+
+\ir wp_fdw.sql

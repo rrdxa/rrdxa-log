@@ -7,7 +7,7 @@ create type rrdxa.band AS enum (
     'unknown'
 );
 
-create or replace function rrdxa.band(freq numeric) returns band
+create or replace function rrdxa.band(freq numeric) returns rrdxa.band
 language sql
 return case
     when freq between 0.1357 and 0.1378     then '2190m'::rrdxa.band
