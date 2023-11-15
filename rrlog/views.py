@@ -363,7 +363,7 @@ def v_summary(request, upload_id):
 
 def v_members(request):
     with connection.cursor() as cursor:
-        cursor.execute("select call, callsigns from members where call ~ '\d' order by call")
+        cursor.execute("select call, callsigns from members where call ~ '\d' and not '{bbp_spectator}' <@ user_roles order by call")
         members = namedtuplefetchall(cursor)
 
     if 'csv' in request.GET:

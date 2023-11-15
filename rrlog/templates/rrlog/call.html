@@ -10,6 +10,7 @@
 <thead>
 <tr>
  <th>Event</th>
+ <th>contest</th>
  <th>station</th>
  <th>exch</th>
  <th>QSOs</th>
@@ -24,12 +25,11 @@
 
 {% for entry in entries %}
  <tr>
- <td>{{entry.event|default_if_none:''}}</td>
+ <td><a href="/log/event/{{entry.event|urlencode:''}}/"><b>{{entry.event|default_if_none:''}}</b></a></td>
+ <td><a href="/log/contest/{{entry.contest|urlencode:''}}/"><b>{{entry.contest|default_if_none:''}}</b></a></td>
  <td>
-  <a href="/log/summary/{{entry.upload_id}}/"><b>{{entry.station_callsign|default_if_none:''}}</b></a>
-  {% if entry.operators %}
-   ({{entry.operators}})
-  {% endif %}
+  <a href="/log/summary/{{entry.upload_id}}/">{{entry.station_callsign|default_if_none:''}}</a>
+  {% if entry.operators %} ({{entry.operators}}){% endif %}
 </td>
  <td>{{entry.exchange|default_if_none:''}}</td>
  <td style="text-align: right;">{{entry.qsos|default_if_none:''|intcomma}}</td>
@@ -46,6 +46,8 @@
 {% endfor %}
 </ul>
 </table>
+
+<br>
 
 {% include 'rrlog/qsos.html' %}
 {% endblock %}
