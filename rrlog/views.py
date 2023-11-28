@@ -5,12 +5,10 @@ from django.db import connection
 import psycopg2, psycopg2.extras
 psycopg2.extensions.register_adapter(dict, psycopg2.extras.Json)
 
-import base64
-from passlib.hash import phpass
-
 import datetime
 import re
 
+from rrlog.auth import basic_auth
 from rrlog.upload import log_upload
 from rrlog.utils import namedtuplefetchall
 from rrlog.summary import get_summary
@@ -273,28 +271,6 @@ error
 from upload u left join event e on u.event_id = e.event_id
 where uploader = %s or %s in ('DF7CB', 'DF7EE', 'DK2DQ')
 order by id desc limit 100"""
-
-def basic_auth(request):
-    auth_header = request.META.get('HTTP_AUTHORIZATION', '')
-    if not auth_header:
-        return False, "Login required"
-    token_type, _, credentials = auth_header.partition(' ')
-    if token_type.lower() != "basic":
-        return False, "Only Basic auth supported"
-    username, password = base64.b64decode(credentials).decode("utf-8").split(':')
-    username = username.upper()
-
-    with connection.cursor() as cursor:
-        cursor.execute("select user_pass from wordpress_users where upper(user_login) = %s", [username])
-        user_password = cursor.fetchone()
-        if not user_password:
-            print(f"user {username} not found in database")
-            return False, "Login failed"
-        if not phpass.verify(password, user_password[0]):
-            print("wrong password")
-            return False, "Login failed"
-
-    return True, username
 
 def v_upload(request):
     # authentication
