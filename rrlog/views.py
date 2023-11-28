@@ -22,14 +22,14 @@ left join dxcc on log.dxcc = dxcc.dxcc
 """
 
 q_events = """
-select event,
+select event, cabrillo_name,
 to_char(lower(period), 'DD.MM.YYYY HH24:MI') as start_str, to_char(upper(period), 'DD.MM.YYYY HH24:MI') as stop_str,
-count(*)
-from event e join upload u on e.event_id = u.event_id
+count(u)
+from event e left join upload u on e.event_id = u.event_id
 where lower(period) >= now() - '1 year'::interval
 group by e.event_id
 order by upper(period) desc
-limit 30
+limit %s
 """
 
 q_operator_stats = """
@@ -53,7 +53,7 @@ limit %s
 
 def index(request):
     with connection.cursor() as cursor:
-        cursor.execute(q_events, [])
+        cursor.execute(q_events, [30])
         events = namedtuplefetchall(cursor)
 
         today = datetime.date.today()
@@ -174,6 +174,33 @@ def v_call(request, call):
         'show_main_link': True
     }
     return render(request, 'rrlog/call.html', context)
+
+def v_events(request):
+    if request.method == 'POST':
+        # authentication
+        status, message = basic_auth(request)
+        if not status:
+            response = render(request, 'rrlog/generic.html', { 'message': message }, status=401)
+            response['WWW-Authenticate'] = 'Basic realm="RRDXA Log Upload"'
+            return response
+        #username = message
+
+        with connection.cursor() as cursor:
+            cursor.execute("insert into event (event, cabrillo_name, period) values (%s, %s, tstzrange(%s, %s, '[]'))",
+                           [request.POST['event'], request.POST['cabrillo_name'], request.POST['start'], request.POST['end']])
+            connection.commit()
+
+    with connection.cursor() as cursor:
+        cursor.execute(q_events, [500])
+        events = namedtuplefetchall(cursor)
+
+    today = str(datetime.date.today())
+
+    context = {
+        'today': today,
+        'events': events,
+    }
+    return render(request, 'rrlog/events.html', context)
 
 q_event = """
 with events as (
