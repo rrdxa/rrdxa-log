@@ -32,6 +32,16 @@ order by upper(period) desc
 limit %s
 """
 
+q_eventlist = """
+select event_id, event,
+to_char(lower(period), 'FMMonth YYYY') as month_str,
+to_char(lower(period), 'DD.MM.YYYY HH24:MI') as start_str, to_char(upper(period), 'DD.MM.YYYY HH24:MI') as stop_str
+from event e
+where lower(period) >= now() - '1 year'::interval
+order by upper(period) desc
+limit 100
+"""
+
 q_operator_stats = """
 select coalesce(operator, station_callsign) as operator,
   count(distinct start::date) as days_active,
@@ -299,7 +309,7 @@ from upload u left join event e on u.event_id = e.event_id
 where uploader = %s or %s in ('DF7CB', 'DF7EE', 'DK2DQ')
 order by id desc limit 100"""
 
-def v_upload(request):
+def v_upload(request, page=None):
     # authentication
     status, message = basic_auth(request)
     if not status:
@@ -320,16 +330,19 @@ def v_upload(request):
 
     # get list of all uploads (including this one)
     with connection.cursor() as cursor:
+        cursor.execute(q_eventlist, [])
+        eventlist = namedtuplefetchall(cursor)
         cursor.execute(q_upload_list, [uploader, uploader])
         uploads = namedtuplefetchall(cursor)
 
     context = {
         'title': 'Log Upload',
         'message': message,
+        'eventlist': eventlist,
         'uploads': uploads,
         'uploader': uploader,
     }
-    return render(request, 'rrlog/upload.html', context)
+    return render(request, page, context)
 
 q_download = """select adif, filename from upload where id = %s and (uploader = %s or %s in ('DF7CB', 'DF7EE', 'DK2DQ'))"""
 

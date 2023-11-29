@@ -11,6 +11,7 @@ def log_upload(connection, request, username):
     station_callsign = upper(data.get('station_callsign')) or None
     operator = upper(data.get('operator')) or None
     contest = data.get('contest') or None
+    event_id = data.get('event_id') or None
 
     upper_content = upper(content)
     if '<EOR>' in upper_content:
@@ -21,8 +22,8 @@ def log_upload(connection, request, username):
         return "Supported log types are ADIF and Cabrillo, this seems like neither of them"
 
     with connection.cursor() as cursor:
-        cursor.execute("insert into upload (uploader, filename, station_callsign, operator, contest, adif) values (%s, %s, %s, %s, %s, %s) returning id",
-                       [username, filename, station_callsign, operator, contest, content])
+        cursor.execute("insert into upload (uploader, filename, station_callsign, operator, contest, event_id, adif) values (%s, %s, %s, %s, %s, %s, %s) returning id",
+                       [username, filename, station_callsign, operator, contest, event_id, content])
         (upload_id,) = cursor.fetchone()
 
         try:

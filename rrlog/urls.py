@@ -15,7 +15,8 @@ urlpatterns = [
     path('month/<int:year>-<int:month>/', views.v_month, name='month'),
     path('year/<int:year>/', views.v_year, name='year'),
 
-    path('upload/', views.v_upload, name='upload'),
+    path('upload/', views.v_upload, {'page': 'rrlog/upload.html'}, name='upload'), 
+    path('cabrillo-upload/', views.v_upload, {'page': 'rrlog/cabrillo-upload.html'}, name='cabrillo'),
     path('download/<int:upload_id>/', views.v_download, name='download'),
     path('summary/<int:upload_id>/', views.v_summary, name='summary'),
 
