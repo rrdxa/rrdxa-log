@@ -309,7 +309,7 @@ from upload u left join event e on u.event_id = e.event_id
 where uploader = %s or %s in ('DF7CB', 'DF7EE', 'DK2DQ')
 order by id desc limit 100"""
 
-def v_upload(request, page=None):
+def v_upload(request, filetype=None):
     # authentication
     status, message = basic_auth(request)
     if not status:
@@ -330,19 +330,27 @@ def v_upload(request, page=None):
 
     # get list of all uploads (including this one)
     with connection.cursor() as cursor:
-        cursor.execute(q_eventlist, [])
-        eventlist = namedtuplefetchall(cursor)
+        if filetype != 'adif':
+            cursor.execute(q_eventlist, [])
+            eventlist = namedtuplefetchall(cursor)
+        else:
+            eventlist = []
+
         cursor.execute(q_upload_list, [uploader, uploader])
         uploads = namedtuplefetchall(cursor)
 
+    if filetype is None:
+        filetype = ''
+
     context = {
-        'title': 'Log Upload',
+        'title': f"{filetype.title()} Log Upload",
+        'filetype': filetype,
         'message': message,
         'eventlist': eventlist,
         'uploads': uploads,
         'uploader': uploader,
     }
-    return render(request, page, context)
+    return render(request, 'rrlog/upload.html', context)
 
 q_download = """select adif, filename from upload where id = %s and (uploader = %s or %s in ('DF7CB', 'DF7EE', 'DK2DQ'))"""
 

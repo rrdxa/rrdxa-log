@@ -2,19 +2,16 @@
 {% load humanize %}
 
 {% block content %}
-<h1>RRDXA Log Upload</h1>
+<h1>{{filetype|default_if_none:''|title}} Log Upload</h1>
 
 <div>
 <b>{{message|default_if_none:''}}</b>
 </div>
 
 <div>
-<a href="/log/">Go to logbook</a>
-</div>
-
-<div>
 <form action="/log/upload/" method="POST" enctype="multipart/form-data">
 <table border=0>
+{% if filetype != 'cabrillo' %}
 <tr>
  <td>Station callsign used on air:</td> <td><input name="station_callsign" value="{{uploader|urlencode:''}}"> (only used when not specified in logfile)</td>
 </tr>
@@ -24,23 +21,39 @@
 <tr>
  <td>Contest ID:</td> <td><input name="contest"> (leave blank for non-contest or mixed logfiles)</td>
 </tr>
+{% endif %}
+{% if filetype != 'adif' %}
 <tr>
- <td>ADIF or Cabrillo logfile:</td> <td><input type="file" name="logfile"></td>
+ <td>Event:</td>
+ <td><select name="event_id" id="type">
+  {% for event in eventlist %}
+  {% ifchanged event.month_str %}<optgroup label="{{event.month_str}}">{% endifchanged %}
+  <option value="{{event.event_id}}">{{event.event}} -- {{event.start_str}}-{{event.stop_str}}</option>
+  {% endfor %}
+  </optgroup>
+  </select>
+  [<a href="/log/event/">Create new event</a>]
+  </td>
 </tr>
+{% endif %}
+<tr>
+ <td>Logfile:</td> <td><input type="file" name="logfile"></td>
+</tr>
+{% if filetype != 'adif' %}
 <tr>
  <td>Soapbox:</td> <td><textarea name="soapbox" cols="80" rows="20" placeholder="Soapbox - write about your contest story
 
-Only used for Cabrillo uploads. If the Cabrillo file already contains a
-soapbox, this entry and the soapbox will both be used. Leave empty if the
-Cabrillo already contains the story.
+If the Cabrillo file already contains a soapbox, this entry and the soapbox
+will both be used. Leave empty if the Cabrillo already contains the story.
 
 A summary of QSOs and DXCCs by band is computed from the log.
 
 Summary and soapbox will be mailed to the RRDXA reflector."></textarea></td>
 </tr>
 <tr>
- <td>Mail summary to reflector:</td> <td><input type="checkbox" name="reflector" checked="checked"> (only used for Cabrillo uploads; untick to disable mailing)</td>
+ <td>Mail summary to reflector:</td> <td><input type="checkbox" name="reflector" checked="checked"> (untick to disable mailing)</td>
 </tr>
+{% endif %}
 <tr>
  <td></td> <td><button type="submit">Upload</button>
 </tr>
@@ -48,7 +61,7 @@ Summary and soapbox will be mailed to the RRDXA reflector."></textarea></td>
 </form>
 </div>
 
-<h2>Your uploads</h2>
+<h1>Your uploads</h1>
 
 <table border=0>
 <thead>
