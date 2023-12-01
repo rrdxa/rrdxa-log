@@ -22,6 +22,11 @@ def log_upload(connection, request, username):
         return "Supported log types are ADIF and Cabrillo, this seems like neither of them"
 
     with connection.cursor() as cursor:
+        # when uploading a Cabrillo log for an event, delete any prior submission from the same station
+        if logtype == 'cabrillo':
+            cursor.execute("delete from upload where station_callsign = %s and event_id = %s",
+                           [station_callsign, event_id])
+
         cursor.execute("insert into upload (uploader, filename, station_callsign, operator, contest, event_id, adif) values (%s, %s, %s, %s, %s, %s, %s) returning id",
                        [username, filename, station_callsign, operator, contest, event_id, content])
         (upload_id,) = cursor.fetchone()

@@ -29,7 +29,8 @@ create table rrdxa.upload (
     claimed_score integer,
     computed_score integer,
     event_id integer references event(event_id),
-    exchange text
+    exchange text,
+    constraint station_callsign_event_unique unique (station_callsign, event_id)
 );
 
 create table rrdxa.log (

@@ -301,7 +301,7 @@ def v_year(request, year):
 
 q_upload_list = """select uploader, id, ts,
 to_char(ts, 'DD.MM.YYYY HH24:MI') as ts_str,
-qsos, to_char(e.start, 'DD.MM.YYYY') as start_str, to_char(e.stop, 'DD.MM.YYYY') as stop_str,
+qsos, to_char(u.start, 'DD.MM.YYYY') as start_str, to_char(u.stop, 'DD.MM.YYYY') as stop_str,
 filename, category_operator,
 station_callsign, operator, contest, event,
 error
