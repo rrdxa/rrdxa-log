@@ -1,3 +1,5 @@
+{% load humanize %}
+
 <table border=0>
 <thead>
 <tr>
@@ -19,15 +21,15 @@
  <tr>
  <td><b><a href="/log/call/{{op.operator|urlencode:''}}/?{% if month %}month={{month}}{% else %}{% if year %}year={{year}}{% endif %}{% endif %}{% if major_mode %}&major_mode={{major_mode}}{% endif %}">{{op.operator}}</a></b></td>
  <td>{{op.days_active}}</td>
- <td>{{op.qsos}}</td>
- <td>{{op.contest_qsos}}</td>
- <td><b>{{op.score}}</b></td>
- <td>{{op.calls}}</td>
- <td>{{op.calls_band_mode}}</td>
- <td>{{op.dxccs}}</td>
- <td>{{op.dxccs_band_mode}}</td>
- <td>{{op.grids}}</td>
- <td>{{op.grids_band_mode}}</td>
+ <td style="text-align: right;">{{op.qsos|intcomma}}</td>
+ <td style="text-align: right;">{{op.contest_qsos|intcomma}}</td>
+ <td style="text-align: right;"><b>{{op.score|intcomma}}</b></td>
+ <td style="text-align: right;">{{op.calls|intcomma}}</td>
+ <td style="text-align: right;">{{op.calls_band_mode|intcomma}}</td>
+ <td style="text-align: right;">{{op.dxccs|intcomma}}</td>
+ <td style="text-align: right;">{{op.dxccs_band_mode|intcomma}}</td>
+ <td style="text-align: right;">{{op.grids|intcomma}}</td>
+ <td style="text-align: right;">{{op.grids_band_mode|intcomma}}</td>
  </tr>
 {% endfor %}
 </ul>

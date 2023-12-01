@@ -9,8 +9,8 @@
 <tr>
  <th>Event</th>
  <th>Cabrillo</th>
- <th>time</th>
  <th>logs</th>
+ <th>time</th>
 </tr>
 </thead>
 
@@ -18,8 +18,8 @@
  <tr>
  <td><a href="/log/event/{{event.event|urlencode:''}}/"><b>{{event.event}}</b></a></td>
  <td>{{event.cabrillo_name|default_if_none:''}}</td>
- <td>{{event.start_str}}-{{event.stop_str}}</td>
- <td>{{event.count}}</td>
+ <td style="text-align: right;"><b>{{event.count|intcomma}}</b></td>
+ <td>{{event.start_str}} - {{event.stop_str}}</td>
  </tr>
 {% endfor %}
 </table>

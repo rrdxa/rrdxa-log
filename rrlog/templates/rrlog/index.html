@@ -1,4 +1,5 @@
 {% extends 'rrlog/rrdxa.html' %}
+{% load humanize %}
 
 {% block content %}
 <h1>RRDXA Logbook</h1>
@@ -13,16 +14,16 @@
 <thead>
 <tr>
  <th>Event</th>
- <th>time</th>
  <th>logs</th>
+ <th>time</th>
 </tr>
 </thead>
 
 {% for event in events %}
  <tr>
  <td><a href="/log/event/{{event.event|urlencode:''}}/"><b>{{event.event}}</b></a></td>
- <td>{{event.start_str}}-{{event.stop_str}}</td>
- <td>{{event.count}}</td>
+ <td style="text-align: right;"><b>{{event.count|intcomma}}</b></td>
+ <td>{{event.start_str}} - {{event.stop_str}}</td>
  </tr>
 {% endfor %}
 </table>
