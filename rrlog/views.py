@@ -23,22 +23,22 @@ left join dxcc on log.dxcc = dxcc.dxcc
 
 q_events = """
 select event, cabrillo_name,
-to_char(lower(period), 'DD.MM.YYYY HH24:MI') as start_str, to_char(upper(period), 'DD.MM.YYYY HH24:MI') as stop_str,
+to_char(e.start, 'DD.MM.YYYY HH24:MI') as start_str, to_char(e.stop, 'DD.MM.YYYY HH24:MI') as stop_str,
 count(u)
 from event e left join upload u on e.event_id = u.event_id
-where lower(period) >= now() - '1 year'::interval
+where e.start >= now() - '1 year'::interval
 group by e.event_id
-order by upper(period) desc
+order by e.stop desc
 limit %s
 """
 
 q_eventlist = """
 select event_id, event,
-to_char(lower(period), 'FMMonth YYYY') as month_str,
-to_char(lower(period), 'DD.MM.YYYY HH24:MI') as start_str, to_char(upper(period), 'DD.MM.YYYY HH24:MI') as stop_str
+to_char(start, 'FMMonth YYYY') as month_str,
+to_char(start, 'DD.MM.YYYY HH24:MI') as start_str, to_char(stop, 'DD.MM.YYYY HH24:MI') as stop_str
 from event e
-where lower(period) >= now() - '1 year'::interval
-order by upper(period) desc
+where start >= now() - '1 year'::interval
+order by stop desc
 limit 100
 """
 
@@ -196,7 +196,7 @@ def v_events(request):
         #username = message
 
         with connection.cursor() as cursor:
-            cursor.execute("insert into event (event, cabrillo_name, period) values (%s, %s, tstzrange(%s, %s, '[]'))",
+            cursor.execute("insert into event (event, cabrillo_name, start, stop) values (%s, %s, %s, %s)",
                            [request.POST['event'], request.POST['cabrillo_name'], request.POST['start'], request.POST['end']])
             connection.commit()
 
@@ -301,7 +301,7 @@ def v_year(request, year):
 
 q_upload_list = """select uploader, id, ts,
 to_char(ts, 'DD.MM.YYYY HH24:MI') as ts_str,
-qsos, to_char(start, 'DD.MM.YYYY') as start_str, to_char(stop, 'DD.MM.YYYY') as stop_str,
+qsos, to_char(e.start, 'DD.MM.YYYY') as start_str, to_char(e.stop, 'DD.MM.YYYY') as stop_str,
 filename, category_operator,
 station_callsign, operator, contest, event,
 error
