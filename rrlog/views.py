@@ -38,7 +38,7 @@ to_char(start, 'FMMonth YYYY') as month_str,
 to_char(start, 'DD.MM.YYYY HH24:MI') as start_str, to_char(stop, 'DD.MM.YYYY HH24:MI') as stop_str
 from event e
 where start >= now() - '1 year'::interval
-order by stop desc
+order by start desc
 limit 100
 """
 
@@ -366,7 +366,7 @@ def v_download(request, upload_id):
     username = message
 
     with connection.cursor() as cursor:
-        cursor.execute(q_download, [id, username, username])
+        cursor.execute(q_download, [upload_id, username, username])
         adif, filename = cursor.fetchone()
 
     response = HttpResponse(adif, content_type='text/plain; charset=utf-8')

@@ -109,7 +109,7 @@ Summary and soapbox will be mailed to the RRDXA reflector."></textarea></td>
  <td>{% if upload.event %}<a href="/log/event/{{upload.event|urlencode:''}}/">{{upload.event}}</a>{% endif %}</td>
  <td>{{upload.error|default_if_none:''}}</td>
  <td>
-  <form action="/log/upload/" method="POST">
+  <form action="/log/{{filetype|default_if_none:'cabrillo'}}-upload/" method="POST">
      <button name="delete" value="{{upload.id}}" type="submit">delete</button>
   </form>
  </td>

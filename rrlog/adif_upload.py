@@ -27,6 +27,8 @@ def adif_upload(cursor, content, station_callsign, operator, contest, upload_id)
 
         for qso in qsos:
             start = adif_io.time_on(qso)
+            if start is None:
+                continue
             upload_start = min(upload_start, start) if upload_start else start
             upload_stop = max(upload_stop, start) if upload_stop else start
 

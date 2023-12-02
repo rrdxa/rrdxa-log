@@ -96,6 +96,8 @@ def read_from_file(filename):
 _one_day = timedelta(days=1)
     
 def time_on(qso):
+    if 'QSO_DATE' not in qso or 'TIME_ON' not in qso:
+        return None
     date = qso['QSO_DATE']
     y = int(date[0:4])
     mo = int(date[4:6])
