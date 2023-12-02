@@ -6,6 +6,7 @@ begin;
 \ir mode.sql
 \ir contest.sql
 \ir log.sql
+\it schedule.sql
 commit;
 
 \ir wp_fdw.sql
