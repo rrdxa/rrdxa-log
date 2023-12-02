@@ -26,6 +26,7 @@
 <tr>
  <td>Event:</td>
  <td><select name="event_id" id="type">
+  <option value="">-- Select event --</option>
   {% for event in eventlist %}
   {% ifchanged event.month_str %}<optgroup label="{{event.month_str}}">{% endifchanged %}
   <option value="{{event.event_id}}">{{event.event}} -- {{event.start_str}}-{{event.stop_str}}</option>

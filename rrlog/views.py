@@ -159,6 +159,7 @@ select station_callsign,
     category_assisted,
     category_band,
     category_mode,
+    category_operator,
     category_overlay,
     category_power,
     category_station,
@@ -223,6 +224,7 @@ select station_callsign,
     category_assisted,
     category_band,
     category_mode,
+    category_operator,
     category_overlay,
     category_power,
     category_station,
@@ -234,7 +236,7 @@ order by qsos desc nulls last, claimed_score desc nulls last
 )
 select * from events
 union all
-select null, null, null, null, sum(qsos), sum(claimed_score), null, null, null, null, null, null, null, null from events
+select count(*)::text, -1, null, null, sum(qsos), sum(claimed_score), null, null, null, null, null, null, null, null, null from events
 """
 
 def v_event(request, event):

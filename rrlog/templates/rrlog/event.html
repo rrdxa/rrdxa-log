@@ -11,6 +11,7 @@
  <th>exch</th>
  <th>QSOs</th>
  <th>score</th>
+ <th>category</th>
  <th>mode</th>
  <th>band</th>
  <th>power</th>
@@ -21,15 +22,26 @@
 
 {% for entry in entries %}
  <tr>
+ {% if entry.upload_id == -1 %}
+ <td style="text-align: right;"><b>{{entry.station_callsign|intcomma}}</b></td>
+ <td></td>
+ <td style="text-align: right;"><b>{{entry.qsos|default_if_none:''|intcomma}}</b></td>
+ <td style="text-align: right;"><b>{{entry.claimed_score|default_if_none:''|intcomma}}</b></td>
+ <td></td>
+ <td></td>
+ <td></td>
+ <td></td>
+ <td></td>
+ <td></td>
+ {% else %}
  <td>
   <a href="/log/summary/{{entry.upload_id}}/"><b>{{entry.station_callsign|default_if_none:''}}</b></a>
-  {% if entry.operators %}
-   ({{entry.operators}})
-  {% endif %}
-</td>
+  {% if entry.operators %} ({{entry.operators}}) {% endif %}
+ </td>
  <td>{{entry.exchange|default_if_none:''}}</td>
  <td style="text-align: right;">{{entry.qsos|default_if_none:''|intcomma}}</td>
  <td style="text-align: right;">{{entry.claimed_score|default_if_none:''|intcomma}}</td>
+ <td>{{entry.category_operator|default_if_none:''}}</td>
  <td>{{entry.category_mode|default_if_none:''}}</td>
  <td>{{entry.category_band|default_if_none:''}}</td>
  <td>{{entry.category_power|default_if_none:''}}</td>
@@ -38,6 +50,7 @@
   {{entry.category_overlay|default_if_none:''}}
   {{entry.category_time|default_if_none:''}}
  </td>
+ {% endif %}
  </tr>
 {% endfor %}
 </ul>
