@@ -193,11 +193,11 @@ def v_events(request):
             response = render(request, 'rrlog/generic.html', { 'message': message }, status=401)
             response['WWW-Authenticate'] = 'Basic realm="RRDXA Log Upload"'
             return response
-        #username = message
+        username = message
 
         with connection.cursor() as cursor:
-            cursor.execute("insert into event (event, cabrillo_name, start, stop) values (%s, %s, %s, %s)",
-                           [request.POST['event'], request.POST['cabrillo_name'], request.POST['start'], request.POST['end']])
+            cursor.execute("insert into event (event, cabrillo_name, start, stop, author) values (%s, %s, %s, %s, %s)",
+                           [request.POST['event'], request.POST['cabrillo_name'], request.POST['start'], request.POST['end'], username])
             connection.commit()
 
     with connection.cursor() as cursor:

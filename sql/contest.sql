@@ -3,7 +3,8 @@ create table rrdxa.event (
     cabrillo_name text,
     event text not null unique,
     start timestamptz not null,
-    stop timestamptz not null
+    stop timestamptz not null,
+    author text
 );
 
 comment on column rrdxa.event.event is 'Unique name of this event, e.g. "WAG 2023"';
