@@ -185,6 +185,19 @@ def v_call(request, call):
     }
     return render(request, 'rrlog/call.html', context)
 
+q_schedules = """select 
+ schedule.cabrillo_name,
+ schedule.prefix, schedule.dateformat,
+ schedule.day,
+ schedule.month,
+ schedule.week,
+ schedule.dow,
+ to_char(schedule.start, 'HH:MM') start,
+ schedule.days,
+ to_char(schedule.stop, 'HH:MM') stop
+from schedule
+order by month, (week+8) % 8, dow, start"""
+
 def v_events(request):
     if request.method == 'POST':
         # authentication
@@ -203,12 +216,15 @@ def v_events(request):
     with connection.cursor() as cursor:
         cursor.execute(q_events, [500])
         events = namedtuplefetchall(cursor)
+        cursor.execute(q_schedules)
+        schedules = namedtuplefetchall(cursor)
 
     today = str(datetime.date.today())
 
     context = {
         'today': today,
         'events': events,
+        'schedules': schedules,
     }
     return render(request, 'rrlog/events.html', context)
 

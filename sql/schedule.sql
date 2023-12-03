@@ -11,7 +11,7 @@ create table rrdxa.schedule (
     stop time not null
 );
 
-comment on column rrdxa.schedule.week is 'week number in month, -1 for "last dow in month", -2 for "last full weekend in month" (with dow=6)';
+comment on column rrdxa.schedule.week is 'week number in month, negative numbers for "at least this many days before the end of the month"';
 
 -- yearly contests
 -- the big ones

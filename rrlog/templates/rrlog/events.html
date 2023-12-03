@@ -33,10 +33,49 @@
 <table border=0>
 <tr><td>Event name</td> <td><input name="event"> Name for this event, e.g. <tt>CQ-WW-CW 2023</tt> </td></tr>
 <tr><td>Cabrillo name </td> <td><input name="cabrillo_name"> Cabrillo contest name, e.g. <tt>CQ-WW-CW</tt> </td></tr>
-<tr><td>Event start</td> <td><input name="start" value="{{today}} 0:00"> UTC</td></tr>
+<tr><td>Event start</td> <td><input name="start" value="{{today}} 00:00"> UTC</td></tr>
 <tr><td>Event end</td> <td><input name="end" value="{{today}} 24:00"> UTC</td> </tr>
 <tr><td></td> <td><button type="submit">Create</button></td></tr>
 </table>
 </form>
+
+<h2>Scheduled Events</h2>
+
+<div>
+The system knows about some recurring events. These will be created on the day they start.
+Negative week numbers mean "at least this many days before the end of the month".
+</div>
+
+<br>
+
+<table border=0>
+<thead>
+<tr>
+ <th>Cabrillo</th>
+ <th>Event template</th>
+ <th>day</th>
+ <th>month</th>
+ <th>week</th>
+ <th>dow</th>
+ <th>start</th>
+ <th>days</th>
+ <th>stop</th>
+</tr>
+</thead>
+
+{% for schedule in schedules %}
+ <tr>
+ <td>{{schedule.cabrillo_name}}</td>
+ <td>{{schedule.prefix}} {{schedule.dateformat}}</td>
+ <td>{{schedule.day|default_if_none:''}}</td>
+ <td>{{schedule.month|default_if_none:''}}</td>
+ <td>{{schedule.week|default_if_none:''}}</td>
+ <td>{{schedule.dow|default_if_none:''}}</td>
+ <td>{{schedule.start}}</td>
+ <td>{{schedule.days}}</td>
+ <td>{{schedule.stop}}</td>
+ </tr>
+{% endfor %}
+</table>
 
 {% endblock %}
