@@ -28,7 +28,7 @@ count(u)
 from event e left join upload u on e.event_id = u.event_id
 where e.start >= now() - '1 year'::interval
 group by e.event_id
-order by e.stop desc
+order by e.start desc
 limit %s
 """
 
