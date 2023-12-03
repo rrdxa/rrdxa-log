@@ -23,7 +23,7 @@ left join dxcc on log.dxcc = dxcc.dxcc
 
 q_events = """
 select event, cabrillo_name,
-to_char(e.start, 'DD.MM.YYYY HH24:MI') as start_str, to_char(e.stop, 'DD.MM.YYYY HH24:MI') as stop_str,
+month_str(e.start), start_str(e.start), stop_str(e.stop),
 count(u)
 from event e left join upload u on e.event_id = u.event_id
 where e.start >= now() - '1 year'::interval
@@ -34,8 +34,7 @@ limit %s
 
 q_eventlist = """
 select event_id, event,
-to_char(start, 'FMMonth YYYY') as month_str,
-to_char(start, 'DD.MM.YYYY HH24:MI') as start_str, to_char(stop, 'DD.MM.YYYY HH24:MI') as stop_str
+month_str(start), start_str(start), stop_str(stop)
 from event e
 where start >= now() - '1 year'::interval
 order by start desc
@@ -302,8 +301,9 @@ def v_year(request, year):
     return render(request, 'rrlog/year.html', context)
 
 q_upload_list = """select uploader, id, ts,
-to_char(ts, 'DD.MM.YYYY HH24:MI') as ts_str,
-qsos, to_char(u.start, 'DD.MM.YYYY') as start_str, to_char(u.stop, 'DD.MM.YYYY') as stop_str,
+start_str(ts) as ts_str,
+qsos,
+start_str(u.start), stop_str(u.stop),
 filename, category_operator,
 station_callsign, operator, contest, event,
 error
