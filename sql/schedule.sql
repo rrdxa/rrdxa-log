@@ -16,18 +16,27 @@ comment on column rrdxa.schedule.week is 'week number in month, -1 for "last dow
 -- yearly contests
 insert into schedule values ('ARRL-RU-RTTY',    'ARRL-RU-RTTY', 'YYYY', null,  1, 1, 6, '18:00', 1, '24:00');
 insert into schedule values ('DARC-10M',        'DARC-10M',     'YYYY', null,  1, 2, 0, '09:00', 0, '11:00');
+insert into schedule values ('HA-DX',           'HA-DX',        'YYYY', null,  1, 3, 6, '12:00', 1, '12:00');
 insert into schedule values ('CQ-WW-160M',      'CQ-WW-160M',   'YYYY', null,  1,-3, 5, '22:00', 2, '22:00'); -- last full weekend including Friday
+insert into schedule values ('REF-CW',          'REF-CW',       'YYYY', null,  1,-1, 6, '06:00', 1, '18:00');
+insert into schedule values ('UBA-DX-SSB',      'UBA-DX-SSB',   'YYYY', null,  1,-1, 6, '13:00', 1, '13:00');
+insert into schedule values ('EU-DX',           'EU-DX',        'YYYY', null,  2, 1, 6, '12:00', 1, '12:00');
 insert into schedule values ('CQ-WPX-RTTY',     'CQ-WPX-RTTY',  'YYYY', null,  2, 2, 6, '00:00', 1, '24:00');
-insert into schedule values ('CQ-WPX-SSB',      'CQ-WPX-SSB',   'YYYY', null,  3,-1, 6, '00:00', 1, '24:00');
-insert into schedule values ('CQ-WPX-CW',       'CQ-WPX-CW',    'YYYY', null,  5,-1, 6, '00:00', 1, '24:00');
+insert into schedule values ('ARRL-DX-CW',      'ARRL-DX-CW',   'YYYY', null,  2, 3, 6, '00:00', 1, '24:00');
+insert into schedule values ('REF-SSB',         'REF-SSB',      'YYYY', null,  2,-1, 6, '06:00', 1, '18:00');
+insert into schedule values ('UBA-DX-CW',       'UBA-DX-CW',    'YYYY', null,  2,-1, 6, '13:00', 1, '13:00');
+insert into schedule values ('ARRL-DX-SSB',     'ARRL-DX-SSB',  'YYYY', null,  3, 1, 6, '00:00', 1, '24:00');
+insert into schedule values ('WOMENS-DAY',      'WOMENS-DAY',   'YYYY', 8,     3, null, null, '18:00', 0, '21:00'); -- Mar 8th
+insert into schedule values ('CQ-WPX-SSB',      'CQ-WPX-SSB',   'YYYY', null,  3,-2, 6, '00:00', 1, '24:00');
+insert into schedule values ('CQ-WPX-CW',       'CQ-WPX-CW',    'YYYY', null,  5,-2, 6, '00:00', 1, '24:00');
 insert into schedule values ('DARC-WAEDC-CW',   'WAEDC-CW',     'YYYY', null,  8, 2, 6, '00:00', 1, '24:00');
 insert into schedule values ('DARC-WAEDC-SSB',  'WAEDC-SSB',    'YYYY', null,  9, 2, 6, '00:00', 1, '24:00');
-insert into schedule values ('CQ-WW-RTTY',      'CQ-WW-RTTY',   'YYYY', null,  9,-1, 6, '00:00', 1, '24:00');
+insert into schedule values ('CQ-WW-RTTY',      'CQ-WW-RTTY',   'YYYY', null,  9,-2, 6, '00:00', 1, '24:00');
 insert into schedule values ('WAG',             'WAG',          'YYYY', null, 10, 3, 6, '15:00', 1, '15:00');
-insert into schedule values ('CQ-WW-SSB',       'CQ-WW-SSB',    'YYYY', null, 10,-1, 6, '00:00', 1, '24:00');
+insert into schedule values ('CQ-WW-SSB',       'CQ-WW-SSB',    'YYYY', null, 10,-2, 6, '00:00', 1, '24:00');
 insert into schedule values ('DARC-WAEDC-RTTY', 'WAEDC-RTTY',   'YYYY', null, 11, 2, 6, '00:00', 1, '24:00');
 insert into schedule values ('OM-OK-DX',        'OM-OK-DX',     'YYYY', null, 11, 2, 6, '12:00', 1, '12:00');
-insert into schedule values ('CQ-WW-CW',        'CQ-WW-CW',     'YYYY', null, 11,-1, 6, '00:00', 1, '24:00');
+insert into schedule values ('CQ-WW-CW',        'CQ-WW-CW',     'YYYY', null, 11,-2, 6, '00:00', 1, '24:00');
 insert into schedule values ('ARRL-10M',        'ARRL-10M',     'YYYY', null, 12, 2, 6, '00:00', 1, '24:00');
 insert into schedule values ('PRO-CW',          'PRO-CW',       'YYYY', null, 12, 1, 6, '12:00', 1, '12:00');
 insert into schedule values ('FT-ROUNDUP',      'FT-ROUNDUP',   'YYYY', null, 12, 1, 6, '18:00', 1, '24:00');
@@ -60,8 +69,6 @@ declare
     d_dow int := extract(dow from date);
     s record;
 begin
-
-    --raise notice 'day %, month %, week %, dow %', d_day, d_month, d_week, d_dow;
 
     for s in select * from schedule where
         (day is null or day = d_day) and

@@ -15,15 +15,14 @@
 </thead>
 
 {% for event in events %}
- <tr>
  {% ifchanged event.month_str %}
- <th colspan="4" style="text-align: left;">{{event.month_str}}</th>
- {% else %}
+ <tr><th colspan="4" style="text-align: left;">{{event.month_str}}</th></tr>
+ {% endifchanged %}
+ <tr>
  <td><a href="/log/event/{{event.event|urlencode:''}}/"><b>{{event.event}}</b></a></td>
  <td>{{event.cabrillo_name|default_if_none:''}}</td>
  <td style="text-align: right;"><b>{{event.count|intcomma}}</b></td>
  <td>{{event.start_str}} - {{event.stop_str}}</td>
- {% endifchanged %}
  </tr>
 {% endfor %}
 </table>
