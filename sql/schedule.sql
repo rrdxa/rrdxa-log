@@ -37,13 +37,13 @@ insert into schedule values ('WAG',             'WAG',          'YYYY', null, 10
 insert into schedule values ('DARC-WAEDC-RTTY', 'WAEDC-RTTY',   'YYYY', null, 11, 2, 6, '00:00', 1, '24:00');
 insert into schedule values ('DARC-XMAS',       'DARC-XMAS',    'YYYY', 26,   12, null, null, '8:30', 0, '11:00'); -- Dec 26th
 -- contests that come in pairs
-insert into schedule values ('REF-CW',          'REF-CW',       'YYYY', null,  1,-1, 6, '06:00', 1, '18:00');
-insert into schedule values ('REF-SSB',         'REF-SSB',      'YYYY', null,  2,-1, 6, '06:00', 1, '18:00');
-insert into schedule values ('UBA-DX-SSB',      'UBA-DX-SSB',   'YYYY', null,  1,-1, 6, '13:00', 1, '13:00');
-insert into schedule values ('UBA-DX-CW',       'UBA-DX-CW',    'YYYY', null,  2,-1, 6, '13:00', 1, '13:00');
-insert into schedule values ('UKEIDX-CW',       'UKEIDX-CW',    'YYYY', null,  4,-1, 6, '12:00', 1, '12:00');
+insert into schedule values ('REF-CW',          'REF-CW',       'YYYY', null,  1,-2, 6, '06:00', 1, '18:00');
+insert into schedule values ('REF-SSB',         'REF-SSB',      'YYYY', null,  2,-2, 6, '06:00', 1, '18:00');
+insert into schedule values ('UBA-DX-SSB',      'UBA-DX-SSB',   'YYYY', null,  1,-2, 6, '13:00', 1, '13:00');
+insert into schedule values ('UBA-DX-CW',       'UBA-DX-CW',    'YYYY', null,  2,-2, 6, '13:00', 1, '13:00');
+insert into schedule values ('UKEIDX-CW',       'UKEIDX-CW',    'YYYY', null,  4,-2, 6, '12:00', 1, '12:00');
 -- UKEIDX-SSB doesn't have a fixed schedule (https://www.ukeicc.com/dx-contest-rules.php)
---insert into schedule values ('UKEIDX-SSB',      'UKEIDX-SSB',   'YYYY', null,  9,-1, 6, '12:00', 1, '12:00');
+--insert into schedule values ('UKEIDX-SSB',      'UKEIDX-SSB',   'YYYY', null,  9,-2, 6, '12:00', 1, '12:00');
 insert into schedule values ('EA-MAJESTAD-CW', 'EA-MAJESTAD-CW','YYYY', null,  5, 3, 6, '12:00', 1, '12:00');
 insert into schedule values ('EA-MAJESTAD-SSB','EA-MAJESTAD-SSB','YYYY',null,  6, 4, 6, '12:00', 1, '12:00');
 insert into schedule values ('IARU-R1-FD-CW',  'IARU-R1-FD-CW', 'YYYY', null,  6, 1, 6, '15:00', 1, '15:00');
@@ -56,7 +56,7 @@ insert into schedule values ('SAC-SSB',         'SAC-SSB',      'YYYY', null, 10
 insert into schedule values ('STEW-PERRY',      'STEW-PERRY',   'YYYY-MM', null,  3, 2, 6, '15:00', 1, '15:00');
 insert into schedule values ('STEW-PERRY',      'STEW-PERRY',   'YYYY-MM', null,  6, 3, 6, '15:00', 1, '15:00');
 insert into schedule values ('STEW-PERRY',      'STEW-PERRY',   'YYYY-MM', null,  8, 3, 6, '15:00', 1, '15:00');
-insert into schedule values ('STEW-PERRY',      'STEW-PERRY',   'YYYY-MM', null, 12,-1, 6, '15:00', 1, '15:00');
+insert into schedule values ('STEW-PERRY',      'STEW-PERRY',   'YYYY-MM', null, 12,-2, 6, '15:00', 1, '15:00');
 -- everything else
 insert into schedule values ('HA-DX',           'HA-DX',        'YYYY', null,  1, 3, 6, '12:00', 1, '12:00');
 insert into schedule values ('EU-DX',           'EU-DX',        'YYYY', null,  2, 1, 6, '12:00', 1, '12:00');
