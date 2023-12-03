@@ -6,6 +6,7 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('logbook/', views.v_logbook),
     path('call/<str:call>/', views.v_call, name='call'),
+    path('challenge/', views.v_challenge, name='challenge'),
     path('contest/<str:contest>/', views.v_contest, name='contest'),
     path('dxcc/<str:dxcc>/', views.v_dxcc, name='dxcc'),
     path('event/', views.v_events, name='events'),

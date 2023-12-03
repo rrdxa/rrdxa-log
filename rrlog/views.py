@@ -185,6 +185,39 @@ def v_call(request, call):
     }
     return render(request, 'rrlog/call.html', context)
 
+q_challenge = """
+select coalesce(operator, station_callsign) as call,
+    sum(qsos) as qsos,
+    count(*) filter (where qsos >= 60) as multis,
+    sum(qsos) * count(*) filter (where qsos >= 60) as score,
+    array_agg(event order by e.start) as events,
+    array_agg(qsos order by e.start) as event_qsos,
+    array_agg(u.id order by e.start) as event_upload_ids
+from upload u join event e on u.event_id = e.event_id
+where e.start between %s and %s
+group by 1
+order by 4 desc, 2 desc
+"""
+
+def v_challenge(request, year=None):
+    today = datetime.date.today()
+    year = today.year
+
+    with connection.cursor() as cursor:
+        cursor.execute(q_challenge, [f"{year}-01-01", f"{year}-12-31"])
+        entries = namedtuplefetchall(cursor)
+
+    # psycopg2 doesn't understand tuples in arrays, so we select 3 separate
+    # arrays above and zip them together here
+    for entry in entries:
+        entry.events[:] = zip(entry.events, entry.event_qsos, entry.event_upload_ids)
+
+    context = {
+        'title': f"RRDXA Challenge {year}",
+        'entries': entries,
+    }
+    return render(request, 'rrlog/challenge.html', context)
+
 q_schedules = """select 
  schedule.cabrillo_name,
  schedule.prefix, schedule.dateformat,

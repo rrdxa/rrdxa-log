@@ -1,0 +1,35 @@
+{% extends 'rrlog/rrdxa.html' %}
+{% load humanize %}
+
+{% block content %}
+<h1>{{title}}</h1>
+
+<table border=0>
+<thead>
+<tr>
+ <th>Call</th>
+ <th>QSOs</th>
+ <th>multi</th>
+ <th>score</th>
+ <th>events</th>
+</tr>
+</thead>
+
+{% for entry in entries %}
+ <tr>
+ <td><a href="/log/call/{{entry.call|urlencode:''}}/"><b>{{entry.call}}</b></a></td>
+ <td style="text-align: right;">{{entry.qsos|intcomma}}</td>
+ <td style="text-align: right;">{{entry.multis|intcomma}}</td>
+ <td style="text-align: right;"><b>{{entry.score|intcomma}}</b></td>
+ <td>
+ {% for event in entry.events %}
+ {% if event.1 >= 60 %}<b>{% endif %}
+ <a href="/log/event/{{event.0|urlencode:''}}/">{{event.0}}</a>
+ <a href="/log/summary/{{event.2|urlencode:''}}/">{{event.1}}</a>{% if event.1 >= 60 %}</b>{% endif %}{% if not forloop.last %},{% endif %}
+ {% endfor %}
+ </td>
+ </tr>
+{% endfor %}
+</table>
+
+{% endblock %}
