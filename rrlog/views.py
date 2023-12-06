@@ -28,6 +28,7 @@ count(u)
 from event e left join upload u on e.event_id = u.event_id
 where e.start >= now() - '1 year'::interval
 group by e.event_id
+having count(u) >= %s
 order by e.start desc
 limit %s
 """
@@ -62,7 +63,7 @@ limit %s
 
 def index(request):
     with connection.cursor() as cursor:
-        cursor.execute(q_events, [30])
+        cursor.execute(q_events, [1, 30])
         events = namedtuplefetchall(cursor)
 
         today = datetime.date.today()
@@ -247,7 +248,7 @@ def v_events(request):
             connection.commit()
 
     with connection.cursor() as cursor:
-        cursor.execute(q_events, [500])
+        cursor.execute(q_events, [0, 500])
         events = namedtuplefetchall(cursor)
         cursor.execute(q_schedules)
         schedules = namedtuplefetchall(cursor)
