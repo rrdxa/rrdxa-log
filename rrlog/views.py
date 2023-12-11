@@ -61,27 +61,21 @@ order by score desc
 limit %s
 """
 
-def index(request):
+def v_index(request):
+    limit = 10
+
     with connection.cursor() as cursor:
-        cursor.execute(q_events, [1, 30])
+        cursor.execute(q_events, [3, 30])
         events = namedtuplefetchall(cursor)
 
         today = datetime.date.today()
         date = f"{today.year}-{today.month:02}-01"
-        cursor.execute(q_operator_stats.format(''), [date, date, '1 month', 20])
+        cursor.execute(q_operator_stats.format(''), [date, date, '1 month', limit])
         current_month_stats = namedtuplefetchall(cursor)
 
-        date = f"{today.year-1 if today.month==1 else today.year}-{12 if today.month==1 else today.month-1:02}-01"
-        cursor.execute(q_operator_stats.format(''), [date, date, '1 month', 20])
-        previous_month_stats = namedtuplefetchall(cursor)
-
         date = f"{today.year}-01-01"
-        cursor.execute(q_operator_stats.format(''), [date, date, '1 year', 20])
+        cursor.execute(q_operator_stats.format(''), [date, date, '1 year', limit])
         current_year_stats = namedtuplefetchall(cursor)
-
-        date = f"{today.year-1}-01-01"
-        cursor.execute(q_operator_stats.format(''), [date, date, '1 year', 20])
-        previous_year_stats = namedtuplefetchall(cursor)
 
         cursor.execute(q_log.format(''), [])
         qsos = namedtuplefetchall(cursor)
@@ -91,16 +85,47 @@ def index(request):
             'events': events,
             'current_month': f"{today.year}-{today.month:02}",
             'current_month_stats': current_month_stats,
+            'current_year': today.year,
+            'current_year_stats': current_year_stats,
+            'qsos': qsos,
+            'urlpath': '/log/logbook/',
+            }
+    return render(request, 'rrlog/index.html', context)
+
+def v_mao(request):
+    limit = 100
+
+    with connection.cursor() as cursor:
+        today = datetime.date.today()
+        date = f"{today.year}-{today.month:02}-01"
+        cursor.execute(q_operator_stats.format(''), [date, date, '1 month', limit])
+        current_month_stats = namedtuplefetchall(cursor)
+
+        date = f"{today.year-1 if today.month==1 else today.year}-{12 if today.month==1 else today.month-1:02}-01"
+        cursor.execute(q_operator_stats.format(''), [date, date, '1 month', limit])
+        previous_month_stats = namedtuplefetchall(cursor)
+
+        date = f"{today.year}-01-01"
+        cursor.execute(q_operator_stats.format(''), [date, date, '1 year', limit])
+        current_year_stats = namedtuplefetchall(cursor)
+
+        date = f"{today.year-1}-01-01"
+        cursor.execute(q_operator_stats.format(''), [date, date, '1 year', limit])
+        previous_year_stats = namedtuplefetchall(cursor)
+
+    context = {
+            'title': 'Logbook',
+            'current_month': f"{today.year}-{today.month:02}",
+            'current_month_stats': current_month_stats,
             'previous_month': f"{today.year-1 if today.month==1 else today.year}-{12 if today.month==1 else today.month-1:02}",
             'previous_month_stats': previous_month_stats,
             'current_year': today.year,
             'current_year_stats': current_year_stats,
             'previous_year': today.year - 1,
             'previous_year_stats': previous_year_stats,
-            'qsos': qsos,
             'urlpath': '/log/logbook/',
             }
-    return render(request, 'rrlog/index.html', context)
+    return render(request, 'rrlog/mao.html', context)
 
 def get_request_qsos(request, quals, params):
     for key in request.GET:
@@ -201,8 +226,9 @@ order by 4 desc, 2 desc
 """
 
 def v_challenge(request, year=None):
-    today = datetime.date.today()
-    year = today.year
+    if year is None:
+        today = datetime.date.today()
+        year = today.year
 
     with connection.cursor() as cursor:
         cursor.execute(q_challenge, [f"{year}-01-01", f"{year}-12-31"])
