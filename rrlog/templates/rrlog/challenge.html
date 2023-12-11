@@ -23,9 +23,9 @@
  <td style="text-align: right;"><b>{{entry.score|intcomma}}</b></td>
  <td>
  {% for event in entry.events %}
- {% if event.1 >= 60 %}<b>{% endif %}
- <a href="/log/event/{{event.0|urlencode:''}}/">{{event.0}}</a>
- <a href="/log/summary/{{event.2|urlencode:''}}/">{{event.1}}</a>{% if event.1 >= 60 %}</b>{% endif %}{% if not forloop.last %},{% endif %}
+ <span style="{% if event.1 >= 60 or event.vhf and event.1 >= 30 %}font-weight: bold;{% endif %}">
+ <a href="/log/event/{{event.0|urlencode:''}}/"><span style="{% if event.3 %}color: red;{% endif %}">{{event.0}}</span></a>
+ <a href="/log/summary/{{event.2|urlencode:''}}/">{{event.1}}</a></span>{% if not forloop.last %},{% endif %}
  {% endfor %}
  </td>
  </tr>

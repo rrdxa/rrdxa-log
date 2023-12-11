@@ -22,7 +22,7 @@ left join dxcc on log.dxcc = dxcc.dxcc
 """
 
 q_events = """
-select event, cabrillo_name,
+select event, cabrillo_name, vhf,
 month_str(e.start), start_str(e.start), stop_str(e.stop),
 count(u)
 from event e left join upload u on e.event_id = u.event_id
@@ -214,11 +214,12 @@ def v_call(request, call):
 q_challenge = """
 select coalesce(operator, station_callsign) as call,
     sum(qsos) as qsos,
-    count(*) filter (where qsos >= 60) as multis,
-    sum(qsos) * count(*) filter (where qsos >= 60) as score,
-    array_agg(event order by e.start) as events,
-    array_agg(qsos order by e.start) as event_qsos,
-    array_agg(u.id order by e.start) as event_upload_ids
+    count(*) filter (where qsos >= 60 or vhf and qsos >= 30) as multis,
+    sum(qsos) * count(*) filter (where qsos >= 60 or vhf and qsos >= 30) as score,
+    array_agg(event order by e.start, event) as events,
+    array_agg(qsos order by e.start, event) as event_qsos,
+    array_agg(u.id order by e.start, event) as event_upload_ids,
+    array_agg(u.id order by e.start, event) as event_vhf
 from upload u join event e on u.event_id = e.event_id
 where e.start between %s and %s
 group by 1
@@ -234,10 +235,10 @@ def v_challenge(request, year=None):
         cursor.execute(q_challenge, [f"{year}-01-01", f"{year}-12-31"])
         entries = namedtuplefetchall(cursor)
 
-    # psycopg2 doesn't understand tuples in arrays, so we select 3 separate
+    # psycopg2 doesn't understand tuples in arrays, so we select 4 separate
     # arrays above and zip them together here
     for entry in entries:
-        entry.events[:] = zip(entry.events, entry.event_qsos, entry.event_upload_ids)
+        entry.events[:] = zip(entry.events, entry.event_qsos, entry.event_upload_ids, entry.event_vhf)
 
     context = {
         'title': f"RRDXA Challenge {year}",
@@ -269,8 +270,9 @@ def v_events(request):
         username = message
 
         with connection.cursor() as cursor:
-            cursor.execute("insert into event (event, cabrillo_name, start, stop, author) values (%s, %s, %s, %s, %s)",
-                           [request.POST['event'], request.POST['cabrillo_name'], request.POST['start'], request.POST['end'], username])
+            is_vhf = 'vhf' in request.POST
+            cursor.execute("insert into event (event, cabrillo_name, start, stop, author, vhf) values (%s, %s, %s, %s, %s, %s)",
+                           [request.POST['event'], request.POST['cabrillo_name'], request.POST['start'], request.POST['end'], username, is_vhf])
             connection.commit()
 
     with connection.cursor() as cursor:
@@ -406,7 +408,6 @@ def v_upload(request, filetype=None):
             cursor.execute("delete from upload where id = %s and uploader = %s", [id, uploader])
             message = f"Upload {id} deleted"
 
-    # get list of all uploads (including this one)
     with connection.cursor() as cursor:
         if filetype != 'adif':
             cursor.execute(q_eventlist, [])
@@ -414,6 +415,7 @@ def v_upload(request, filetype=None):
         else:
             eventlist = []
 
+        # get list of all uploads (including this one)
         cursor.execute(q_upload_list, [uploader, uploader])
         uploads = namedtuplefetchall(cursor)
 

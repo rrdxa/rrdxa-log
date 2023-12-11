@@ -8,7 +8,8 @@ create table rrdxa.schedule (
     dow int,
     start time not null,
     days int not null default 0,
-    stop time not null
+    stop time not null,
+    vhf boolean not null default false
 );
 
 comment on column rrdxa.schedule.week is 'week number in month, negative numbers for "at least this many days before the end of the month"';
@@ -104,8 +105,8 @@ begin
         (week is null or week = d_week or (week < 0 and rrdxa.last_week_in_month(date, week))) and
         (dow is null or dow = d_dow) loop
 
-        insert into event (event, cabrillo_name, start, stop)
-            values (s.prefix || ' ' || to_char(date, s.dateformat), s.cabrillo_name, date + s.start, date + s.days + s.stop)
+        insert into event (event, cabrillo_name, start, stop, vhf)
+            values (s.prefix || ' ' || to_char(date, s.dateformat), s.cabrillo_name, date + s.start, date + s.days + s.stop, s.vhf)
             on conflict do nothing;
     end loop;
 

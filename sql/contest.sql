@@ -5,7 +5,8 @@ create table rrdxa.event (
     start timestamptz(0) not null,
     stop timestamptz(0) not null,
     author text,
-    created timestamptz(0) not null default now()
+    created timestamptz(0) not null default now(),
+    vhf boolean not null default false
 );
 
 comment on column rrdxa.event.event is 'Unique name of this event, e.g. "WAG 2023"';

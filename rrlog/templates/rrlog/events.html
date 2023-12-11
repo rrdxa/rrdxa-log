@@ -8,7 +8,7 @@
 <thead>
 <tr>
  <th>Event</th>
- <th>Cabrillo</th>
+ <th>UKW</th>
  <th>logs</th>
  <th>time</th>
 </tr>
@@ -19,8 +19,10 @@
  <tr><th colspan="4" style="text-align: left;">{{event.month_str}}</th></tr>
  {% endifchanged %}
  <tr>
- <td><a href="/log/event/{{event.event|urlencode:''}}/"><b>{{event.event}}</b></a></td>
- <td>{{event.cabrillo_name|default_if_none:''}}</td>
+ <td><a href="/log/event/{{event.event|urlencode:''}}/">
+  {% if event.count >= 5 %}<b>{{event.event}}</b>{% else %}{{event.event}}{% endif %}
+  </a></td>
+ <td style="text-align: center;">{% if event.vhf %}✔{% endif %}</td>
  <td style="text-align: right;"><b>{{event.count|intcomma}}</b></td>
  <td>{{event.start_str}} - {{event.stop_str}}</td>
  </tr>
@@ -35,6 +37,7 @@
 <tr><td>Cabrillo name </td> <td><input name="cabrillo_name"> Cabrillo contest name, e.g. <tt>CQ-WW-CW</tt> </td></tr>
 <tr><td>Event start</td> <td><input name="start" value="{{today}} 00:00"> UTC</td></tr>
 <tr><td>Event end</td> <td><input name="end" value="{{today}} 24:00"> UTC</td> </tr>
+<tr><td>UKW</td> <td><input type="checkbox" name="vhf"> This is a VHF/UHF/SHF+ contest</td> </tr>
 <tr><td></td> <td><button type="submit">Create</button></td></tr>
 </table>
 </form>
