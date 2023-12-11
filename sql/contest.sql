@@ -2,9 +2,10 @@ create table rrdxa.event (
     event_id serial primary key,
     cabrillo_name text,
     event text not null unique,
-    start timestamptz not null,
-    stop timestamptz not null,
-    author text
+    start timestamptz(0) not null,
+    stop timestamptz(0) not null,
+    author text,
+    created timestamptz(0) not null default now()
 );
 
 comment on column rrdxa.event.event is 'Unique name of this event, e.g. "WAG 2023"';
