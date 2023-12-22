@@ -1,6 +1,7 @@
 -- refresh passwords
 refresh materialized view rrdxa.wordpress_users;
 refresh materialized view rrdxa.members;
+refresh materialized view rrdxa.rrcalls;
 
 -- delete uploads that have no QSOs
 delete from rrdxa.upload where ts < now() - '4 week'::interval and

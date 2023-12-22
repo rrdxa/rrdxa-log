@@ -2,6 +2,13 @@
 {% load humanize %}
 
 {% block content %}
+<h1>Worked All RRDXA60</h1>
+
+<form action="/log/rrdxa60/">
+Call: <input name="call">
+<input type=submit value="Check QSOs">
+</form>
+
 <h1>Contests and Events [<a href="/log/event/">view all</a>]</h1>
 
 <table border=0>
@@ -35,7 +42,7 @@
 
 {% include 'rrlog/operator_stats.html' with operators=current_year_stats year=current_year %}
 
-<h1>500 most recent QSOs [<a href="/log/logbook/">view</a>]</h1>
+<h1>250 most recent member-member QSOs [<a href="/log/logbook/">view</a>]</h1>
 
 {% include 'rrlog/qsos.html' %}
 

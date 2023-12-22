@@ -54,8 +54,8 @@
  <td><a href="{{urlpath}}{% relative_url 'call' qso.station_callsign request.GET.urlencode %}">{{qso.station_callsign}}</a></td>
  <td>{% if qso.operator %}<a href="{{urlpath}}{% relative_url 'call' qso.operator request.GET.urlencode %}">{{qso.operator}}</a>{% endif %}</td>
  {% endif %}
- <td><a href="{{urlpath}}{% relative_url 'call' qso.call request.GET.urlencode %}">{{qso.call}}</a></td>
- <td>{% if qso.country %}<a href="{{urlpath}}{% relative_url 'country' qso.country request.GET.urlencode %}">{{qso.country}}</a>{% endif %}</td>
+ <td><a href="{{urlpath}}{% relative_url 'call' qso.call request.GET.urlencode %}"><span{% if qso.rrcall %} style="font-weight: bold;"{% endif %}>{{qso.call}}</span></a></td>
+ <td>{% if qso.country %}<a href="{{urlpath}}{% relative_url 'country' qso.country request.GET.urlencode %}">{{qso.country|title}}</a>{% endif %}</td>
  <td><a href="{{urlpath}}{% relative_url 'band' qso.band request.GET.urlencode %}">{{qso.band}}</a></td>
  <td>{{qso.freq|default_if_none:''}}</td>
  <td>{% spaceless %}

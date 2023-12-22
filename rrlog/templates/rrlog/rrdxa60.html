@@ -1,0 +1,49 @@
+{% extends 'rrlog/rrdxa.html' %}
+{% load humanize %}
+
+{% block content %}
+<h1>{{title}}</h1>
+
+<form action="/log/rrdxa60/">
+Call: <input name="call" value="{{call|default_if_none:''}}">
+<input type=submit value="Check QSOs">
+</form>
+
+{% if call %}
+
+<h2>RRDXA members worked</h2>
+
+<table border=0>
+<thead>
+<tr>
+ <th>Operator</th>
+ {% for band in bands %}
+ <th>{{band}}</th>
+ {% endfor %}
+</tr>
+</thead>
+
+{% for op in worked %}
+ <tr>
+ <td>{{op.operator}}
+ {% for band in op.bands %}
+ <td style="text-align: center;">{% if band %}🟢{% endif %}</td>
+ {% endfor %}
+ </tr>
+{% endfor %}
+</table>
+
+<div>
+<br>
+<b>QSO with DA0RR: {% if da0rr %}🟢 yes{% else %}🔴 no{% endif %}</b>
+<br>
+<b>RRDXA60 Bandpoints: {{bandpoints}}</b>
+</div>
+
+<h2>Log</h2>
+
+{% include 'rrlog/qsos.html' %}
+
+{% endif %}
+
+{% endblock %}

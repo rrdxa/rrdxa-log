@@ -49,4 +49,13 @@ order by user_login;
 create index on rrdxa.members (call);
 analyze rrdxa.members;
 
+create materialized view rrdxa.rrcalls as
+select call as rrcall, call as rroperator from members
+union
+select u, call from members, unnest(callsigns) u(u)
+order by 2, 1;
+
+create index on rrdxa.rrcalls(rrcall);
+analyze rrdxa.rrcalls;
+
 commit;

@@ -16,6 +16,7 @@ urlpatterns = [
     path('log/<int:log>/', views.v_log, name='log'),
     path('mao/', views.v_mao, name='mao'),
     path('month/<int:year>-<int:month>/', views.v_month, name='month'),
+    path('rrdxa60/', views.v_rrdxa60, name='challenge'),
     path('year/<int:year>/', views.v_year, name='year'),
 
     path('upload/', views.v_upload, {'filetype': None}, name='upload'),

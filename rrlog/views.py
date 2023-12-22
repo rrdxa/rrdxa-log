@@ -15,10 +15,13 @@ from rrlog.summary import get_summary
 
 q_log = """
 select log.*, dxcc.country,
-to_char(start, 'DD.MM.YYYY') as start_str
+to_char(start, 'DD.MM.YYYY') as start_str,
+rrcall, rroperator
 from log
 left join dxcc on log.dxcc = dxcc.dxcc
-{} order by start desc limit 500
+left join rrcalls on log.call = rrcalls.rrcall
+{}
+order by start desc limit {}
 """
 
 q_events = """
@@ -77,7 +80,7 @@ def v_index(request):
         cursor.execute(q_operator_stats.format(''), [date, date, '1 year', limit])
         current_year_stats = namedtuplefetchall(cursor)
 
-        cursor.execute(q_log.format(''), [])
+        cursor.execute(q_log.format('where rrcall is not null', 250), [])
         qsos = namedtuplefetchall(cursor)
 
     context = {
@@ -152,7 +155,7 @@ def get_request_qsos(request, quals, params):
     where = ('where ' + ' and '.join(quals)) if quals else ''
 
     with connection.cursor() as cursor:
-        cursor.execute(q_log.format(where), params)
+        cursor.execute(q_log.format(where, 500), params)
         qsos = namedtuplefetchall(cursor)
 
     return qsos
@@ -211,6 +214,60 @@ def v_call(request, call):
     }
     return render(request, 'rrlog/call.html', context)
 
+q_worked = """
+select rroperator, band, string_agg(distinct rrcall, ' ')
+from log
+join rrcalls on log.station_callsign = rrcalls.rrcall
+where call = %s and start between %s and %s
+group by rroperator, band
+order by rroperator, band
+"""
+
+def v_rrdxa60(request):
+    call, qsos, bands, worked = None, None, None, []
+    da0rr = False
+    bandpoints = 0
+
+    today = datetime.date.today()
+    year = today.year
+
+    if 'call' in request.GET:
+        call = request.GET['call']
+
+        with connection.cursor() as cursor:
+            params = [call, f"{year}-01-01", f"{year+1}-01-01"]
+            cursor.execute(q_log.format(f"where call = %s and start between %s and %s", 1000), params)
+            qsos = namedtuplefetchall(cursor)
+
+            cursor.execute("select distinct band from log where call = %s and start between %s and %s order by 1", params)
+            bands = [x[0] for x in cursor.fetchall()]
+
+            # compute crosstab of worked members
+            cursor.execute(q_worked, params)
+            wkd = {'DA0RR': {}}
+            for operator, band, calls in cursor.fetchall():
+                if operator not in wkd:
+                    wkd[operator] = {}
+                wkd[operator][band] = calls
+                bandpoints += 1
+                if operator == 'DA0RR': da0rr = True
+            for operator in wkd:
+                worked.append({
+                    'operator': operator,
+                    'bands': [(wkd[operator][band] if band in wkd[operator] else '') for band in bands],
+                })
+
+    context = {
+        'title': f"Worked All RRDXA60",
+        'call': call,
+        'bands': bands,
+        'worked': worked,
+        'bandpoints': bandpoints,
+        'da0rr': da0rr,
+        'qsos': qsos,
+    }
+    return render(request, 'rrlog/rrdxa60.html', context)
+
 q_challenge = """
 select coalesce(operator, station_callsign) as call,
     sum(qsos) as qsos,
@@ -232,7 +289,7 @@ def v_challenge(request, year=None):
         year = today.year
 
     with connection.cursor() as cursor:
-        cursor.execute(q_challenge, [f"{year}-01-01", f"{year}-12-31"])
+        cursor.execute(q_challenge, [f"{year}-01-01", f"{year+1}-01-01"])
         entries = namedtuplefetchall(cursor)
 
     # psycopg2 doesn't understand tuples in arrays, so we select 4 separate
@@ -453,7 +510,7 @@ def v_download(request, upload_id):
 
 def v_summary(request, upload_id):
     with connection.cursor() as cursor:
-        cursor.execute(q_log.format('where upload = %s'), [upload_id])
+        cursor.execute(q_log.format('where upload = %s', 500), [upload_id])
         qsos = namedtuplefetchall(cursor)
         data, summary = get_summary(cursor, upload_id)
 
