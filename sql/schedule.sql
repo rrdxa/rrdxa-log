@@ -73,9 +73,9 @@ insert into schedule values ('OK-DX-RTTY',      'OK-DX-RTTY',   'YYYY', null, 12
 insert into schedule values ('9A-DX',           '9A-DX',        'YYYY', null, 12, 3, 6, '14:00', 1, '24:00');
 
 -- monthly contests
-insert into schedule values ('FT8-ACTIVITY-2M',   'FT8-ACTIVITY 2M',   'YYYY-MM', null, null, 1, 3, '17:00', 0, '21:00'); -- 1st Monday
-insert into schedule values ('FT8-ACTIVITY-70CM', 'FT8-ACTIVITY 70CM', 'YYYY-MM', null, null, 2, 3, '17:00', 0, '21:00'); -- 2nd Monday
-insert into schedule values ('FT8-ACTIVITY-23CM', 'FT8-ACTIVITY 23CM', 'YYYY-MM', null, null, 3, 3, '17:00', 0, '21:00'); -- 3rd Monday
+insert into schedule values ('FT8-ACTIVITY-2M',   'FT8-ACTIVITY 2M',   'YYYY-MM', null, null, 1, 3, '17:00', 0, '21:00', 't'); -- 1st Monday, VHF
+insert into schedule values ('FT8-ACTIVITY-70CM', 'FT8-ACTIVITY 70CM', 'YYYY-MM', null, null, 2, 3, '17:00', 0, '21:00', 't'); -- 2nd Monday, VHF
+insert into schedule values ('FT8-ACTIVITY-23CM', 'FT8-ACTIVITY 23CM', 'YYYY-MM', null, null, 3, 3, '17:00', 0, '21:00', 't'); -- 3rd Monday, VHF
 
 -- weekly contests
 insert into schedule values ('MWC', 'MWC', 'YYMMDD', null, null, null, 1, '16:30', 0, '17:30'); -- every Monday
