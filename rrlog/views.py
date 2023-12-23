@@ -232,7 +232,7 @@ def v_rrdxa60(request):
     year = today.year
 
     if 'call' in request.GET:
-        call = request.GET['call']
+        call = request.GET['call'].upper()
 
         with connection.cursor() as cursor:
             params = [call, f"{year}-01-01", f"{year+1}-01-01"]
