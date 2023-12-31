@@ -214,16 +214,37 @@ def v_call(request, call):
     }
     return render(request, 'rrlog/call.html', context)
 
+q_rrdxa60_top = """
+select call, count(distinct (rroperator, band)) from (
+    select coalesce(operator, station_callsign) as call, rroperator, band
+        from log
+        join rrcalls on log.call = rrcalls.rrcall
+        where start between %s and %s
+    union
+    select call, rroperator, band
+        from log
+        join rrcalls on log.station_callsign = rrcalls.rrcall
+        where start between %s and %s
+)
+group by 1
+having count(distinct (rroperator, band)) >= 60
+order by 2 desc;
+"""
+
 q_worked = """
-select rroperator, band, string_agg(distinct rrcall, ' ')
-from log
-join rrcalls on log.station_callsign = rrcalls.rrcall
-where call = %s and start between %s and %s
-group by rroperator, band
-order by rroperator, band
+select rroperator, band
+    from log
+    join rrcalls on log.call = rrcalls.rrcall
+    where coalesce(operator, station_callsign) = %s and start between %s and %s
+union
+select rroperator, band
+    from log
+    join rrcalls on log.station_callsign = rrcalls.rrcall
+    where call = %s and start between %s and %s
 """
 
 def v_rrdxa60(request):
+    top_calls = []
     call, qsos, bands, worked = None, None, None, []
     da0rr = False
     bandpoints = 0
@@ -243,12 +264,12 @@ def v_rrdxa60(request):
             bands = [x[0] for x in cursor.fetchall()]
 
             # compute crosstab of worked members
-            cursor.execute(q_worked, params)
+            cursor.execute(q_worked, params * 2)
             wkd = {'DA0RR': {}}
-            for operator, band, calls in cursor.fetchall():
+            for operator, band in cursor.fetchall():
                 if operator not in wkd:
                     wkd[operator] = {}
-                wkd[operator][band] = calls
+                wkd[operator][band] = 1
                 bandpoints += 1
                 if operator == 'DA0RR': da0rr = True
             for operator in wkd:
@@ -257,8 +278,16 @@ def v_rrdxa60(request):
                     'bands': [(wkd[operator][band] if band in wkd[operator] else '') for band in bands],
                 })
 
+    else:
+        with connection.cursor() as cursor:
+            params = [f"{year}-01-01", f"{year+1}-01-01"] * 2
+            cursor.execute(q_rrdxa60_top, params)
+            top_calls = namedtuplefetchall(cursor)
+
     context = {
         'title': f"Worked All RRDXA60",
+        'top_calls': top_calls,
+        'top_calls_len': len(top_calls),
         'call': call,
         'bands': bands,
         'worked': worked,

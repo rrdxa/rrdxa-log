@@ -11,7 +11,7 @@ Call: <input name="call" value="{{call|default_if_none:''}}">
 
 {% if call %}
 
-<h2>RRDXA members worked</h2>
+<h2>RRDXA members worked by {{call}}</h2>
 
 <table border=0>
 <thead>
@@ -37,12 +37,22 @@ Call: <input name="call" value="{{call|default_if_none:''}}">
 <br>
 <b>QSO with DA0RR: {% if da0rr %}🟢 yes{% else %}🔴 no{% endif %}</b>
 <br>
-<b>RRDXA60 Bandpoints: {{bandpoints}}</b>
+<b>RRDXA60 Bandpoints: 🟢 {{bandpoints}}</b>
 </div>
 
 <h2>Log</h2>
 
 {% include 'rrlog/qsos.html' %}
+
+{% else %}
+
+<br>
+<div>
+{% for top in top_calls %}
+<a href="?call={{top.call|urlencode:''}}">{{top.call}}</a> {{top.count}}{% if not forloop.last %},{% endif %}
+{% endfor %}
+({{top_calls_len}} calls)
+</div>
 
 {% endif %}
 
