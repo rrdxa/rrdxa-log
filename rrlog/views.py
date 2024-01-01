@@ -8,6 +8,8 @@ psycopg2.extensions.register_adapter(dict, psycopg2.extras.Json)
 import datetime
 import re
 
+from rrdxa import settings
+
 from rrlog.auth import basic_auth
 from rrlog.upload import log_upload
 from rrlog.utils import namedtuplefetchall
@@ -63,6 +65,12 @@ group by coalesce(operator, station_callsign)
 order by score desc
 limit %s
 """
+
+def render_with_username_cookie(request, page, context, username):
+    response = render(request, page, context)
+    if username:
+        response.set_cookie('username', username)
+    return response
 
 def v_index(request):
     limit = 10
@@ -361,6 +369,8 @@ from schedule
 order by month, (week+8) % 8, dow, start"""
 
 def v_events(request):
+    username = None
+
     if request.method == 'POST':
         # authentication
         status, message = basic_auth(request)
@@ -389,7 +399,7 @@ def v_events(request):
         'events': events,
         'schedules': schedules,
     }
-    return render(request, 'rrlog/events.html', context)
+    return render_with_username_cookie(request, 'rrlog/events.html', context, username)
 
 q_event = """
 with events as (
@@ -497,16 +507,16 @@ def v_upload(request, filetype=None):
         response = render(request, 'rrlog/generic.html', { 'message': message }, status=401)
         response['WWW-Authenticate'] = 'Basic realm="RRDXA Log Upload"'
         return response
-    uploader = message
+    username = message
 
     # actual page
     message = None
     if request.method == 'POST' and 'logfile' in request.FILES:
-        message = log_upload(connection, request, uploader)
+        message = log_upload(connection, request, username)
     elif request.method == 'POST' and 'delete' in request.POST:
         id = request.POST['delete']
         with connection.cursor() as cursor:
-            cursor.execute("delete from upload where id = %s and uploader = %s", [id, uploader])
+            cursor.execute("delete from upload where id = %s and uploader = %s", [id, username])
             message = f"Upload {id} deleted"
 
     with connection.cursor() as cursor:
@@ -517,7 +527,7 @@ def v_upload(request, filetype=None):
             eventlist = []
 
         # get list of all uploads (including this one)
-        cursor.execute(q_upload_list, [uploader, uploader])
+        cursor.execute(q_upload_list, [username, username])
         uploads = namedtuplefetchall(cursor)
 
     if filetype is None:
@@ -529,9 +539,9 @@ def v_upload(request, filetype=None):
         'message': message,
         'eventlist': eventlist,
         'uploads': uploads,
-        'uploader': uploader,
+        'uploader': username,
     }
-    return render(request, 'rrlog/upload.html', context)
+    return render_with_username_cookie(request, 'rrlog/upload.html', context, username)
 
 q_download = """select adif, filename from upload where id = %s and (uploader = %s or %s in ('DF7CB', 'DF7EE', 'DK2DQ'))"""
 
@@ -550,19 +560,54 @@ def v_download(request, upload_id):
 
     response = HttpResponse(adif, content_type='text/plain; charset=utf-8')
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    response.set_cookie('username', username)
     return response
 
 def v_summary(request, upload_id):
+    if request.method == 'POST':
+        # authentication
+        status, message = basic_auth(request)
+        if not status:
+            response = render(request, 'rrlog/generic.html', { 'message': message }, status=401)
+            response['WWW-Authenticate'] = 'Basic realm="RRDXA Log Upload"'
+            return response
+        username = message
+
+        with connection.cursor() as cursor:
+            q_update = "update upload set event_id = %s where id = %s"
+            event_id = None if request.POST['event_id'] == '0' else request.POST['event_id']
+            params = [event_id, request.POST['upload_id']]
+            if username not in settings.RRDXA_ADMINS:
+                q_update += " and uploader = %s"
+                params.append(username)
+            cursor.execute(q_update, params)
+            connection.commit()
+
+    # username cookie is not secure, we show extra controls based on it, but
+    # still require authentication to actually use them
+    username, eventlist = None, []
+    if 'username' in request.COOKIES:
+        username = request.COOKIES['username']
+
     with connection.cursor() as cursor:
         cursor.execute(q_log.format('where upload = %s', 500), [upload_id])
         qsos = namedtuplefetchall(cursor)
         data, summary = get_summary(cursor, upload_id)
 
+        if username in [data.uploader] + settings.RRDXA_ADMINS:
+            # get all events overlapping this upload
+            cursor.execute("select *, start_str(start), stop_str(stop), event_id = %s as selected from event where %s <= stop and %s >= start",
+                           [data.event_id, data.upload_start, data.upload_stop])
+            eventlist = namedtuplefetchall(cursor)
+
     context = {
         'title': f"{data.station_callsign} {data.contest} {data.category_operator}",
+        'upload_id': upload_id,
         'data': data,
         'summary': summary,
         'qsos': qsos,
+        'username': username,
+        'eventlist': eventlist,
     }
     return render(request, 'rrlog/summary.html', context)
 

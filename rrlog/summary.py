@@ -24,9 +24,12 @@ grid_locator,
 soapbox,
 claimed_score,
 exchange,
-event
-from upload
-left join event on upload.event_id = event.event_id
+u.start as upload_start,
+u.stop as upload_stop,
+e.event_id,
+e.event
+from upload u
+left join event e on u.event_id = e.event_id
 where id = %s
 """
 
