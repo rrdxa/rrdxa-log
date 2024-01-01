@@ -497,8 +497,8 @@ filename, category_operator,
 station_callsign, operator, contest, event,
 error
 from upload u left join event e on u.event_id = e.event_id
-where uploader = %s or %s in ('DF7CB', 'DF7EE', 'DK2DQ')
-order by id desc limit 100"""
+{}
+order by id desc limit 1000"""
 
 def v_upload(request, filetype=None):
     # authentication
@@ -514,10 +514,15 @@ def v_upload(request, filetype=None):
     if request.method == 'POST' and 'logfile' in request.FILES:
         message = log_upload(connection, request, username)
     elif request.method == 'POST' and 'delete' in request.POST:
-        id = request.POST['delete']
+        upload_id = request.POST['delete']
         with connection.cursor() as cursor:
-            cursor.execute("delete from upload where id = %s and uploader = %s", [id, username])
-            message = f"Upload {id} deleted"
+            q_delete = "delete from upload where id = %s"
+            params = [upload_id]
+            if username not in settings.RRDXA_ADMINS:
+                q_update += " and uploader = %s"
+                params.append(username)
+            cursor.execute(q_delete, params)
+            message = f"Upload {upload_id} deleted"
 
     with connection.cursor() as cursor:
         if filetype != 'adif':
@@ -527,7 +532,11 @@ def v_upload(request, filetype=None):
             eventlist = []
 
         # get list of all uploads (including this one)
-        cursor.execute(q_upload_list, [username, username])
+        if username not in settings.RRDXA_ADMINS:
+            qual, params = "where uploader = %s", [username]
+        else:
+            qual, params = "", []
+        cursor.execute(q_upload_list.format(qual), params)
         uploads = namedtuplefetchall(cursor)
 
     if filetype is None:
@@ -543,8 +552,6 @@ def v_upload(request, filetype=None):
     }
     return render_with_username_cookie(request, 'rrlog/upload.html', context, username)
 
-q_download = """select adif, filename from upload where id = %s and (uploader = %s or %s in ('DF7CB', 'DF7EE', 'DK2DQ'))"""
-
 def v_download(request, upload_id):
     # authentication
     status, message = basic_auth(request)
@@ -555,7 +562,12 @@ def v_download(request, upload_id):
     username = message
 
     with connection.cursor() as cursor:
-        cursor.execute(q_download, [upload_id, username, username])
+        q_download = "select adif, filename from upload where id = %s"
+        params = [upload_id]
+        if username not in settings.RRDXA_ADMINS:
+            q_update += " and uploader = %s"
+            params.append(username)
+        cursor.execute(q_download, params)
         adif, filename = cursor.fetchone()
 
     response = HttpResponse(adif, content_type='text/plain; charset=utf-8')
