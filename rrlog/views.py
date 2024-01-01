@@ -227,20 +227,35 @@ select call, count(distinct (rroperator, band)) from (
         where start between %s and %s
 )
 group by 1
-having count(distinct (rroperator, band)) >= 60
+having count(distinct (rroperator, band)) >= 10
 order by 2 desc;
+"""
+
+q_worked_bands = """
+select band from log where call = %s and start between %s and %s
+union
+select band from log where station_callsign = %s and start between %s and %s
+union
+select band from log where operator = %s and start between %s and %s
+order by 1;
 """
 
 q_worked = """
 select rroperator, band
     from log
     join rrcalls on log.call = rrcalls.rrcall
-    where coalesce(operator, station_callsign) = %s and start between %s and %s
+    where station_callsign = %s and start between %s and %s
+union
+select rroperator, band
+    from log
+    join rrcalls on log.call = rrcalls.rrcall
+    where operator = %s and start between %s and %s
 union
 select rroperator, band
     from log
     join rrcalls on log.station_callsign = rrcalls.rrcall
     where call = %s and start between %s and %s
+order by 1, 2
 """
 
 def v_rrdxa60(request):
@@ -260,11 +275,11 @@ def v_rrdxa60(request):
             cursor.execute(q_log.format(f"where call = %s and start between %s and %s", 1000), params)
             qsos = namedtuplefetchall(cursor)
 
-            cursor.execute("select distinct band from log where call = %s and start between %s and %s order by 1", params)
+            cursor.execute(q_worked_bands, params * 3)
             bands = [x[0] for x in cursor.fetchall()]
 
             # compute crosstab of worked members
-            cursor.execute(q_worked, params * 2)
+            cursor.execute(q_worked, params * 3)
             wkd = {'DA0RR': {}}
             for operator, band in cursor.fetchall():
                 if operator not in wkd:
