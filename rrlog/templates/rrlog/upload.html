@@ -70,9 +70,7 @@ Summary and soapbox will be mailed to the RRDXA reflector."></textarea></td>
  <th>Uploader</th>
  <th>time</th>
  <th>QSOs</th>
- <th>timespan</th>
- <th>filename</th>
- <th></th>
+ <th>timespan (view QSOs)<br>filename (download)</th>
  <th></th>
  <th>station callsign</th>
  <th>operator</th>
@@ -88,14 +86,8 @@ Summary and soapbox will be mailed to the RRDXA reflector."></textarea></td>
  <td>{{upload.uploader}}</td>
  <td>{{upload.ts_str}}</td>
  <td style="text-align: right;">{{upload.qsos|default_if_none:'-'|intcomma}}</td>
- <td>{{upload.start_str|default_if_none:''}}-{{upload.stop_str|default_if_none:''}}</td>
- <td><a href="/log/download/{{upload.id}}/">{{upload.filename|default_if_none:'logfile'}}</a></td>
- <td>
-  <form action="/log/logbook/" method="GET">
-     <input type="hidden" name="upload" value="{{upload.id}}" />
-     <button type="submit">view</button>
-  </form>
- </td>
+ <td><a href="/log/logbook/?upload={{upload.id}}">{{upload.start_str|default_if_none:''}}-{{upload.stop_str|default_if_none:''}}</a><br>
+     <a href="/log/download/{{upload.id}}/">{{upload.filename|default_if_none:'logfile'}}</a></td>
  <td>
   {% if upload.contest %}
   <form action="/log/summary/{{upload.id}}/" method="GET">
