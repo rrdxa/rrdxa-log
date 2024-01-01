@@ -91,7 +91,7 @@ Summary and soapbox will be mailed to the RRDXA reflector."></textarea></td>
  <td><a href="/log/call/{{upload.station_callsign|urlencode:''}}/">{{upload.station_callsign|default_if_none:''}}</a></td>
  <td><a href="/log/call/{{upload.operator|urlencode:''}}/">{{upload.operator|default_if_none:''}}</a></td>
  <td>{% if upload.contest %}<a href="/log/contest/{{upload.contest|urlencode:''}}/">{{upload.contest}}</a>{% endif %}</td>
- <td>{% if upload.event %}<a href="/log/event/{{upload.event|urlencode:''}}/">{{upload.event}}</a>{% else %}{% if upload.contest %}<span style="color: red;">no event</span>{% endif %}{% endif %}</td>
+ <td>{% if upload.event %}<a href="/log/event/{{upload.event|urlencode:''}}/">{{upload.event}}</a>{% else %}{% if upload.contest %}[<a href="/log/summary/{{upload.id}}/?add_event=y"><span style="color: red;">no event</span></a>]{% endif %}{% endif %}</td>
  <td>{% if upload.contest %}[<a href="/log/summary/{{upload.id}}/">summary</a>]{% endif %}</td>
  <td>{{upload.error|default_if_none:''}}</td>
  <td>

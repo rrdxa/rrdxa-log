@@ -23,12 +23,14 @@ insert into schedule values ('CQ-WW-CW',        'CQ-WW-CW',     'YYYY', null, 11
 insert into schedule values ('CQ-WPX-RTTY',     'CQ-WPX-RTTY',  'YYYY', null,  2, 2, 6, '00:00', 1, '24:00');
 insert into schedule values ('CQ-WPX-SSB',      'CQ-WPX-SSB',   'YYYY', null,  3,-2, 6, '00:00', 1, '24:00');
 insert into schedule values ('CQ-WPX-CW',       'CQ-WPX-CW',    'YYYY', null,  5,-2, 6, '00:00', 1, '24:00');
+
 -- ARRL
 insert into schedule values ('ARRL-RU-RTTY',    'ARRL-RU-RTTY', 'YYYY', null,  1, 1, 6, '18:00', 1, '24:00');
 insert into schedule values ('ARRL-DX-CW',      'ARRL-DX-CW',   'YYYY', null,  2, 3, 6, '00:00', 1, '24:00');
 insert into schedule values ('ARRL-DX-SSB',     'ARRL-DX-SSB',  'YYYY', null,  3, 1, 6, '00:00', 1, '24:00');
 insert into schedule values ('ARRL-160M',       'ARRL-160M',    'YYYY', null, 12, 1, 5, '22:00', 2, '16:00'); -- first Friday in December
 insert into schedule values ('ARRL-10M',        'ARRL-10M',     'YYYY', null, 12, 2, 6, '00:00', 1, '24:00');
+
 -- DARC
 insert into schedule values ('DARC-10M',        'DARC-10M',     'YYYY', null,  1, 2, 0, '09:00', 0, '11:00');
 insert into schedule values ('DARC-WAEDC-CW',   'WAEDC-CW',     'YYYY', null,  8, 2, 6, '00:00', 1, '24:00');
@@ -37,6 +39,7 @@ insert into schedule values ('DARC-AC',         'DARC-AC',      'YYYY', null, 10
 insert into schedule values ('WAG',             'WAG',          'YYYY', null, 10, 3, 6, '15:00', 1, '15:00');
 insert into schedule values ('DARC-WAEDC-RTTY', 'WAEDC-RTTY',   'YYYY', null, 11, 2, 6, '00:00', 1, '24:00');
 insert into schedule values ('DARC-XMAS',       'DARC-XMAS',    'YYYY', 26,   12, null, null, '8:30', 0, '11:00'); -- Dec 26th
+
 -- contests that come in pairs
 insert into schedule values ('REF-CW',          'REF-CW',       'YYYY', null,  1,-2, 6, '06:00', 1, '18:00');
 insert into schedule values ('REF-SSB',         'REF-SSB',      'YYYY', null,  2,-2, 6, '06:00', 1, '18:00');
@@ -53,20 +56,26 @@ insert into schedule values ('ALL-ASIAN-CW',    'ALL-ASIAN-CW', 'YYYY', null,  6
 insert into schedule values ('ALL-ASIAN-SSB',   'ALL-ASIAN-SSB','YYYY', null,  9, 1, 6, '00:00', 1, '24:00');
 insert into schedule values ('SAC-CW',          'SAC-CW',       'YYYY', null,  9, 3, 6, '12:00', 1, '12:00');
 insert into schedule values ('SAC-SSB',         'SAC-SSB',      'YYYY', null, 10, 2, 6, '12:00', 1, '12:00');
+
 -- Stew Perry
 insert into schedule values ('STEW-PERRY',      'STEW-PERRY',   'YYYY-MM', null,  3, 2, 6, '15:00', 1, '15:00');
 insert into schedule values ('STEW-PERRY',      'STEW-PERRY',   'YYYY-MM', null,  6, 3, 6, '15:00', 1, '15:00');
 insert into schedule values ('STEW-PERRY',      'STEW-PERRY',   'YYYY-MM', null,  8, 3, 6, '15:00', 1, '15:00');
 insert into schedule values ('STEW-PERRY',      'STEW-PERRY',   'YYYY-MM', null, 12,-2, 6, '15:00', 1, '15:00');
+
 -- everything else
+insert into schedule values ('AGCW-HNY',        'AGCW-HNY',     'YYYY', 1,     1, null, null, '09:00', 0, '12:00');
 insert into schedule values ('HA-DX',           'HA-DX',        'YYYY', null,  1, 3, 6, '12:00', 1, '12:00');
 insert into schedule values ('EU-DX',           'EU-DX',        'YYYY', null,  2, 1, 6, '12:00', 1, '12:00');
 insert into schedule values ('WOMENS-DAY',      'WOMENS-DAY',   'YYYY', 8,     3, null, null, '18:00', 0, '21:00'); -- Mar 8th
 insert into schedule values ('CQMM',            'CQMM',         'YYYY', null,  4, 3, 6, '09:00', 1, '24:00');
+insert into schedule values ('HELVETIA',        'HELVETIA',     'YYYY', null,  4,-1, 6, '13:00', 1, '13:00');
 insert into schedule values ('MMC',             'MMC',          'YYYY', null,  7, 1, 6, '14:00', 1, '14:00');
 insert into schedule values ('IOTA',            'IOTA',         'YYYY', null,  7,-2, 6, '12:00', 1, '12:00');
 insert into schedule values ('YO-DX',           'YO-DX',        'YYYY', null,  8,-2, 6, '12:00', 1, '12:00');
+insert into schedule values ('MARCONI-VHF',     'MARCONI-VHF',  'YYYY', null, 11, 1, 6, '14:00', 1, '14:00');
 insert into schedule values ('OM-OK-DX',        'OM-OK-DX',     'YYYY', null, 11, 2, 6, '12:00', 1, '12:00');
+insert into schedule values ('LZ-DX',           'LZ-DX',        'YYYY', null, 11,-9, 6, '12:00', 1, '12:00'); -- last weekend before CQ-WW-CW
 insert into schedule values ('PRO-CW',          'PRO-CW',       'YYYY', null, 12, 1, 6, '12:00', 1, '12:00');
 insert into schedule values ('FT-ROUNDUP',      'FT-ROUNDUP',   'YYYY', null, 12, 1, 6, '18:00', 1, '24:00');
 insert into schedule values ('OK-DX-RTTY',      'OK-DX-RTTY',   'YYYY', null, 12, 3, 6, '00:00', 0, '24:00');

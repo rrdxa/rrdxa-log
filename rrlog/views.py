@@ -576,7 +576,7 @@ def v_download(request, upload_id):
     return response
 
 def v_summary(request, upload_id):
-    if request.method == 'POST':
+    if request.method == 'POST' or 'add_event' in request.GET:
         # authentication
         status, message = basic_auth(request)
         if not status:
@@ -585,6 +585,7 @@ def v_summary(request, upload_id):
             return response
         username = message
 
+    if request.method == 'POST':
         with connection.cursor() as cursor:
             q_update = "update upload set event_id = %s where id = %s"
             event_id = None if request.POST['event_id'] == '0' else request.POST['event_id']
@@ -593,6 +594,16 @@ def v_summary(request, upload_id):
                 q_update += " and uploader = %s"
                 params.append(username)
             cursor.execute(q_update, params)
+            connection.commit()
+
+    if 'add_event' in request.GET:
+        with connection.cursor() as cursor:
+            q_schedule = "select schedule_events(start::date) from upload where id = %s"
+            params = [upload_id]
+            if username not in settings.RRDXA_ADMINS:
+                q_schedule += " and uploader = %s"
+                params.append(username)
+            cursor.execute(q_schedule, params)
             connection.commit()
 
     # username cookie is not secure, we show extra controls based on it, but
