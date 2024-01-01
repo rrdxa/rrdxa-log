@@ -84,19 +84,21 @@ def get_summary(cursor, upload_id):
     cursor.execute(q_qso_summary, [upload_id])
     summary = namedtuplefetchall(cursor)
 
-    return data, summary
+    subject = f"{data.station_callsign} "
+    subject += data.event or data.contest or ''
+    if data.category_operator: subject += f" {data.category_operator}"
+    if data.category_band and data.category_band != 'ALL': subject += f" {data.category_band}"
+    if data.category_mode: subject += f" {data.category_mode}"
+    if data.category_power: subject += f" {data.category_power}"
+    if data.category_assisted: subject += f" {data.category_assisted}"
+
+    return data, summary, subject
 
 def post_summary(cursor, upload_id, send=True):
-    data, summary = get_summary(cursor, upload_id)
+    data, summary, subject = get_summary(cursor, upload_id)
 
     if data is None:
         return "No data found"
-
-    # build subject
-    subject = f"{data.station_callsign} {data.contest} {data.category_operator}"
-    if data.category_band and data.category_band != 'ALL': subject += f" {data.category_band}"
-    if data.category_mode and data.category_mode != 'ALL': subject += f" {data.category_mode}"
-    if data.category_assisted: subject += f" {data.category_power} {data.category_assisted}"
 
     # build content
     mail = f"{subject}\n\n"

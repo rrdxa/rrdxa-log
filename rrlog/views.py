@@ -604,7 +604,7 @@ def v_summary(request, upload_id):
     with connection.cursor() as cursor:
         cursor.execute(q_log.format('where upload = %s', 500), [upload_id])
         qsos = namedtuplefetchall(cursor)
-        data, summary = get_summary(cursor, upload_id)
+        data, summary, subject = get_summary(cursor, upload_id)
 
         if username in [data.uploader] + settings.RRDXA_ADMINS:
             # get all events overlapping this upload
@@ -613,7 +613,7 @@ def v_summary(request, upload_id):
             eventlist = namedtuplefetchall(cursor)
 
     context = {
-        'title': f"{data.station_callsign} {data.contest} {data.category_operator}",
+        'title': subject,
         'upload_id': upload_id,
         'data': data,
         'summary': summary,
