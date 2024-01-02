@@ -63,6 +63,15 @@ insert into schedule values ('STEW-PERRY',      'STEW-PERRY',   'YYYY-MM', null,
 insert into schedule values ('STEW-PERRY',      'STEW-PERRY',   'YYYY-MM', null,  8, 3, 6, '15:00', 1, '15:00');
 insert into schedule values ('STEW-PERRY',      'STEW-PERRY',   'YYYY-MM', null, 12,-2, 6, '15:00', 1, '15:00');
 
+-- VHF
+insert into schedule values ('2M-AUSB',         '2M-AUSB',      'YYYY-MM', null,  2, 4, 0, '14:00', 0, '16:00', 't');
+insert into schedule values ('2M-AUSB',         '2M-AUSB',      'YYYY-MM', null,  4, 4, 0, '13:00', 0, '15:00', 't');
+insert into schedule values ('DARC-VHF',        'DARC-VHF',     'YYYY-MM', null,  5, 1, 6, '14:00', 1, '14:00', 't');
+insert into schedule values ('2M-AUSB',         '2M-AUSB',      'YYYY-MM', null,  6, 3, 0, '13:00', 0, '15:00', 't');
+insert into schedule values ('2M-AUSB',         '2M-AUSB',      'YYYY-MM', null,  8, 4, 0, '13:00', 0, '15:00', 't');
+insert into schedule values ('REG1-VHF-SEP',    'REG1-VHF-SEP', 'YYYY', null,  9, 1, 6, '14:00', 1, '14:00', 't');
+insert into schedule values ('REG1-MICROWAVE',  'REG1-MICROWAVE', 'YYYY', null, 10, 1, 6, '14:00', 1, '14:00', 't');
+
 -- everything else
 insert into schedule values ('AGCW-HNY',        'AGCW-HNY',     'YYYY', 1,     1, null, null, '09:00', 0, '12:00');
 insert into schedule values ('HA-DX',           'HA-DX',        'YYYY', null,  1, 3, 6, '12:00', 1, '12:00');
