@@ -32,9 +32,11 @@ insert into schedule values ('ARRL-160M',       'ARRL-160M',    'YYYY', null, 12
 insert into schedule values ('ARRL-10M',        'ARRL-10M',     'YYYY', null, 12, 2, 6, '00:00', 1, '24:00');
 
 -- DARC
+insert into schedule values ('RLP-WEEK',        'RLP-WEEK',     'YYYY', 1,     1, null, null, '00:00', 6, '24:00');
 insert into schedule values ('DARC-10M',        'DARC-10M',     'YYYY', null,  1, 2, 0, '09:00', 0, '11:00');
 insert into schedule values ('DARC-WAEDC-CW',   'WAEDC-CW',     'YYYY', null,  8, 2, 6, '00:00', 1, '24:00');
 insert into schedule values ('DARC-WAEDC-SSB',  'WAEDC-SSB',    'YYYY', null,  9, 2, 6, '00:00', 1, '24:00');
+insert into schedule values ('DARC-HELL',       'DARC-HELL',    'YYYY', null, 10, 1, 6, '16:00', 1, '11:00');
 insert into schedule values ('DARC-AC',         'DARC-AC',      'YYYY', null, 10, 3, 6, '12:00', 0, '14:30');
 insert into schedule values ('WAG',             'WAG',          'YYYY', null, 10, 3, 6, '15:00', 1, '15:00');
 insert into schedule values ('DARC-WAEDC-RTTY', 'WAEDC-RTTY',   'YYYY', null, 11, 2, 6, '00:00', 1, '24:00');
@@ -65,16 +67,45 @@ insert into schedule values ('STEW-PERRY',      'STEW-PERRY',   'YYYY-MM', null,
 
 -- VHF
 insert into schedule values ('2M-AUSB',         '2M-AUSB',      'YYYY-MM', null,  2, 4, 0, '14:00', 0, '16:00', 't');
+insert into schedule values ('REG1-50MHZ',      'REG1-50MHZ',   'YYYY-MM', null,  4, 3, 6, '14:00', 1, '14:00', 't');
 insert into schedule values ('2M-AUSB',         '2M-AUSB',      'YYYY-MM', null,  4, 4, 0, '13:00', 0, '15:00', 't');
 insert into schedule values ('DARC-VHF',        'DARC-VHF',     'YYYY-MM', null,  5, 1, 6, '14:00', 1, '14:00', 't');
+insert into schedule values ('REG1-70MHZ',      'REG1-70MHZ',   'YYYY-MM', null,  5, 3, 6, '14:00', 1, '14:00', 't');
 insert into schedule values ('2M-AUSB',         '2M-AUSB',      'YYYY-MM', null,  6, 3, 0, '13:00', 0, '15:00', 't');
+insert into schedule values ('REG1-50MHZ',      'REG1-50MHZ',   'YYYY-MM', null,  6, 3, 6, '14:00', 1, '14:00', 't');
+insert into schedule values ('REG1-70MHZ',      'REG1-70MHZ',   'YYYY-MM', null,  7, 3, 6, '14:00', 1, '14:00', 't');
 insert into schedule values ('2M-AUSB',         '2M-AUSB',      'YYYY-MM', null,  8, 4, 0, '13:00', 0, '15:00', 't');
 insert into schedule values ('REG1-VHF-SEP',    'REG1-VHF-SEP', 'YYYY', null,  9, 1, 6, '14:00', 1, '14:00', 't');
 insert into schedule values ('REG1-MICROWAVE',  'REG1-MICROWAVE', 'YYYY', null, 10, 1, 6, '14:00', 1, '14:00', 't');
+insert into schedule values ('WNA',             'WNA',          'YYYY-MM', null,  1, 1, 2, '18:00', 0, '20:00', 't');
+insert into schedule values ('WNA',             'WNA',          'YYYY-MM', null,  2, 1, 2, '18:00', 0, '20:00', 't');
+insert into schedule values ('WNA',             'WNA',          'YYYY-MM', null,  3, 1, 2, '18:00', 0, '20:00', 't');
+insert into schedule values ('WNA',             'WNA',          'YYYY-MM', null,  4, 1, 2, '17:00', 0, '19:00', 't');
+insert into schedule values ('WNA',             'WNA',          'YYYY-MM', null,  5, 1, 2, '17:00', 0, '19:00', 't');
+insert into schedule values ('WNA',             'WNA',          'YYYY-MM', null,  6, 1, 2, '17:00', 0, '19:00', 't');
+insert into schedule values ('WNA',             'WNA',          'YYYY-MM', null,  7, 1, 2, '17:00', 0, '19:00', 't');
+insert into schedule values ('WNA',             'WNA',          'YYYY-MM', null,  8, 1, 2, '17:00', 0, '19:00', 't');
+insert into schedule values ('WNA',             'WNA',          'YYYY-MM', null,  9, 1, 2, '17:00', 0, '19:00', 't');
+insert into schedule values ('WNA',             'WNA',          'YYYY-MM', null, 10, 1, 2, '17:00', 0, '19:00', 't');
+insert into schedule values ('WNA',             'WNA',          'YYYY-MM', null, 11, 1, 2, '18:00', 0, '20:00', 't');
+insert into schedule values ('WNA',             'WNA',          'YYYY-MM', null, 12, 1, 2, '18:00', 0, '20:00', 't');
+insert into schedule values ('WSA',             'WSA',          'YYYY-MM', null,  1, 1, 2, '18:00', 0, '20:00', 't');
+insert into schedule values ('WSA',             'WSA',          'YYYY-MM', null,  2, 1, 2, '18:00', 0, '20:00', 't');
+insert into schedule values ('WSA',             'WSA',          'YYYY-MM', null,  3, 1, 2, '18:00', 0, '20:00', 't');
+insert into schedule values ('WSA',             'WSA',          'YYYY-MM', null,  4, 1, 2, '17:00', 0, '19:00', 't');
+insert into schedule values ('WSA',             'WSA',          'YYYY-MM', null,  5, 1, 2, '17:00', 0, '19:00', 't');
+insert into schedule values ('WSA',             'WSA',          'YYYY-MM', null,  6, 1, 2, '17:00', 0, '19:00', 't');
+insert into schedule values ('WSA',             'WSA',          'YYYY-MM', null,  7, 1, 2, '17:00', 0, '19:00', 't');
+insert into schedule values ('WSA',             'WSA',          'YYYY-MM', null,  8, 1, 2, '17:00', 0, '19:00', 't');
+insert into schedule values ('WSA',             'WSA',          'YYYY-MM', null,  9, 1, 2, '17:00', 0, '19:00', 't');
+insert into schedule values ('WSA',             'WSA',          'YYYY-MM', null, 10, 1, 2, '17:00', 0, '19:00', 't');
+insert into schedule values ('WSA',             'WSA',          'YYYY-MM', null, 11, 1, 2, '18:00', 0, '20:00', 't');
+insert into schedule values ('WSA',             'WSA',          'YYYY-MM', null, 12, 1, 2, '18:00', 0, '20:00', 't');
 
 -- everything else
 insert into schedule values ('AGCW-HNY',        'AGCW-HNY',     'YYYY', 1,     1, null, null, '09:00', 0, '12:00');
 insert into schedule values ('HA-DX',           'HA-DX',        'YYYY', null,  1, 3, 6, '12:00', 1, '12:00');
+insert into schedule values ('BARTG-RTTY-SPRINT', 'BARTG-RTTY-SPRINT', 'YYYY', null,  1, 4, 6, '12:00', 1, '12:00');
 insert into schedule values ('EU-DX',           'EU-DX',        'YYYY', null,  2, 1, 6, '12:00', 1, '12:00');
 insert into schedule values ('WOMENS-DAY',      'WOMENS-DAY',   'YYYY', 8,     3, null, null, '18:00', 0, '21:00'); -- Mar 8th
 insert into schedule values ('CQMM',            'CQMM',         'YYYY', null,  4, 3, 6, '09:00', 1, '24:00');
@@ -82,6 +113,7 @@ insert into schedule values ('HELVETIA',        'HELVETIA',     'YYYY', null,  4
 insert into schedule values ('MMC',             'MMC',          'YYYY', null,  7, 1, 6, '14:00', 1, '14:00');
 insert into schedule values ('IOTA',            'IOTA',         'YYYY', null,  7,-2, 6, '12:00', 1, '12:00');
 insert into schedule values ('YO-DX',           'YO-DX',        'YYYY', null,  8,-2, 6, '12:00', 1, '12:00');
+insert into schedule values ('AGCW-DTC',        'AGCW-DTC',     'YYYY', 3, 10, null, null, '07:00', 0, '10:00');
 insert into schedule values ('MARCONI-VHF',     'MARCONI-VHF',  'YYYY', null, 11, 1, 6, '14:00', 1, '14:00');
 insert into schedule values ('OM-OK-DX',        'OM-OK-DX',     'YYYY', null, 11, 2, 6, '12:00', 1, '12:00');
 insert into schedule values ('LZ-DX',           'LZ-DX',        'YYYY', null, 11,-9, 6, '12:00', 1, '12:00'); -- last weekend before CQ-WW-CW
