@@ -23,13 +23,21 @@
  <td style="text-align: right;"><b>{{entry.score|intcomma}}</b></td>
  <td>
  {% for event in entry.events %}
- <span style="{% if event.1 >= 60 or event.vhf and event.1 >= 30 %}font-weight: bold;{% endif %}">
- <a href="/log/event/{{event.0|urlencode:''}}/"><span style="{% if event.3 %}color: red;{% endif %}">{{event.0}}</span></a>
- <a href="/log/summary/{{event.2|urlencode:''}}/">{{event.1}}</a></span>{% if not forloop.last %},{% endif %}
+ <span style="{% if event.qsos >= 60 or event.vhf and event.qsos >= 30 %}font-weight: bold;{% endif %}">
+ <a href="/log/event/{{event.event|urlencode:''}}/"><span style="{% if event.vhf %}color: red;{% endif %}">{{event.event}}</span></a>
+ ({% if entry.call != event.station_callsign %}{{event.station_callsign}} {% endif %}<a href="/log/summary/{{event.upload_id|urlencode:''}}/">{{event.qsos}}</a>)</span>{% if not forloop.last %},{% endif %}
  {% endfor %}
  </td>
  </tr>
 {% endfor %}
 </table>
+
+<br>
+<div>
+<em>
+<span style="color: red;">rot</span> = VHF+ log,
+<span style="font-weight: bold;">bold</span> = valid log with 60+ QSOs (30+ on VHF+)
+</em>
+</div>
 
 {% endblock %}

@@ -321,15 +321,16 @@ def v_rrdxa60(request):
     return render(request, 'rrlog/rrdxa60.html', context)
 
 q_challenge = """
-select coalesce(operator, station_callsign) as call,
+select operator as call,
     sum(qsos) as qsos,
     count(*) filter (where qsos >= 60 or vhf and qsos >= 30) as multis,
     sum(qsos) * count(*) filter (where qsos >= 60 or vhf and qsos >= 30) as score,
-    array_agg(event order by e.start, event) as events,
+    array_agg(u.id order by e.start, event) as upload_ids,
+    array_agg(station_callsign order by e.start, event) as station_callsigns,
     array_agg(qsos order by e.start, event) as event_qsos,
-    array_agg(u.id order by e.start, event) as event_upload_ids,
-    array_agg(u.id order by e.start, event) as event_vhf
-from upload u join event e on u.event_id = e.event_id
+    array_agg(event order by e.start, event) as events,
+    array_agg(vhf order by e.start, event) as event_vhf
+from upload_operators u join event e on u.event_id = e.event_id
 where e.start between %s and %s
 group by 1
 order by 4 desc, 2 desc
@@ -344,10 +345,11 @@ def v_challenge(request, year=None):
         cursor.execute(q_challenge, [f"{year}-01-01", f"{year+1}-01-01"])
         entries = namedtuplefetchall(cursor)
 
-    # psycopg2 doesn't understand tuples in arrays, so we select 4 separate
+    # psycopg2 doesn't understand tuples in arrays, so we select separate
     # arrays above and zip them together here
     for entry in entries:
-        entry.events[:] = zip(entry.events, entry.event_qsos, entry.event_upload_ids, entry.event_vhf)
+        entry.events[:] = [{"upload_id": x[0], "station_callsign": x[1], "qsos": x[2], "event": x[3], "vhf": x[4]} \
+                for x in zip(entry.upload_ids, entry.station_callsigns, entry.event_qsos, entry.events, entry.event_vhf)]
 
     context = {
         'title': f"RRDXA Challenge {year}",
@@ -420,6 +422,7 @@ select station_callsign,
     exchange
 from upload u join event e on u.event_id = e.event_id
 where e.event = %s
+    and qsos > 0
 order by qsos desc nulls last, claimed_score desc nulls last
 )
 select * from events
