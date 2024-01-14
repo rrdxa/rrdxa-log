@@ -519,7 +519,7 @@ def v_upload(request, filetype=None):
             q_delete = "delete from upload where id = %s"
             params = [upload_id]
             if username not in settings.RRDXA_ADMINS:
-                q_update += " and uploader = %s"
+                q_delete += " and uploader = %s"
                 params.append(username)
             cursor.execute(q_delete, params)
             message = f"Upload {upload_id} deleted"
@@ -565,7 +565,7 @@ def v_download(request, upload_id):
         q_download = "select adif, filename from upload where id = %s"
         params = [upload_id]
         if username not in settings.RRDXA_ADMINS:
-            q_update += " and uploader = %s"
+            q_download += " and uploader = %s"
             params.append(username)
         cursor.execute(q_download, params)
         adif, filename = cursor.fetchone()
