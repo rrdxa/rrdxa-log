@@ -51,7 +51,7 @@ def cabrillo_upload(cursor, content, station_callsign, operator, contest, upload
             elif qso['band'] >= 0.0125:
                 band = str(int(qso['band'] * 100.0)) + 'cm'
             else:
-                raise Exception(f"Band {qso['band']} is not supported yet")
+                raise Exception(f"Band {qso['band']} is not supported yet, please contact DF7CB")
 
             major_mode = qso['mode'].upper()
             if major_mode == 'CW':
@@ -65,12 +65,14 @@ def cabrillo_upload(cursor, content, station_callsign, operator, contest, upload
             elif major_mode == 'RY':
                 major_mode = 'DIGI'
                 mode = 'RTTY'
-            elif major_mode == 'PS':
+            elif major_mode in ('PS', 'PK'):
                 major_mode = 'DIGI'
                 mode = 'PSK'
             elif major_mode == 'DG':
                 major_mode = 'DIGI'
                 mode = None
+            else:
+                raise Exception(f"Cabillo mode {major_mode} is not supported yet, please contact DF7CB")
 
             cursor.execute(q_insert_qso,
                            [start,
