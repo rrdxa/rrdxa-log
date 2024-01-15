@@ -222,6 +222,13 @@ def v_call(request, call):
     }
     return render(request, 'rrlog/call.html', context)
 
+q_members_list = """
+select string_agg(replace(call, '/', '%%2F'), ',') from
+    (select call from members union
+     select unnest(callsigns) from members
+     order by call);
+"""
+
 q_rrdxa60_top = """
 select call, count(distinct (rroperator, band)) from (
     select coalesce(operator, station_callsign) as call, rroperator, band
@@ -267,7 +274,7 @@ order by 1, 2
 """
 
 def v_rrdxa60(request):
-    top_calls = []
+    top_calls, members_list = [], ''
     call, qsos, bands, worked = None, None, None, []
     da0rr = False
     bandpoints = 0
@@ -307,10 +314,14 @@ def v_rrdxa60(request):
             cursor.execute(q_rrdxa60_top, params)
             top_calls = namedtuplefetchall(cursor)
 
+            cursor.execute(q_members_list, [])
+            members_list = cursor.fetchone()[0]
+
     context = {
         'title': f"Worked All RRDXA60",
         'top_calls': top_calls,
         'top_calls_len': len(top_calls),
+        'members_list': members_list,
         'call': call,
         'bands': bands,
         'worked': worked,

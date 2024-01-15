@@ -48,6 +48,12 @@ Call: <input name="call" value="{{call|default_if_none:''}}">
 
 <br>
 <div>
+<a href="http://dxsummit.fi/#/?dx_calls={{members_list}}" target="_blank"><b>All RRDXA members at DXSummit</b></a>
+<!-- <a href="https://www.reversebeacon.net/main.php?spotted_call={{members_list}}" target="_blank"><b>Alle RRDXA-Calls bei RBN</b></a> -->
+</div>
+
+<br>
+<div>
 {% for top in top_calls %}
 <a href="?call={{top.call|urlencode:''}}">{{top.call}}</a> {{top.count}}{% if not forloop.last %},{% endif %}
 {% endfor %}
