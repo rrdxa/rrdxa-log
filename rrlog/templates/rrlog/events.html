@@ -20,7 +20,7 @@
  {% endifchanged %}
  <tr>
  <td><a href="/log/event/{{event.event|urlencode:''}}/">
-  {% if event.count >= 5 %}<b>{{event.event}}</b>{% else %}{{event.event}}{% endif %}
+  <span style="{% if event.count >= 5 %}font-weight: bold;{% endif %}{% if event.vhf %}color: red;{% endif %}">{{event.event}}</span>
   </a></td>
  <td style="text-align: center;">{% if event.vhf %}✔{% endif %}</td>
  <td style="text-align: right;"><b>{{event.count|intcomma}}</b></td>
@@ -63,20 +63,25 @@ Negative week numbers mean "at least this many days before the end of the month"
  <th>start</th>
  <th>days</th>
  <th>stop</th>
+ <th>VHF</th>
 </tr>
 </thead>
 
 {% for schedule in schedules %}
+ {% ifchanged schedule.month_str %}
+ <tr><th colspan="10" style="text-align: left;">{{schedule.month_str}}</th></tr>
+ {% endifchanged %}
  <tr>
- <td>{{schedule.cabrillo_name}}</td>
+ <td><span style="{% if schedule.vhf %}color: red;{% endif %}">{{schedule.cabrillo_name}}</span></td>
  <td>{{schedule.prefix}} {{schedule.dateformat}}</td>
- <td>{{schedule.day|default_if_none:''}}</td>
- <td>{{schedule.month|default_if_none:''}}</td>
- <td>{{schedule.week|default_if_none:''}}</td>
- <td>{{schedule.dow|default_if_none:''}}</td>
- <td>{{schedule.start}}</td>
- <td>{{schedule.days}}</td>
- <td>{{schedule.stop}}</td>
+ <td style="text-align: right;">{{schedule.day|default_if_none:''}}</td>
+ <td style="text-align: right;">{{schedule.month|default_if_none:''}}</td>
+ <td style="text-align: right;">{{schedule.week|default_if_none:''}}</td>
+ <td style="text-align: right;">{{schedule.dow|default_if_none:''}}</td>
+ <td style="text-align: right;">{{schedule.start}}</td>
+ <td style="text-align: right;">{{schedule.days}}</td>
+ <td style="text-align: right;">{{schedule.stop}}</td>
+ <td style="text-align: center;">{% if schedule.vhf %}✔{% endif %}</td>
  </tr>
 {% endfor %}
 </table>

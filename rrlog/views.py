@@ -357,16 +357,18 @@ def v_challenge(request, year=None):
     }
     return render(request, 'rrlog/challenge.html', context)
 
-q_schedules = """select 
+q_schedules = """select
  schedule.cabrillo_name,
  schedule.prefix, schedule.dateformat,
  schedule.day,
  schedule.month,
  schedule.week,
  schedule.dow,
- to_char(schedule.start, 'HH:MM') start,
+ to_char(schedule.start, 'HH24:MI') start,
  schedule.days,
- to_char(schedule.stop, 'HH:MM') stop
+ to_char(schedule.stop, 'HH24:MI') stop,
+ schedule.vhf,
+ coalesce(to_char('2023-12-01'::date + schedule.month * '1month'::interval, 'FMMonth'), 'Other') as month_str
 from schedule
 order by month, (week+8) % 8, dow, start"""
 
