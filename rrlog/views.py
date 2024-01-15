@@ -223,10 +223,7 @@ def v_call(request, call):
     return render(request, 'rrlog/call.html', context)
 
 q_members_list = """
-select string_agg(replace(call, '/', '%%2F'), ',') from
-    (select call from members union
-     select unnest(callsigns) from members
-     order by call);
+select string_agg(replace(rrcall, '/', '%%2F'), ',') from rrcalls;
 """
 
 q_rrdxa60_top = """
@@ -652,8 +649,12 @@ def v_summary(request, upload_id):
 
 def v_members(request):
     with connection.cursor() as cursor:
-        cursor.execute("select call, callsigns from members where call ~ '\d' and not '{bbp_spectator}' <@ user_roles order by call")
+        cursor.execute("select call, callsigns from members where call ~ '\d' and public order by call")
         members = namedtuplefetchall(cursor)
+
+        cursor.execute(q_members_list, [])
+        members_list = cursor.fetchone()[0]
+
 
     if 'csv' in request.GET:
         csv = ''
@@ -670,6 +671,7 @@ def v_members(request):
 
     context = {
         'title': "RRDXA members",
+        'members_list': members_list,
         'members': members,
     }
     return render(request, 'rrlog/members.html', context)

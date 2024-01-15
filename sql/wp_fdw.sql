@@ -37,7 +37,8 @@ select
     m_nickname.meta_value as nickname,
     user_email,
     user_pass,
-    user_roles(m_roles.meta_value)
+    user_roles(m_roles.meta_value),
+    not '{bbp_spectator}' <@ user_roles(m_roles.meta_value) as public
 from wordpress."L7l2a_users" u
 left join wordpress."L7l2a_bp_xprofile_data" x_callsigns on u."ID" = x_callsigns.user_id and x_callsigns.field_id = 2
 left join wordpress."L7l2a_usermeta" m_firstname on u."ID" = m_firstname.user_id and m_firstname.meta_key = 'first_name'
@@ -50,9 +51,9 @@ create index on rrdxa.members (call);
 analyze rrdxa.members;
 
 create materialized view rrdxa.rrcalls as
-select call as rrcall, call as rroperator from members
+select call as rrcall, call as rroperator from members where call ~ '[0-9]' and public
 union
-select u, call from members, unnest(callsigns) u(u)
+select u, call from members, unnest(callsigns) u(u) where call ~ '[0-9]' and public
 order by 2, 1;
 
 create index on rrdxa.rrcalls(rrcall);
