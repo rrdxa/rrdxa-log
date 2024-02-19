@@ -78,7 +78,7 @@ def get_summary(cursor, upload_id):
     cursor.execute(q_upload_data, [upload_id])
     data_arr = namedtuplefetchall(cursor)
     if len(data_arr) == 0:
-        return None, None
+        return None, None, None
     data = data_arr[0]
 
     cursor.execute(q_qso_summary, [upload_id])

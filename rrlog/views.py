@@ -632,7 +632,7 @@ def v_summary(request, upload_id):
         qsos = namedtuplefetchall(cursor)
         data, summary, subject = get_summary(cursor, upload_id)
 
-        if username in [data.uploader] + settings.RRDXA_ADMINS:
+        if data and username in [data.uploader] + settings.RRDXA_ADMINS:
             # get all events overlapping this upload
             cursor.execute("select *, start_str(start), stop_str(stop), event_id = %s as selected from event where %s <= stop and %s >= start",
                            [data.event_id, data.upload_start, data.upload_stop])
