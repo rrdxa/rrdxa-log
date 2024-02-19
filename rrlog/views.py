@@ -330,18 +330,18 @@ def v_rrdxa60(request):
 
 q_challenge = """
 select operator as call,
-    sum(qsos) as qsos,
+    sum(qsos / n_operators) as qsos,
     count(*) filter (where qsos >= 60 or vhf and qsos >= 30) as multis,
-    sum(qsos) * count(*) filter (where qsos >= 60 or vhf and qsos >= 30) as score,
+    sum(qsos / n_operators) * count(*) filter (where qsos >= 60 or vhf and qsos >= 30) as score,
     array_agg(u.id order by e.start, event) as upload_ids,
     array_agg(station_callsign order by e.start, event) as station_callsigns,
-    array_agg(qsos order by e.start, event) as event_qsos,
+    array_agg(qsos / n_operators order by e.start, event) as event_qsos,
     array_agg(event order by e.start, event) as events,
     array_agg(vhf order by e.start, event) as event_vhf
 from upload_operators u join event e on u.event_id = e.event_id
 where e.start between %s and %s
 group by 1
-order by 4 desc, 2 desc
+order by 4 desc, 2 desc, operator
 """
 
 def v_challenge(request, year=None):

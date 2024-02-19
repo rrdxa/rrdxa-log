@@ -33,14 +33,16 @@ create table rrdxa.upload (
     constraint station_callsign_event_unique unique (station_callsign, event_id)
 );
 
-create view rrdxa.upload_operators as
+create or replace view rrdxa.upload_operators as
     select id,
         station_callsign,
         coalesce(nullif(op, ''), nullif(operator, ''), station_callsign) as operator,
         qsos,
+        array_length(ops, 1) n_operators,
         event_id
-    from rrdxa.upload
-        left join lateral regexp_split_to_table(operators, '[\s,]+') as op on true
+    from rrdxa.upload,
+        regexp_split_to_array(coalesce(nullif(operators, ''), station_callsign), '[\s,]+') as ops,
+        unnest(ops) as u(op)
     where qsos > 0;
 
 create table rrdxa.log (
