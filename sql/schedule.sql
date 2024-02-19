@@ -129,6 +129,11 @@ insert into schedule values ('FT8-ACTIVITY-23CM', 'FT8-ACTIVITY 23CM', 'YYYY-MM'
 
 -- weekly contests
 insert into schedule values ('MWC', 'MWC', 'YYMMDD', null, null, null, 1, '16:30', 0, '17:30'); -- every Monday
+insert into schedule values ('CWT', 'CWT', 'YYMMDD 13', null, null, null, 3, '13:00', 0, '14:00');
+insert into schedule values ('MINI-TEST', 'Mini-Test', 'YYMMDD', null, null, null, 3, '17:00', 0, '19:00');
+insert into schedule values ('CWT', 'CWT', 'YYMMDD 19', null, null, null, 3, '19:00', 0, '20:00');
+insert into schedule values ('CWT', 'CWT', 'YYMMDD 03', null, null, null, 4, '03:00', 0, '04:00');
+insert into schedule values ('CWT', 'CWT', 'YYMMDD 07', null, null, null, 4, '07:00', 0, '08:00');
 
 create or replace function rrdxa.last_week_in_month(date date, "offset" int)
     returns boolean
