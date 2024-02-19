@@ -338,7 +338,9 @@ select operator as call,
     array_agg(qsos / n_operators order by e.start, event) as event_qsos,
     array_agg(event order by e.start, event) as events,
     array_agg(vhf order by e.start, event) as event_vhf
-from upload_operators u join event e on u.event_id = e.event_id
+from upload_operators u
+    join event e on u.event_id = e.event_id
+    join rrcalls rr on u.operator = rr.rrcall -- limit to RRDXA members
 where e.start between %s and %s
 group by 1
 order by 4 desc, 2 desc, operator
