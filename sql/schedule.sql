@@ -89,18 +89,18 @@ insert into schedule values ('WNA',             'WNA',          'YYYY-MM', null,
 insert into schedule values ('WNA',             'WNA',          'YYYY-MM', null, 10, 1, 2, '17:00', 0, '19:00', 't');
 insert into schedule values ('WNA',             'WNA',          'YYYY-MM', null, 11, 1, 2, '18:00', 0, '20:00', 't');
 insert into schedule values ('WNA',             'WNA',          'YYYY-MM', null, 12, 1, 2, '18:00', 0, '20:00', 't');
-insert into schedule values ('WSA',             'WSA',          'YYYY-MM', null,  1, 1, 2, '18:00', 0, '20:00', 't');
-insert into schedule values ('WSA',             'WSA',          'YYYY-MM', null,  2, 1, 2, '18:00', 0, '20:00', 't');
-insert into schedule values ('WSA',             'WSA',          'YYYY-MM', null,  3, 1, 2, '18:00', 0, '20:00', 't');
-insert into schedule values ('WSA',             'WSA',          'YYYY-MM', null,  4, 1, 2, '17:00', 0, '19:00', 't');
-insert into schedule values ('WSA',             'WSA',          'YYYY-MM', null,  5, 1, 2, '17:00', 0, '19:00', 't');
-insert into schedule values ('WSA',             'WSA',          'YYYY-MM', null,  6, 1, 2, '17:00', 0, '19:00', 't');
-insert into schedule values ('WSA',             'WSA',          'YYYY-MM', null,  7, 1, 2, '17:00', 0, '19:00', 't');
-insert into schedule values ('WSA',             'WSA',          'YYYY-MM', null,  8, 1, 2, '17:00', 0, '19:00', 't');
-insert into schedule values ('WSA',             'WSA',          'YYYY-MM', null,  9, 1, 2, '17:00', 0, '19:00', 't');
-insert into schedule values ('WSA',             'WSA',          'YYYY-MM', null, 10, 1, 2, '17:00', 0, '19:00', 't');
-insert into schedule values ('WSA',             'WSA',          'YYYY-MM', null, 11, 1, 2, '18:00', 0, '20:00', 't');
-insert into schedule values ('WSA',             'WSA',          'YYYY-MM', null, 12, 1, 2, '18:00', 0, '20:00', 't');
+insert into schedule values ('WSA',             'WSA',          'YYYY-MM', null,  1, 2, 2, '18:00', 0, '20:00', 't');
+insert into schedule values ('WSA',             'WSA',          'YYYY-MM', null,  2, 2, 2, '18:00', 0, '20:00', 't');
+insert into schedule values ('WSA',             'WSA',          'YYYY-MM', null,  3, 2, 2, '18:00', 0, '20:00', 't');
+insert into schedule values ('WSA',             'WSA',          'YYYY-MM', null,  4, 2, 2, '17:00', 0, '19:00', 't');
+insert into schedule values ('WSA',             'WSA',          'YYYY-MM', null,  5, 2, 2, '17:00', 0, '19:00', 't');
+insert into schedule values ('WSA',             'WSA',          'YYYY-MM', null,  6, 2, 2, '17:00', 0, '19:00', 't');
+insert into schedule values ('WSA',             'WSA',          'YYYY-MM', null,  7, 2, 2, '17:00', 0, '19:00', 't');
+insert into schedule values ('WSA',             'WSA',          'YYYY-MM', null,  8, 2, 2, '17:00', 0, '19:00', 't');
+insert into schedule values ('WSA',             'WSA',          'YYYY-MM', null,  9, 2, 2, '17:00', 0, '19:00', 't');
+insert into schedule values ('WSA',             'WSA',          'YYYY-MM', null, 10, 2, 2, '17:00', 0, '19:00', 't');
+insert into schedule values ('WSA',             'WSA',          'YYYY-MM', null, 11, 2, 2, '18:00', 0, '20:00', 't');
+insert into schedule values ('WSA',             'WSA',          'YYYY-MM', null, 12, 2, 2, '18:00', 0, '20:00', 't');
 
 -- everything else
 insert into schedule values ('AGCW-HNY',        'AGCW-HNY',     'YYYY', 1,     1, null, null, '09:00', 0, '12:00');
