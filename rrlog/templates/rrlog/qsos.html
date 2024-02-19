@@ -74,5 +74,5 @@
  <td>{% if qso.contest %}<a href="{{urlpath}}{% relative_url 'contest' qso.contest request.GET.urlencode %}">{{qso.contest}}</a>{% endif %}</td>
  </tr>
 {% endfor %}
-</ul>
 </table>
+<em>{{qsos|length}} QSOs shown</em>

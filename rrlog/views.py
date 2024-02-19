@@ -23,7 +23,7 @@ from log
 left join dxcc on log.dxcc = dxcc.dxcc
 left join rrcalls on log.call = rrcalls.rrcall
 {}
-order by start desc limit {}
+order by start {} limit {}
 """
 
 q_events = """
@@ -88,7 +88,7 @@ def v_index(request):
         cursor.execute(q_operator_stats.format(''), [date, date, '1 year', limit])
         current_year_stats = namedtuplefetchall(cursor)
 
-        cursor.execute(q_log.format('where rrcall is not null', 250), [])
+        cursor.execute(q_log.format('where rrcall is not null', 'desc', 250), [])
         qsos = namedtuplefetchall(cursor)
 
     context = {
@@ -163,7 +163,7 @@ def get_request_qsos(request, quals, params):
     where = ('where ' + ' and '.join(quals)) if quals else ''
 
     with connection.cursor() as cursor:
-        cursor.execute(q_log.format(where, 500), params)
+        cursor.execute(q_log.format(where, 'desc', 500), params)
         qsos = namedtuplefetchall(cursor)
 
     return qsos
@@ -284,7 +284,7 @@ def v_rrdxa60(request):
 
         with connection.cursor() as cursor:
             params = [call, f"{year}-01-01", f"{year+1}-01-01"]
-            cursor.execute(q_log.format(f"where call = %s and start between %s and %s", 1000), params)
+            cursor.execute(q_log.format("where call = %s and start between %s and %s", 'asc', 1000), params)
             qsos = namedtuplefetchall(cursor)
 
             cursor.execute(q_worked_bands, params * 3)
@@ -628,7 +628,7 @@ def v_summary(request, upload_id):
         username = request.COOKIES['username']
 
     with connection.cursor() as cursor:
-        cursor.execute(q_log.format('where upload = %s', 500), [upload_id])
+        cursor.execute(q_log.format('where upload = %s', 'asc', 10000), [upload_id])
         qsos = namedtuplefetchall(cursor)
         data, summary, subject = get_summary(cursor, upload_id)
 
