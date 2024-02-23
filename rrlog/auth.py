@@ -12,18 +12,19 @@ def basic_auth(request):
         return False, "Only Basic auth supported"
 
     username, password = base64.b64decode(credentials).decode("utf-8").split(':')
-    username = username.upper()
 
     with connection.cursor() as cursor:
-        cursor.execute("select user_pass from members where call = %s", [username])
-        user_password = cursor.fetchone()
+        cursor.execute("select call, user_pass from members where call = %s or user_email = %s", [username.upper(), username.lower()])
+        userdata = cursor.fetchone()
 
-        if not user_password:
-            print(f"user {username} not found in database")
-            return False, "Login failed"
+    if not userdata:
+        print(f"user {username} not found in database")
+        return False, "Login failed"
 
-        if not phpass.verify(password, user_password[0]):
-            print("wrong password")
-            return False, "Login failed"
+    username, user_password = userdata
+
+    if not phpass.verify(password, user_password):
+        print("wrong password for user {username}")
+        return False, "Login failed"
 
     return True, username
