@@ -16,7 +16,8 @@ comment on column rrdxa.schedule.week is 'week number in month, negative numbers
 
 -- yearly contests
 -- the big ones
-insert into schedule values ('CQ-WW-160M',      'CQ-WW-160M',   'YYYY', null,  1,-3, 5, '22:00', 2, '22:00'); -- last full weekend including Friday
+insert into schedule values ('CQ-160-CW',       'CQ-160-CW',    'YYYY', null,  1,-3, 5, '22:00', 2, '22:00'); -- last full weekend including Friday
+insert into schedule values ('CQ-160-SSB',      'CQ-160-SSB',   'YYYY', null,  2,-3, 5, '22:00', 2, '22:00'); -- last full weekend including Friday
 insert into schedule values ('CQ-WW-RTTY',      'CQ-WW-RTTY',   'YYYY', null,  9,-2, 6, '00:00', 1, '24:00');
 insert into schedule values ('CQ-WW-SSB',       'CQ-WW-SSB',    'YYYY', null, 10,-2, 6, '00:00', 1, '24:00');
 insert into schedule values ('CQ-WW-CW',        'CQ-WW-CW',     'YYYY', null, 11,-2, 6, '00:00', 1, '24:00');
@@ -47,6 +48,8 @@ insert into schedule values ('REF-CW',          'REF-CW',       'YYYY', null,  1
 insert into schedule values ('REF-SSB',         'REF-SSB',      'YYYY', null,  2,-2, 6, '06:00', 1, '18:00');
 insert into schedule values ('UBA-DX-SSB',      'UBA-DX-SSB',   'YYYY', null,  1,-2, 6, '13:00', 1, '13:00');
 insert into schedule values ('UBA-DX-CW',       'UBA-DX-CW',    'YYYY', null,  2,-2, 6, '13:00', 1, '13:00');
+insert into schedule values ('HSC',             'HSC',       'YYYY-MM', null,  2,-1, 0, '14:00', 0, '17:00');
+insert into schedule values ('HSC',             'HSC',       'YYYY-MM', null, 11, 1, 0, '14:00', 0, '17:00');
 insert into schedule values ('UKEIDX-CW',       'UKEIDX-CW',    'YYYY', null,  4,-2, 6, '12:00', 1, '12:00');
 -- UKEIDX-SSB doesn't have a fixed schedule (https://www.ukeicc.com/dx-contest-rules.php)
 --insert into schedule values ('UKEIDX-SSB',      'UKEIDX-SSB',   'YYYY', null,  9,-2, 6, '12:00', 1, '12:00');

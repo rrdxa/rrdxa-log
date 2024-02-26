@@ -239,7 +239,7 @@ select call, count(distinct (rroperator, band)) from (
         where start between %s and %s
 )
 group by 1
-having count(distinct (rroperator, band)) >= 30
+having count(distinct (rroperator, band)) >= 60
 order by 2 desc;
 """
 
