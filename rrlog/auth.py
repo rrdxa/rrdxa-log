@@ -1,6 +1,8 @@
 from django.db import connection
+from django.shortcuts import render
 import base64
 from passlib.hash import phpass
+import functools
 
 def basic_auth(request):
     auth_header = request.META.get('HTTP_AUTHORIZATION', '')
@@ -28,3 +30,18 @@ def basic_auth(request):
         return False, "Login failed"
 
     return True, username
+
+def auth_required(func):
+    """Make sure the user is logged in before delivering this page"""
+
+    @functools.wraps(func)
+    def wrapper_auth_required(request, *args, **kwargs):
+        status, message = basic_auth(request)
+        if not status:
+            response = render(request, 'rrlog/generic.html', { 'message': message }, status=401)
+            response['WWW-Authenticate'] = 'Basic realm="RRDXA Log Upload"'
+            return response
+        request.username = message
+        return func(request, *args, **kwargs)
+
+    return wrapper_auth_required

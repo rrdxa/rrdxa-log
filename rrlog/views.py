@@ -10,7 +10,7 @@ import re
 
 from rrdxa import settings
 
-from rrlog.auth import basic_auth
+from rrlog.auth import basic_auth, auth_required
 from rrlog.upload import log_upload
 from rrlog.utils import namedtuplefetchall
 from rrlog.summary import get_summary
@@ -515,14 +515,9 @@ from upload u left join event e on u.event_id = e.event_id
 {}
 order by id desc limit 1000"""
 
+@auth_required
 def v_upload(request, filetype=None):
-    # authentication
-    status, message = basic_auth(request)
-    if not status:
-        response = render(request, 'rrlog/generic.html', { 'message': message }, status=401)
-        response['WWW-Authenticate'] = 'Basic realm="RRDXA Log Upload"'
-        return response
-    username = message
+    username = request.username
 
     # actual page
     message = None
@@ -567,14 +562,9 @@ def v_upload(request, filetype=None):
     }
     return render_with_username_cookie(request, 'rrlog/upload.html', context, username)
 
+@auth_required
 def v_download(request, upload_id):
-    # authentication
-    status, message = basic_auth(request)
-    if not status:
-        response = render(request, 'rrlog/generic.html', { 'message': message }, status=401)
-        response['WWW-Authenticate'] = 'Basic realm="RRDXA Log Upload"'
-        return response
-    username = message
+    username = request.username
 
     with connection.cursor() as cursor:
         q_download = "select adif, filename from upload where id = %s"
