@@ -31,6 +31,7 @@ create materialized view rrdxa.members as
 select
     upper(user_login) as call,
     regexp_split_to_array(upper(x_callsigns.value), '([\s,-]|&amp;)+', 'i') as callsigns,
+    x_member_no.value::int as member_no,
     display_name,
     m_firstname.meta_value as first_name,
     m_lastname.meta_value as last_name,
@@ -41,13 +42,15 @@ select
     not '{bbp_spectator}' <@ user_roles(m_roles.meta_value) as public
 from wordpress."L7l2a_users" u
 left join wordpress."L7l2a_bp_xprofile_data" x_callsigns on u."ID" = x_callsigns.user_id and x_callsigns.field_id = 2
+left join wordpress."L7l2a_bp_xprofile_data" x_member_no on u."ID" = x_member_no.user_id and x_member_no.field_id = 3
 left join wordpress."L7l2a_usermeta" m_firstname on u."ID" = m_firstname.user_id and m_firstname.meta_key = 'first_name'
 left join wordpress."L7l2a_usermeta" m_lastname on u."ID" = m_lastname.user_id and m_lastname.meta_key = 'last_name'
 left join wordpress."L7l2a_usermeta" m_nickname on u."ID" = m_nickname.user_id and m_nickname.meta_key = 'nickname'
 left join wordpress."L7l2a_usermeta" m_roles on u."ID" = m_roles.user_id and m_roles.meta_key = 'L7l2a_capabilities'
 order by user_login;
 
-create index on rrdxa.members (call);
+create unique index on rrdxa.members (call);
+create unique index on rrdxa.members (member_no);
 analyze rrdxa.members;
 
 create materialized view rrdxa.rrcalls as
@@ -56,7 +59,7 @@ union
 select u, call from members, unnest(callsigns) u(u) where call ~ '[0-9]' and public
 order by 2, 1;
 
-create index on rrdxa.rrcalls(rrcall);
+create unique index on rrdxa.rrcalls(rrcall);
 analyze rrdxa.rrcalls;
 
 commit;
