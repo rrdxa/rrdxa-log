@@ -1,0 +1,30 @@
+{% extends 'rrlog/rrdxa.html' %}
+
+{% block content %}
+<h1>{{call}} #{{data.member_no}}</h1>
+
+Hallo {{data.first_name}}!
+
+<ul>
+{% if data.member_no %}
+<li><a href="membership_certificate/">RRDXA-Mitgliedsurkunde</a></li>
+{% else %}
+<li>Für {{call}} wurde noch keine Mitgliedsnummer vergeben. Bitte beim Vorstand nachfragen!</li>
+{% endif %}
+</ul>
+
+<h2>Mitgliederliste</h2>
+
+<div>
+<em>Nur für den internen Gebrauch, nicht weitergeben/veröffentlichen!</em>
+</div>
+<br>
+
+<table border="0">
+<tr><th>#</th><th>Call</th><th>Name</th><th>weitere Calls</th></tr>
+{% for member in member_list %}
+<tr><td>{{member.member_no}}</td><td>{{member.call}}</td><td>{{member.display_name}}</td><td>{% for c in member.callsigns %}{{c}}{% if not forloop.last %}, {% endif %}{% endfor %}</td></tr>
+{% endfor %}
+</table>
+
+{% endblock %}

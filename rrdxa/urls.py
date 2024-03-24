@@ -18,4 +18,5 @@ from django.urls import include, path
 
 urlpatterns = [
     path('log/', include('rrlog.urls')),
+    path('member/', include('rrmember.urls')),
 ]
