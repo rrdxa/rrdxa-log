@@ -21,13 +21,20 @@ Hallo {{data.first_name}}!
 <br>
 
 <table border="0">
-<tr><th>#</th><th>Call</th><th>Name</th><th>weitere Calls</th></tr>
+<tr>
+ <th>#</th>
+ <th>Call</th>
+ <th>Name</th>
+ <th>weitere Calls</th>
+ {% if data.admin %}<th>WP</th>{% endif %}
+</tr>
 {% for member in member_list %}
 <tr>
  <td>{{member.member_no}}</td>
  <td><a href="https://rrdxa.org/mitglieder/{{member.call|lower}}/">{{member.call}}</a></td>
  <td>{{member.display_name}}</td>
  <td>{% for c in member.callsigns %}{{c}}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+ {% if data.admin %}<td><a href="https://rrdxa.org/wp-admin/user-edit.php?user_id={{member.wpid}}">WP</a></td>{% endif %}
 </tr>
 {% endfor %}
 </table>

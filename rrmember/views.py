@@ -9,7 +9,7 @@ from .certificate import certificate
 
 def member_data(call):
     with connection.cursor() as cursor:
-        cursor.execute("select call, first_name, display_name, member_no from members where call = %s", [call])
+        cursor.execute("select call, first_name, display_name, member_no, admin from members where call = %s", [call])
         data = namedtuplefetchall(cursor)
         return data[0]
 
@@ -18,7 +18,7 @@ def v_index(request):
     data = member_data(request.username)
 
     with connection.cursor() as cursor:
-        cursor.execute("select member_no, call, display_name, callsigns from members where public and member_no is not null order by member_no", [])
+        cursor.execute("select member_no, call, display_name, callsigns, wpid from members where public and member_no is not null order by member_no", [])
         member_list = namedtuplefetchall(cursor)
 
     context = {

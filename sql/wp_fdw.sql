@@ -38,8 +38,10 @@ select
     m_nickname.meta_value as nickname,
     user_email,
     user_pass,
+    "ID" as wpid,
     user_roles(m_roles.meta_value),
-    not '{bbp_spectator}' <@ user_roles(m_roles.meta_value) as public
+    not '{bbp_spectator}' <@ user_roles(m_roles.meta_value) as public,
+    '{administrator}' <@ user_roles(m_roles.meta_value) as admin
 from wordpress."L7l2a_users" u
 left join wordpress."L7l2a_bp_xprofile_data" x_callsigns on u."ID" = x_callsigns.user_id and x_callsigns.field_id = 2
 left join wordpress."L7l2a_bp_xprofile_data" x_member_no on u."ID" = x_member_no.user_id and x_member_no.field_id = 3
