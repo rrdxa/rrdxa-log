@@ -40,3 +40,20 @@ def v_membership_certificate(request):
     response = HttpResponse(pdf, content_type='application/pdf')
     response['Content-Disposition'] = f'inline; filename="RRDXA_{data.call}.pdf"'
     return response
+
+def comma_join(l):
+    if l is None:
+        return ''
+    return ','.join(l)
+
+@auth_required
+def v_list(request):
+    with connection.cursor() as cursor:
+        cursor.execute("select member_no, call, display_name, callsigns from members where public and member_no is not null order by member_no", [])
+        member_list = namedtuplefetchall(cursor)
+
+    csv = "member_no;call;name;extra_calls\n" + \
+        ''.join([f"{m.member_no};{m.call};{m.display_name};{comma_join(m.callsigns)}\n" for m in member_list])
+    response = HttpResponse(csv, content_type='text/plain; charset=utf-8')
+    response['Content-Disposition'] = f'inline; filename="RRDXA_members.txt"'
+    return response
