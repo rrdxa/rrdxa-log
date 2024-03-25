@@ -28,6 +28,7 @@ Hallo {{data.first_name}}!
  <th>Call</th>
  <th>Name</th>
  <th>weitere Calls</th>
+ <th>QRZ</th>
  {% if data.admin %}<th>WP</th>{% endif %}
 </tr>
 {% for member in member_list %}
@@ -36,6 +37,7 @@ Hallo {{data.first_name}}!
  <td><a href="https://rrdxa.org/mitglieder/{{member.call|lower}}/">{{member.call}}</a></td>
  <td>{{member.display_name}}</td>
  <td>{% for c in member.callsigns %}{{c}}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+ <td><a href="https://www.qrz.com/db/{{member.call}}">QRZ</a></td>
  {% if data.admin %}<td><a href="https://rrdxa.org/wp-admin/user-edit.php?user_id={{member.wpid}}">WP</a></td>{% endif %}
 </tr>
 {% endfor %}
