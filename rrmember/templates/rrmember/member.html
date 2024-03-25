@@ -23,7 +23,12 @@ Hallo {{data.first_name}}!
 <table border="0">
 <tr><th>#</th><th>Call</th><th>Name</th><th>weitere Calls</th></tr>
 {% for member in member_list %}
-<tr><td>{{member.member_no}}</td><td>{{member.call}}</td><td>{{member.display_name}}</td><td>{% for c in member.callsigns %}{{c}}{% if not forloop.last %}, {% endif %}{% endfor %}</td></tr>
+<tr>
+ <td>{{member.member_no}}</td>
+ <td><a href="https://rrdxa.org/mitglieder/{{member.call|lower}}/">{{member.call}}</a></td>
+ <td>{{member.display_name}}</td>
+ <td>{% for c in member.callsigns %}{{c}}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+</tr>
 {% endfor %}
 </table>
 
