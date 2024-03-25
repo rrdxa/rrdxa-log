@@ -38,7 +38,7 @@ def v_membership_certificate(request):
 
     pdf = certificate(data.call, data.display_name, today, data.member_no)
     response = HttpResponse(pdf, content_type='application/pdf')
-    response['Content-Disposition'] = f'inline; filename="RRDXA_{data.call}.pdf"'
+    response['Content-Disposition'] = f'attachment; filename="RRDXA_{data.call}.pdf"'
     return response
 
 def comma_join(l):
