@@ -1,8 +1,6 @@
-#from django.db import transaction
-#import re
-#from rrlog import cabrillo, country
 from rrlog.utils import namedtuplefetchall
 from email.message import EmailMessage
+from email.headerregistry import Address
 import smtplib
 
 q_upload_data = """select uploader,
@@ -142,8 +140,8 @@ def post_summary(cursor, upload_id, send=True):
     if send:
         msg = EmailMessage()
         msg['Message-Id'] = f"<cabrillo-upload-{upload_id}@rrdxa.org>"
-        msg['From'] = f"{data.uploader} via rrdxa.org <logbook@rrdxa.org>"
-        msg['To'] = f"{data.contest} score submission <rrdxa@mailman.qth.net>"
+        msg['From'] = Address(display_name=f"{data.uploader} via rrdxa.org",  addr_spec="logbook@rrdxa.org")
+        msg['To'] = Address(display_name=f"{data.contest} score submission", addr_spec="rrdxa@mailman.qth.net")
         msg['Subject'] = subject
         msg['X-Callsign'] = data.station_callsign
         msg['X-Contest'] = data.contest
