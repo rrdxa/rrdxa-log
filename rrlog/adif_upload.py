@@ -32,10 +32,10 @@ def adif_upload(cursor, content, station_callsign, operator, contest, upload_id)
             upload_start = min(upload_start, start) if upload_start else start
             upload_stop = max(upload_stop, start) if upload_stop else start
 
-            qso_station = qso.get('STATION_CALLSIGN') or station_callsign \
-                    or qso.get('OPERATOR') or operator
-            qso_operator = qso.get('OPERATOR') or operator \
-                    or qso.get('STATION_CALLSIGN') or station_callsign
+            qso_station = upper(qso.get('STATION_CALLSIGN') or station_callsign \
+                    or qso.get('OPERATOR') or operator)
+            qso_operator = upper(qso.get('OPERATOR') or operator \
+                    or qso.get('STATION_CALLSIGN') or station_callsign)
             if qso_station == qso_operator:
                 qso_operator = None
 
