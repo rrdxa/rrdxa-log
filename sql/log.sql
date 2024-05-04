@@ -78,7 +78,8 @@ create or replace view rrdxa.log_v as
         rsttx, extx,
         rstrx, exrx,
         gridsquare,
-        contest
+        contest,
+        upload
     from log
     left join dxcc on log.dxcc = dxcc.dxcc
     left join rrcalls on basecall(log.call) = rrcalls.rrcall;
