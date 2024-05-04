@@ -1,0 +1,3 @@
+# No sensibly searchable content here, just very long lists of callsigns
+User-Agent: *
+Disallow: /

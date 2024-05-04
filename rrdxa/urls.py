@@ -15,8 +15,10 @@ Including another URLconf
 """
 
 from django.urls import include, path
+from django.views.generic.base import TemplateView
 
 urlpatterns = [
     path('log/', include('rrlog.urls')),
     path('member/', include('rrmember.urls')),
+    path('robots.txt', TemplateView.as_view(template_name="robots.txt", content_type="text/plain")),
 ]
