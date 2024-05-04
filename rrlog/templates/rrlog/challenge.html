@@ -4,29 +4,37 @@
 {% block content %}
 <h1>{{title}}</h1>
 
+<p>
+<a href="https://rrdxa.org/rrdxa-challenge-rules/">Zu den Challenge-Regeln</a>
+</p>
+
 <table border=0>
 <thead>
 <tr>
+ <th>#</th>
  <th>Call</th>
  <th>QSOs</th>
- <th>multi</th>
- <th>score</th>
- <th>events</th>
+ <th>Multi</th>
+ <th>Score</th>
+ <th>Events</th>
 </tr>
 </thead>
 
 {% for entry in entries %}
  <tr>
+ <td style="text-align: right;">{{entry.rank}}</td>
  <td><a href="/log/call/{{entry.call|urlencode:''}}/"><b>{{entry.call}}</b></a></td>
  <td style="text-align: right;">{{entry.qsos|intcomma}}</td>
- <td style="text-align: right;">{{entry.multis|intcomma}}</td>
+ <td style="text-align: right;{% if entry.multis >= 6 %}font-weight: bold;{% endif %}">{{entry.multis|intcomma}}</td>
  <td style="text-align: right;"><b>{{entry.score|intcomma}}</b></td>
  <td>
+ <div class="hover-expand">
  {% for event in entry.events %}
- <span style="{% if event.qsos >= 60 or event.vhf and event.qsos >= 30 %}font-weight: bold;{% endif %}">
+ <span style="{% if event.qsos < 30 or not event.vhf and event.qsos < 60 %}font-size: small;{% endif %}">
  <a href="/log/event/{{event.event|urlencode:''}}/"><span style="{% if event.vhf %}color: red;{% endif %}">{{event.event}}</span></a>
  ({% if entry.call != event.station_callsign %}{{event.station_callsign}} {% endif %}<a href="/log/summary/{{event.upload_id|urlencode:''}}/">{{event.qsos}}</a>)</span>{% if not forloop.last %},{% endif %}
  {% endfor %}
+ </div>
  </td>
  </tr>
 {% endfor %}
@@ -35,8 +43,7 @@
 <br>
 <div>
 <em>
-<span style="color: red;">rot</span> = VHF+ log,
-<span style="font-weight: bold;">bold</span> = valid log with 60+ QSOs (30+ on VHF+)
+<span style="color: red;">rot</span> = UKW-Log
 </em>
 </div>
 

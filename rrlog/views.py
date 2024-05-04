@@ -329,6 +329,7 @@ def v_rrdxa60(request):
     return render(request, 'rrlog/rrdxa60.html', context)
 
 q_challenge = """
+select rank() over (order by score desc, qsos desc), * from (
 select operator as call,
     sum(qsos / n_operators) as qsos,
     count(*) filter (where qsos >= 60 or vhf and qsos >= 30) as multis,
@@ -343,7 +344,8 @@ from upload_operators u
     join rrcalls rr on u.operator = rr.rrcall -- limit to RRDXA members
 where e.start between %s and %s
 group by 1
-order by 4 desc, 2 desc, operator
+)
+order by score desc, qsos desc, call
 """
 
 def v_challenge(request, year=None):
