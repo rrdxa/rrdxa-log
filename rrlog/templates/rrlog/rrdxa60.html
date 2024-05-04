@@ -25,7 +25,7 @@ Call: <input name="call" value="{{call|default_if_none:''}}">
 
 {% for op in worked %}
  <tr>
- <td>{{op.operator}}
+ <td><span style="{% if op.operator == 'DA0RR' or op.operator == 'DL60RRDXA' %}font-weight: bold;{% endif %}">{{op.operator}}</span>
  {% for band in op.bands %}
  <td style="text-align: center;">{% if band %}🟢{% endif %}</td>
  {% endfor %}
@@ -35,7 +35,7 @@ Call: <input name="call" value="{{call|default_if_none:''}}">
 
 <div>
 <br>
-<b>QSO with DA0RR: {% if da0rr %}🟢 yes{% else %}🔴 no{% endif %}</b>
+<b>QSO with DA0RR or DL60RRDXA: {% if da0rr %}🟢 yes{% else %}🔴 no{% endif %}</b>
 <br>
 <b>RRDXA60 Bandpoints: 🟢 {{bandpoints}}</b>
 </div>

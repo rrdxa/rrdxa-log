@@ -2,6 +2,7 @@
 refresh materialized view rrdxa.wordpress_users;
 refresh materialized view rrdxa.members;
 refresh materialized view rrdxa.rrcalls;
+refresh materialized view rrdxa.rrdxa60_top;
 
 -- delete uploads that have no QSOs
 delete from rrdxa.upload where ts < now() - '4 week'::interval and
@@ -15,5 +16,4 @@ select * from upload_ids where min is not null);
 -- delete events with no logs after 2 weeks
 delete from rrdxa.event e where start < now() - '2 weeks'::interval and
     created < now() - '2 weeks'::interval and
-    not exists (select from upload u where e.event_id = u.event_id)
-    returning *;
+    not exists (select from upload u where e.event_id = u.event_id);

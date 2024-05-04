@@ -67,12 +67,29 @@ create table rrdxa.log (
     primary key (station_callsign, call, band, major_mode, start)
 );
 
+create or replace view rrdxa.log_v as
+    select
+        start, to_char(start, 'DD.MM.YYYY') as start_str,
+        station_callsign, coalesce(operator, station_callsign) as operator,
+        call, rrdxa.basecall(call), rrcalls.rroperator,
+        dxcc.country,
+        band, freq,
+        major_mode, mode, submode,
+        rsttx, extx,
+        rstrx, exrx,
+        gridsquare,
+        contest
+    from log
+    left join dxcc on log.dxcc = dxcc.dxcc
+    left join rrcalls on basecall(log.call) = rrcalls.rrcall;
+
 grant select, insert, update, delete on rrdxa.upload, rrdxa.log to "www-data";
 grant usage on rrdxa.upload_id_seq to "www-data";
 
 create index on rrdxa.log (start);
-create index on rrdxa.log (operator);
+create index log_operator_start_idx on rrdxa.log (coalesce(operator, station_callsign), start);
 create index on rrdxa.log (call);
+create index on rrdxa.log (basecall(call));
 create index on rrdxa.log (dxcc);
 create index on rrdxa.log (gridsquare);
 create index on rrdxa.log (contest);

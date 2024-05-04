@@ -62,6 +62,7 @@ select u, call from members, unnest(callsigns) u(u) where call ~ '[0-9]' and pub
 order by 2, 1;
 
 create unique index on rrdxa.rrcalls(rrcall);
+create index on rrdxa.rrcalls(rroperator);
 analyze rrdxa.rrcalls;
 
 commit;

@@ -23,3 +23,9 @@ create or replace function rrdxa.stop_str(stop timestamptz)
     case when stop::time = '00:00' then to_char(stop - '1 day'::interval, 'DD.MM.YYYY 24:00')
     else to_char(stop, 'DD.MM.YYYY HH24:MI')
     end;
+
+create or replace function rrdxa.basecall(call text)
+  returns text
+  immutable parallel safe strict
+  return (select * from regexp_split_to_table(call, '/') parts(part) order by length(part) desc limit 1);
+

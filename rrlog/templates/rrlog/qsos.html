@@ -32,7 +32,6 @@
 <tr>
  <th>Date</th>
  <th>station</th>
- <th>op</th>
  <th>DX call</th>
  <th>DXCC</th>
  <th>band</th>
@@ -48,13 +47,12 @@
 {% for qso in qsos %}
  <tr>
  <td>{{qso.start_str}}</td>
- {% if not qso.operator or qso.operator == qso.station_callsign %}
- <td colspan="2"><a href="{{urlpath}}{% relative_url 'call' qso.station_callsign request.GET.urlencode %}">{{qso.station_callsign}}</a></td>
- {% else %}
- <td><a href="{{urlpath}}{% relative_url 'call' qso.station_callsign request.GET.urlencode %}">{{qso.station_callsign}}</a></td>
- <td>{% if qso.operator %}<a href="{{urlpath}}{% relative_url 'call' qso.operator request.GET.urlencode %}">{{qso.operator}}</a>{% endif %}</td>
- {% endif %}
- <td><a href="{{urlpath}}{% relative_url 'call' qso.call request.GET.urlencode %}"><span{% if qso.rrcall %} style="font-weight: bold;"{% endif %}>{{qso.call}}</span></a></td>
+ <td><a href="{{urlpath}}{% relative_url 'call' qso.station_callsign request.GET.urlencode %}">{{qso.station_callsign}}</a>
+ {% if qso.operator and qso.operator != qso.station_callsign %}(<a href="{{urlpath}}{% relative_url 'call' qso.operator request.GET.urlencode %}">{{qso.operator}}</a>){% endif %}
+ </td>
+ <td><a href="{{urlpath}}{% relative_url 'call' qso.call request.GET.urlencode %}"><span{% if qso.rroperator %} style="font-weight: bold;"{% endif %}>{{qso.call}}</span></a>
+ {% if qso.rroperator and qso.rroperator != qso.call %}(<a href="{{urlpath}}{% relative_url 'call' qso.rroperator request.GET.urlencode %}">{{qso.rroperator}}</a>){% endif %}
+ </td>
  <td>{% if qso.country %}<a href="{{urlpath}}{% relative_url 'country' qso.country request.GET.urlencode %}">{{qso.country|title}}</a>{% endif %}</td>
  <td><a href="{{urlpath}}{% relative_url 'band' qso.band request.GET.urlencode %}">{{qso.band}}</a></td>
  <td>{{qso.freq|default_if_none:''}}</td>
