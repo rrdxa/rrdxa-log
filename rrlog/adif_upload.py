@@ -73,6 +73,6 @@ def adif_upload(cursor, content, station_callsign, operator, contest, upload_id)
                             upload_id,
                             qso,
                             ])
-        cursor.execute("update upload set qsos = %s, start = %s, stop = %s where id = %s", [len(qsos), upload_start, upload_stop, upload_id])
+        cursor.execute("update upload set qsos = %s, start = date_trunc('minute', %s), stop = date_trunc('minute', %s) where id = %s", [len(qsos), upload_start, upload_stop, upload_id])
 
     return len(qsos)

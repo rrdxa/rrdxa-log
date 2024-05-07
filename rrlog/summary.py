@@ -3,7 +3,9 @@ from email.message import EmailMessage
 from email.headerregistry import Address
 import smtplib
 
-q_upload_data = """select uploader,
+q_upload_data = """select
+id as upload_id,
+uploader,
 contest,
 station_callsign,
 operators,
@@ -20,12 +22,15 @@ category_transmitter,
 location,
 grid_locator,
 soapbox,
+qsos,
 claimed_score,
 exchange,
 u.start as upload_start,
 u.stop as upload_stop,
 e.event_id,
-e.event
+e.event,
+e.start as event_start,
+e.stop as event_stop
 from upload u
 left join event e on u.event_id = e.event_id
 where id = %s
@@ -54,7 +59,7 @@ with log_with_op_time as (
                 start + (lead(start) over (order by start) - start)/2
             else start + '1 min'::interval
         end, '[]') qso_op_time
-    from log where upload = %s
+    from log where start between %s and %s and upload = %s
 ),
 data as (
     select
@@ -79,7 +84,7 @@ def get_summary(cursor, upload_id):
         return None, None, None
     data = data_arr[0]
 
-    cursor.execute(q_qso_summary, [upload_id])
+    cursor.execute(q_qso_summary, [data.event_start or data.upload_start, data.event_stop or data.upload_stop, upload_id])
     summary = namedtuplefetchall(cursor)
 
     subject = f"{data.station_callsign} "
@@ -92,9 +97,7 @@ def get_summary(cursor, upload_id):
 
     return data, summary, subject
 
-def post_summary(cursor, upload_id, send=True):
-    data, summary, subject = get_summary(cursor, upload_id)
-
+def post_summary(data, summary, subject, send=True):
     if data is None:
         return "No data found"
 
@@ -139,7 +142,7 @@ def post_summary(cursor, upload_id, send=True):
     # send it
     if send:
         msg = EmailMessage()
-        msg['Message-Id'] = f"<cabrillo-upload-{upload_id}@rrdxa.org>"
+        msg['Message-Id'] = f"<cabrillo-upload-{data.upload_id}@rrdxa.org>"
         msg['From'] = Address(display_name=f"{data.uploader} via rrdxa.org",  addr_spec="logbook@rrdxa.org")
         msg['To'] = Address(display_name=f"{data.contest} score submission", addr_spec="rrdxa@mailman.qth.net")
         msg['Subject'] = subject

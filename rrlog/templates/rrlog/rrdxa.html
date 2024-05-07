@@ -43,9 +43,10 @@ a:hover, a:active {
 }
 
 </style>
+{% block header %}{% endblock %}
 </head>
 
-<body>
+<body{% block bodyopts %}{% endblock %}>
 
 <div id="navbar">
 [<a href="/log/">Logbook Home</a>]
@@ -54,8 +55,7 @@ a:hover, a:active {
 [<a href="/log/mao/">Most Active Operator</a>]
 [<a href="/log/challenge/">Challenge</a>]
 [<a href="/log/event/">Events</a>]
-[<a href="/log/cabrillo-upload/">Cabrillo Upload</a>]
-[<a href="/log/adif-upload/">Adif Upload</a>]
+[<a href="/log/upload/">Upload</a>]
 [<a href="/member/">Member Area</a>]
 <!-- {% if username %}[{{username}}]{% endif %} -->
 </div>

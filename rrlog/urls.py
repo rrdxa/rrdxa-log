@@ -19,11 +19,12 @@ urlpatterns = [
     path('rrdxa60/', views.v_rrdxa60, name='challenge'),
     path('year/<int:year>/', views.v_year, name='year'),
 
-    path('upload/', views.v_upload, {'filetype': None}, name='upload'),
-    path('adif-upload/', views.v_upload, {'filetype': 'adif'}, name='upload'),
-    path('cabrillo-upload/', views.v_upload, {'filetype': 'cabrillo'}, name='cabrillo'),
+    path('upload/', views.v_upload, name='upload'),
+    path('adif-upload/', views.v_upload, name='upload'),
+    path('cabrillo-upload/', views.v_upload, name='upload'),
     path('download/<int:upload_id>/', views.v_download, name='download'),
     path('summary/<int:upload_id>/', views.v_summary, name='summary'),
+    path('edit/<int:upload_id>/', views.v_edit, name='edit'),
 
     path('members/', views.v_members, name='members'),
 ]

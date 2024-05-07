@@ -1,33 +1,23 @@
 from django.db import transaction
 import re
 from rrlog import cabrillo, country
+from rrlog.utils import upper
 
-q_insert_qso = """insert into log
-(start, station_callsign, operator, call, dxcc, band, freq, major_mode, mode, rsttx, extx, rstrx, exrx, contest, upload)
-values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-on conflict on constraint log_pkey do update set
-operator = coalesce(excluded.operator, log.operator),
-dxcc =     coalesce(excluded.dxcc, log.dxcc),
-freq =     coalesce(excluded.freq, log.freq),
-mode =     coalesce(excluded.mode, log.mode),
-rsttx =    excluded.rsttx,
-extx =     excluded.extx,
-rstrx =    excluded.rstrx,
-exrx =     excluded.exrx,
-contest =  excluded.contest,
-upload =   excluded.upload
-"""
-
-def cabrillo_upload(cursor, content, station_callsign, operator, contest, upload_id):
-    data = cabrillo.parse(content)
-    qsos = data['qsos']
+def cabrillo_upload(cursor, content, upload_id):
+    cbr = cabrillo.parse(content)
+    qsos = cbr['qsos']
     upload_start, upload_stop = None, None
 
+    if 'CALLSIGN' not in cbr:
+        raise Exception("Cabrillo log is missing the CALLSIGN header")
+    station_callsign = cbr.get('CALLSIGN').upper()
+    operators = upper(cbr.get('OPERATORS'))
+    operator = None
     # if there is a single operator specified in the Cabrillo file, use it
-    if 'OPERATORS' in data and re.match(r'[\w\d/]+$', data['OPERATORS']):
-        operator = data['OPERATORS'].upper()
+    if operators and re.match(r'[\w\d/]+$', operators) and station_callsign != operators:
+        operator = operators
 
-    contest = data.get('CONTEST') or contest
+    contest = cbr.get('CONTEST')
 
     with transaction.atomic():
         for qso in qsos:
@@ -36,9 +26,8 @@ def cabrillo_upload(cursor, content, station_callsign, operator, contest, upload
             upload_stop = max(upload_stop, start) if upload_stop else start
 
             qso_station = qso['station_callsign'].upper()
-            qso_operator = operator
-            if qso_station == qso_operator:
-                qso_operator = None
+            if qso_station != station_callsign:
+                raise Exception(f"Cabrillo header CALLSIGN {station_callsign} does not match QSO station callsign {qso_station}")
 
             call = qso['call'].upper()
             dxcc = country.lookup(call, start)
@@ -74,9 +63,24 @@ def cabrillo_upload(cursor, content, station_callsign, operator, contest, upload
             else:
                 raise Exception(f"Cabillo mode {major_mode} is not supported yet, please contact DF7CB")
 
-            cursor.execute(q_insert_qso,
+            cursor.execute("""\
+insert into log
+(start, station_callsign, operator, call, dxcc, band, freq, major_mode, mode, rsttx, extx, rstrx, exrx, contest, upload)
+values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+on conflict on constraint log_pkey do update set
+operator = coalesce(excluded.operator, log.operator),
+dxcc =     coalesce(excluded.dxcc, log.dxcc),
+freq =     coalesce(excluded.freq, log.freq),
+mode =     coalesce(excluded.mode, log.mode),
+rsttx =    excluded.rsttx,
+extx =     excluded.extx,
+rstrx =    excluded.rstrx,
+exrx =     excluded.exrx,
+contest =  excluded.contest,
+upload =   excluded.upload
+""",
                            [start,
-                            qso_station, qso_operator,
+                            station_callsign, operator,
                             call,
                             dxcc,
                             band, freq,
@@ -92,7 +96,8 @@ qsos = %s,
 start = %s,
 stop = %s,
 contest = %s,
-station_callsign = upper(coalesce(%s, station_callsign)),
+station_callsign = %s,
+operator = %s,
 operators = upper(%s),
 club = %s,
 category_operator = %s,
@@ -114,22 +119,23 @@ where id = %s""",
                         upload_start,
                         upload_stop,
                         contest,
-                        data.get('CALLSIGN'),
-                        data.get('OPERATORS'),
-                        data.get('CLUB'),
-                        data.get('CATEGORY-OPERATOR'),
-                        data.get('CATEGORY-ASSISTED'),
-                        data.get('CATEGORY-BAND'),
-                        data.get('CATEGORY-MODE'),
-                        data.get('CATEGORY-OVERLAY'),
-                        data.get('CATEGORY-POWER'),
-                        data.get('CATEGORY-STATION'),
-                        data.get('CATEGORY-TIME'),
-                        data.get('CATEGORY-TRANSMITTER'),
-                        data.get('LOCATION'),
-                        data.get('GRID-LOCATOR'),
-                        data.get('SOAPBOX'),
-                        data.get('CLAIMED-SCORE'),
+                        station_callsign,
+                        operator, # only set when there is a single operator
+                        cbr.get('OPERATORS'), # one or more operators
+                        cbr.get('CLUB'),
+                        cbr.get('CATEGORY-OPERATOR'),
+                        cbr.get('CATEGORY-ASSISTED'),
+                        cbr.get('CATEGORY-BAND'),
+                        cbr.get('CATEGORY-MODE'),
+                        cbr.get('CATEGORY-OVERLAY'),
+                        cbr.get('CATEGORY-POWER'),
+                        cbr.get('CATEGORY-STATION'),
+                        cbr.get('CATEGORY-TIME'),
+                        cbr.get('CATEGORY-TRANSMITTER'),
+                        cbr.get('LOCATION'),
+                        cbr.get('GRID-LOCATOR'),
+                        cbr.get('SOAPBOX'),
+                        cbr.get('CLAIMED-SCORE'),
                         qsos[0]['extx'] if len(qsos) > 0 else None,
                         upload_id])
 

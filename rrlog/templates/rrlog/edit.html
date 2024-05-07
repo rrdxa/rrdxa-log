@@ -1,0 +1,92 @@
+{% extends 'rrlog/rrdxa.html' %}
+{% load humanize %}
+
+{% block header %}
+<script>
+function extrafields(newstyle) {
+  const extraonlyelements = document.querySelectorAll('.extraonly');
+  extraonlyelements.forEach(element => {
+    element.style.display = newstyle;
+  });
+}
+</script>
+{% endblock %}
+
+{% block bodyopts %} onload="extrafields('none')" {% endblock %}
+
+{% block content %}
+<h1>{{title}}</h1>
+
+<form action="/log/edit/{{upload_id}}/" method="POST">
+<table>
+<tr><td>Callsign     </td><td><input name="station_callsign" value="{{data.station_callsign|default_if_none:''}}"></td></tr>
+<tr><td>Operators    </td><td><input name="operators" size="80" placeholder="operators" value="{{data.operators|default_if_none:''}}"></td></tr>
+<tr class="extraonly"><td>Club         </td><td><input name="club" placeholder="club" value="{{data.club|default_if_none:''}}"></td></tr>
+<tr class="extraonly"><td>Location     </td><td><input name="location" placeholder="location" value="{{data.location|default_if_none:''}}"> DX/... </td></tr>
+<tr class="extraonly"><td>Grid-Locator </td><td><input name="grid_locator" placeholder="locator" value="{{data.grid_locator|default_if_none:''}}"></td></tr>
+<tr class="extraonly"><td>Contest      </td><td><input name="" placeholder="contest" value="{{data.contest|default_if_none:''}}"></td></tr>
+<tr><td>{% if data.event %}<a href="/log/event/{{data.event}}/">Event</a>{% else %}Event{% endif %}</td>
+  <td><select name="event_id" id="type">
+    <option value="">--None--</option>
+    {% for event in eventlist %}
+    <option value="{{event.event_id}}"{% if event.selected %} selected{% endif %}>{{event.event}} -- {{event.start_str}}-{{event.stop_str}}</option>
+    {% endfor %}
+    </optgroup>
+    </select>
+    [<a href="/log/event/#new">Create new event</a>]
+  </td></tr>
+<tr class="extraonly"><td>Category-Operator</td> <td><input name="category_operator" placeholder="class" value="{{data.category_operator|default_if_none:''}}"> SINGLE-OP/MULTI-OP/CHECKLOG </td></tr>
+<tr class="extraonly"><td>Category-Band</td><td><input name="category_band" placeholder="band" value="{{data.category_band|default_if_none:''}}"> ALL/80M/40M/... </td></tr>
+<tr class="extraonly"><td>Category-Mode</td><td><input name="category_mode" placeholder="mode" value="{{data.category_mode|default_if_none:''}}"> MIXED/CW/PHONE/RTTY/DIGI/FM/... </td></tr>
+<tr class="extraonly"><td>Category-Power</td><td><input name="category_power" placeholder="power" value="{{data.category_power|default_if_none:''}}"> HIGH/LOW/QRP </td></tr>
+<tr class="extraonly"><td>Category-Assisted</td><td><input name="category_assisted" placeholder="assisted" value="{{data.category_assisted|default_if_none:''}}"> ASSISTED/NON-ASSISTED </td></tr>
+<tr class="extraonly"><td>Category-Overlay</td><td><input name="category_overlay" placeholder="overlay" value="{{data.category_overlay|default_if_none:''}}"> CLASSIC/ROOKIE/TB-WIRES/YOUTH/... </td></tr>
+<tr class="extraonly"><td>Category-Time</td><td><input name="category_time" placeholder="time" value="{{data.category_time|default_if_none:''}}"> 6-HOURS/12-HOURS/24-HOURS/... </td></tr>
+<tr class="extraonly"><td>Category-Transmitter</td><td><input name="category_transmitter" placeholder="transmitter" value="{{data.category_transmitter|default_if_none:''}}"> ONE/TWO/LIMITED/UNLIMITED/SWL </td></tr>
+<tr class="extraonly"><td>Exchange</td><td><input name="exchange" placeholder="exchange" value="{{data.exchange|default_if_none:''}}"> 001/14/28/...</td></tr>
+<tr><td>Claimed Score</td><td><input name="claimed_score" placeholder="score" value="{{data.claimed_score|default_if_none:''}}">
+                              <input type="button" onclick="extrafields('table-row')" value="weitere Felder"></td></tr>
+<tr class="extraonly"><td>QSOs</td><td>{{data.qsos|default_if_none:''}} ({{data.upload_start|date:'d.m.Y H:i'}} - {{data.upload_stop|date:'d.m.Y H:i'}})</td></tr>
+<tr><td>Soapbox</td><td><textarea name="soapbox" cols="80" rows="20" placeholder="Soapbox - write about your contest story
+
+If the Cabrillo file already contains a soapbox, this entry and the soapbox
+will both be used. Leave empty if the Cabrillo already contains the story.
+
+A summary of QSOs and DXCCs by band is computed from the log.
+
+Summary and soapbox will be mailed to the RRDXA reflector.">{{data.soapbox|default_if_none:''}}</textarea></td></tr>
+<tr><td>Mail auf den Reflektor</td> <td><input type="checkbox" name="reflector"{% if mail_checked %} checked{% endif %}></td></tr>
+<tr><td></td><td><button type="submit">Speichern</button></td></tr>
+</table>
+</form>
+
+{% if summary %}
+<br>
+<table>
+<tr>
+ <th>Band</th>
+ <th>Mode</th>
+ <th>QSOs</th>
+ <th>DXCCs</th>
+ <th>Time</th>
+ <th>Rate</th>
+</tr>
+
+{% for b in summary %}
+<tr>
+ <td>{{b.band}}</td>
+ <td>{{b.mode}}</td>
+ <td style="text-align: right;">{{b.qsos|intcomma}}</td>
+ <td style="text-align: right;">{{b.dxccs|intcomma}}</td>
+ <td>{{b.op_time}}</td>
+ <td style="text-align: right;">{{b.rate}}</td>
+</tr>
+{% endfor %}
+</table>
+
+{% else %}
+No QSO data found
+{% endif %}
+
+{% include 'rrlog/qsos.html' with with_time=True dupecheck=True event_start=data.event_start event_stop=data.event_stop %}
+{% endblock %}

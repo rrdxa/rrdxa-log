@@ -2,11 +2,11 @@
 {% load humanize %}
 
 {% block content %}
-<h1>{{title}}</h1>
+<h1>{{title}}{% if edit %} [<a href="/log/edit/{{upload_id}}/"><b>Edit</b></a>]{% endif %}</h1>
 
 <ul>
 
-                                 <li>Callsign:    {{data.station_callsign}}
+                                 <li>Callsign:    {{data.station_callsign}}</li>
  {% if data.operators and data.operators != data.station_callsign %}
                                  <li>Operators:   {{data.operators}}</li>{% endif %}
  {% if data.club %}              <li>Club:        {{data.club}}</li>{% endif %}
@@ -16,21 +16,6 @@
 
  {% if data.contest %}           <li>Contest:     {{data.contest}}</li>{% endif %}
  {% if data.event %}             <li>Event:       <a href="/log/event/{{data.event|urlencode:''}}/">{{data.event}}</a></li>{% endif %}
- {% if eventlist %}
- <li>
-  <form action="/log/summary/{{upload_id}}/" method="POST" enctype="multipart/form-data">
-   <input name="upload_id" value="{{upload_id}}" type="hidden">
-   <select name="event_id" id="type">
-    <option value="0">--None--</option>
-    {% for event in eventlist %}
-    <option value="{{event.event_id}}"{% if event.selected %} selected{% endif %}>{{event.event}} -- {{event.start_str}}-{{event.stop_str}}</option>
-    {% endfor %}
-    </optgroup>
-    </select>
-   <button type="submit">Set event</button>
-  </form>
- </li>
- {% endif %}
  {% if data.category_operator %} <li>Category:    {{data.category_operator}}</li>{% endif %}
  {% if data.category_band %}     <li>Band:        {{data.category_band}}</li>{% endif %}
  {% if data.category_mode %}     <li>Mode:        {{data.category_mode}}</li>{% endif %}
@@ -41,11 +26,25 @@
                                  <li>Transmitter: {{data.category_transmitter}}</li>{% endif %}
  {% if data.category_assisted %} <li>Assisted:    {{data.category_assisted}}</li>{% endif %}
  {% if data.exchange %}          <li>Exchange:    {{data.exchange}}</li>{% endif %}
-</li>
 <br>
 
+{% if data.claimed_score %}
+<li><b>Claimed score: {{data.claimed_score|intcomma}}</b></li>
+<br>
+{% endif %}
+
+{% if edit %}
+<li><a href="/log/edit/{{upload_id}}/"><b>Edit Contest Entry</b></a></li>
+{% endif %}
+
+</ul>
+
+{% if data.soapbox %}
+<b>Soapbox:</b><br>
+<pre style="white-space: pre-wrap;">{{data.soapbox}}</pre>
+{% endif %}
+
 {% if summary %}
-<li>
 <table>
 <tr>
  <th>Band</th>
@@ -67,24 +66,10 @@
 </tr>
 {% endfor %}
 </table>
-</li>
 
 {% else %}
 No QSO data found
 {% endif %}
 
-{% if data.claimed_score %}
-<br>
-<li><b>Claimed score: {{data.claimed_score|intcomma}}</b></li>
-{% endif %}
-
-{% if data.soapbox %}
-<br>
-<li>Soapbox:<br>
-<pre style="white-space: pre-wrap;">{{data.soapbox}}</pre>
-{% endif %}
-
-</ul>
-
-{% include 'rrlog/qsos.html' %}
+{% include 'rrlog/qsos.html' with dupecheck=True %}
 {% endblock %}

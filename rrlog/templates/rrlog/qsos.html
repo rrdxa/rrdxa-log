@@ -41,12 +41,13 @@
  <th>recv</th>
  <th>grid</th>
  <th>contest</th>
+ {% if dupecheck %}<th>valid</th>{% endif %}
 </tr>
 </thead>
 
 {% for qso in qsos %}
  <tr>
- <td>{{qso.start_str}}</td>
+ <td>{% if with_time %}{{qso.start|date:'d.m.Y H:i'}}{% else %}{{qso.start_str}}{% endif %}</td>
  <td><a href="{{urlpath}}{% relative_url 'call' qso.station_callsign request.GET.urlencode %}">{{qso.station_callsign}}</a>
  {% if qso.operator and qso.operator != qso.station_callsign %}(<a href="{{urlpath}}{% relative_url 'call' qso.operator request.GET.urlencode %}">{{qso.operator}}</a>){% endif %}
  </td>
@@ -70,6 +71,7 @@
  <td>{{qso.rstrx|default_if_none:''}} {{qso.exrx|default_if_none:''}}</td>
  <td>{% if qso.gridsquare %}<a href="{{urlpath}}{% relative_url 'gridsquare' qso.gridsquare request.GET.urlencode %}">{{qso.gridsquare}}</a>{% endif %}</td>
  <td>{% if qso.contest %}<a href="{{urlpath}}{% relative_url 'contest' qso.contest request.GET.urlencode %}">{{qso.contest}}</a>{% endif %}</td>
+ {% if dupecheck %}<td>{% if qso.start < data.event_start or qso.start > data.event_stop %}<span style="color: red;">time</span>{% elif qso.row_number > 1 %}dupe{% else %}✔{% endif %}</td>{% endif %}
  </tr>
 {% endfor %}
 </table>

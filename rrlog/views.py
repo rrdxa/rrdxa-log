@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import HttpResponse, FileResponse
 from django.db import connection
 
@@ -13,10 +13,16 @@ from rrdxa import settings
 from rrlog.auth import basic_auth, auth_required
 from rrlog.upload import log_upload
 from rrlog.utils import namedtuplefetchall, band_sort
-from rrlog.summary import get_summary
+from rrlog.summary import get_summary, post_summary
 
 q_log = """
 select * from log_v
+{}
+order by start {} limit {}
+"""
+
+q_log_dupecheck = """
+select *, row_number() over (partition by call, band, major_mode order by start) from log_v
 {}
 order by start {} limit {}
 """
@@ -512,13 +518,17 @@ from upload u left join event e on u.event_id = e.event_id
 order by id desc limit 1000"""
 
 @auth_required
-def v_upload(request, filetype=None):
+def v_upload(request):
     username = request.username
 
     # actual page
     message = None
     if request.method == 'POST' and 'logfile' in request.FILES:
-        message = log_upload(connection, request, username)
+        upload_id, contest, message = log_upload(connection, request, username)
+
+        if upload_id and contest:
+            return redirect('edit', upload_id=upload_id)
+
     elif request.method == 'POST' and 'delete' in request.POST:
         upload_id = request.POST['delete']
         with connection.cursor() as cursor:
@@ -531,12 +541,6 @@ def v_upload(request, filetype=None):
             message = f"Upload {upload_id} deleted"
 
     with connection.cursor() as cursor:
-        if filetype != 'adif':
-            cursor.execute(q_eventlist, [])
-            eventlist = namedtuplefetchall(cursor)
-        else:
-            eventlist = []
-
         # get list of all uploads (including this one)
         if username not in settings.RRDXA_ADMINS:
             qual, params = "where uploader = %s", [username]
@@ -545,14 +549,9 @@ def v_upload(request, filetype=None):
         cursor.execute(q_upload_list.format(qual), params)
         uploads = namedtuplefetchall(cursor)
 
-    if filetype is None:
-        filetype = ''
-
     context = {
-        'title': f"{filetype.title()} Log Upload",
-        'filetype': filetype,
+        'title': f"Log Upload",
         'message': message,
-        'eventlist': eventlist,
         'uploads': uploads,
         'uploader': username,
     }
@@ -577,52 +576,72 @@ def v_download(request, upload_id):
     return response
 
 def v_summary(request, upload_id):
-    if request.method == 'POST' or 'add_event' in request.GET:
-        # authentication
-        status, message = basic_auth(request)
-        if not status:
-            response = render(request, 'rrlog/generic.html', { 'message': message }, status=401)
-            response['WWW-Authenticate'] = 'Basic realm="RRDXA Log Upload"'
-            return response
-        username = message
-
-    if request.method == 'POST':
-        with connection.cursor() as cursor:
-            q_update = "update upload set event_id = %s where id = %s"
-            event_id = None if request.POST['event_id'] == '0' else request.POST['event_id']
-            params = [event_id, request.POST['upload_id']]
-            if username not in settings.RRDXA_ADMINS:
-                q_update += " and uploader = %s"
-                params.append(username)
-            cursor.execute(q_update, params)
-            connection.commit()
-
-    if 'add_event' in request.GET:
-        with connection.cursor() as cursor:
-            q_schedule = "select schedule_events(start::date) from upload where id = %s"
-            params = [upload_id]
-            if username not in settings.RRDXA_ADMINS:
-                q_schedule += " and uploader = %s"
-                params.append(username)
-            cursor.execute(q_schedule, params)
-            connection.commit()
-
     # username cookie is not secure, we show extra controls based on it, but
     # still require authentication to actually use them
-    username, eventlist = None, []
+    username = None
     if 'username' in request.COOKIES:
         username = request.COOKIES['username']
 
     with connection.cursor() as cursor:
-        cursor.execute(q_log.format('where upload = %s', 'asc', 10000), [upload_id])
+        cursor.execute(q_log_dupecheck.format('where upload = %s', 'asc', 10000), [upload_id])
         qsos = namedtuplefetchall(cursor)
         data, summary, subject = get_summary(cursor, upload_id)
 
-        if data and username in [data.uploader] + settings.RRDXA_ADMINS:
-            # get all events overlapping this upload
-            cursor.execute("select *, start_str(start), stop_str(stop), event_id = %s as selected from event where %s <= stop and %s >= start",
-                           [data.event_id, data.upload_start, data.upload_stop])
-            eventlist = namedtuplefetchall(cursor)
+    context = {
+        'title': subject,
+        'upload_id': upload_id,
+        'data': data,
+        'summary': summary,
+        'qsos': qsos,
+        'username': username,
+        'edit': data and username in [data.uploader] + settings.RRDXA_ADMINS
+    }
+    return render(request, 'rrlog/summary.html', context)
+
+@auth_required
+def v_edit(request, upload_id):
+    username = request.username
+
+    if request.method == 'POST':
+        with connection.cursor() as cursor:
+
+            set_fields, params = [], []
+            for field in 'station_callsign', 'operator', 'contest', 'operators', 'club', 'category_operator', 'category_assisted', 'category_band', 'category_mode', 'category_overlay', 'category_power', 'category_station', 'category_time', 'category_transmitter', 'location', 'grid_locator', 'soapbox', 'claimed_score', 'computed_score', 'event_id', 'exchange':
+                if field in request.POST:
+                    set_fields.append(field)
+                    params.append(request.POST[field] or None)
+            if set_fields:
+                q_update = "update upload set " + \
+                        ", ".join([f"{field} = %s" for field in set_fields]) + \
+                        " where id = %s"
+                params.append(upload_id)
+                if username not in settings.RRDXA_ADMINS:
+                    q_update += " and uploader = %s"
+                    params.append(username)
+                cursor.execute(q_update, params)
+
+            if 'event_id' in request.POST:
+                cursor.execute("select start, stop from event where event_id = %s", [request.POST['event_id']])
+                start, stop = cursor.fetchone()
+                cursor.execute("""\
+update upload set qsos =
+    (select count(distinct (call, band, major_mode)) from log
+     where start between %s and %s and upload = %s)
+where id = %s""", [start, stop, upload_id, upload_id])
+
+    with connection.cursor() as cursor:
+        cursor.execute(q_log_dupecheck.format('where upload = %s', 'asc', 10000), [upload_id])
+        qsos = namedtuplefetchall(cursor)
+        data, summary, subject = get_summary(cursor, upload_id)
+
+        # post to reflector when requested
+        if request.POST.get('reflector'):
+            post_summary(data, summary, subject)
+
+        # get all events overlapping this upload
+        cursor.execute("select *, start_str(start), stop_str(stop), event_id = %s as selected from event where %s <= stop and %s >= start",
+                       [data.event_id, data.upload_start, data.upload_stop])
+        eventlist = namedtuplefetchall(cursor)
 
     context = {
         'title': subject,
@@ -632,8 +651,9 @@ def v_summary(request, upload_id):
         'qsos': qsos,
         'username': username,
         'eventlist': eventlist,
+        'mail_checked': True,
     }
-    return render(request, 'rrlog/summary.html', context)
+    return render(request, 'rrlog/edit.html', context)
 
 def v_members(request):
     with connection.cursor() as cursor:

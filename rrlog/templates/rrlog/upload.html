@@ -1,68 +1,55 @@
 {% extends 'rrlog/rrdxa.html' %}
 {% load humanize %}
 
+{% block header %}
+<script>
+function logfile_changed (filename) {
+  if (filename.toLowerCase().endsWith(".adi") || filename.toLowerCase().endsWith(".adif")) {
+    var newstyle = 'table-row';
+  } else {
+    var newstyle = 'none';
+  }
+  const adifonlyelements = document.querySelectorAll('.adifonly');
+  adifonlyelements.forEach(element => {
+    element.style.display = newstyle;
+  });
+}
+</script>
+{% endblock %}
+
+{% block bodyopts %} onload="logfile_changed('none')" {% endblock %}
+
 {% block content %}
-<h1>{{filetype|default_if_none:''|title}} Log Upload</h1>
+<h1>Log Upload</h1>
 
 <div>
 <b>{{message|default_if_none:''}}</b>
 </div>
 
 <div>
-<form action="/log/{{filetype|default_if_none:'cabrillo'}}-upload/" method="POST" enctype="multipart/form-data">
+<form action="/log/upload/" method="POST" enctype="multipart/form-data">
 <table border=0>
-{% if filetype != 'cabrillo' %}
 <tr>
- <td>Station callsign used on air:</td> <td><input name="station_callsign" value="{{uploader|urlencode:''}}"> (only used when not specified in logfile)</td>
+ <td>Logfile</td> <td><input type="file" oninput="logfile_changed(this.value)" id="logfile" name="logfile"></td>
+</tr>
+<tr class="adifonly">
+ <td>Contest-Log</td> <td><input type=checkbox name="contest"> - Contest-Log oder allgemeiner Log-Upload?</td>
+</tr>
+<tr class="adifonly">
+ <td>Stationscall (on air)</td> <td><input name="station_callsign" value="{{uploader|urlencode:''}}"> - nur wenn im Log kein &lt;station_callsign&gt; steht</td>
+</tr>
+<tr class="adifonly">
+ <td>Operator-Call</td> <td><input name="operator" value="{{uploader|urlencode:''}}"> - nur wenn im Log kein &lt;operator&gt; steht</td>
 </tr>
 <tr>
- <td>Operator callsign:</td> <td><input name="operator" value="{{uploader|urlencode:''}}"> (only used when not specified in logfile)</td>
-</tr>
-<tr>
- <td>Contest ID:</td> <td><input name="contest"> (leave blank for non-contest or mixed logfiles)</td>
-</tr>
-{% endif %}
-{% if filetype != 'adif' %}
-<tr>
- <td>Event:</td>
- <td><select name="event_id" id="type">
-  <option value="">-- Select event --</option>
-  {% for event in eventlist %}
-  {% ifchanged event.month_str %}<optgroup label="{{event.month_str}}">{% endifchanged %}
-  <option value="{{event.event_id}}">{{event.event}} -- {{event.start_str}}-{{event.stop_str}}</option>
-  {% endfor %}
-  </optgroup>
-  </select>
-  [<a href="/log/event/#new">Create new event</a>]
-  </td>
-</tr>
-{% endif %}
-<tr>
- <td>Logfile:</td> <td><input type="file" name="logfile"></td>
-</tr>
-{% if filetype != 'adif' %}
-<tr>
- <td>Soapbox:</td> <td><textarea name="soapbox" cols="80" rows="20" placeholder="Soapbox - write about your contest story
-
-If the Cabrillo file already contains a soapbox, this entry and the soapbox
-will both be used. Leave empty if the Cabrillo already contains the story.
-
-A summary of QSOs and DXCCs by band is computed from the log.
-
-Summary and soapbox will be mailed to the RRDXA reflector."></textarea></td>
-</tr>
-<tr>
- <td>Mail summary to reflector:</td> <td><input type="checkbox" name="reflector" checked="checked"> (untick to disable mailing)</td>
-</tr>
-{% endif %}
-<tr>
- <td></td> <td><button type="submit">Upload</button>
+ <td></td>
+ <td><button type="submit">Upload</button></td>
 </tr>
 </table>
 </form>
 </div>
 
-<h1>Your uploads</h1>
+<h1>Uploads</h1>
 
 <table border=0>
 <thead>
@@ -91,11 +78,11 @@ Summary and soapbox will be mailed to the RRDXA reflector."></textarea></td>
  <td><a href="/log/call/{{upload.station_callsign|urlencode:''}}/">{{upload.station_callsign|default_if_none:''}}</a></td>
  <td><a href="/log/call/{{upload.operator|urlencode:''}}/">{{upload.operator|default_if_none:''}}</a></td>
  <td>{% if upload.contest %}<a href="/log/contest/{{upload.contest|urlencode:''}}/">{{upload.contest}}</a>{% endif %}</td>
- <td>{% if upload.event %}<a href="/log/event/{{upload.event|urlencode:''}}/">{{upload.event}}</a>{% else %}{% if upload.contest %}[<a href="/log/summary/{{upload.id}}/?add_event=y"><span style="color: red;">no event</span></a>]{% endif %}{% endif %}</td>
+ <td>{% if upload.event %}<a href="/log/event/{{upload.event|urlencode:''}}/">{{upload.event}}</a>{% else %}{% if upload.contest %}[<a href="/log/edit/{{upload.id}}/"><span style="color: red;">no event</span></a>]{% endif %}{% endif %}</td>
  <td>{% if upload.contest %}[<a href="/log/summary/{{upload.id}}/">summary</a>]{% endif %}</td>
  <td>{{upload.error|default_if_none:''}}</td>
  <td>
-  <form action="/log/{{filetype|default_if_none:'cabrillo'}}-upload/" method="POST">
+  <form action="/log/upload/" method="POST">
      <button name="delete" value="{{upload.id}}" type="submit">delete</button>
   </form>
  </td>
