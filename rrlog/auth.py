@@ -13,7 +13,7 @@ def basic_auth(request):
     if token_type.lower() != "basic":
         return False, "Only Basic auth supported"
 
-    username, password = base64.b64decode(credentials).decode("utf-8").split(':')
+    username, _, password = base64.b64decode(credentials).decode("utf-8").partition(':')
 
     with connection.cursor() as cursor:
         cursor.execute("select call, user_pass from members where call = %s or user_email = %s", [username.upper(), username.lower()])
