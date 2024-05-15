@@ -26,7 +26,7 @@ def log_upload(connection, request, username):
 
         try:
             if logtype == 'adif':
-                num_qsos = adif_upload(cursor, content, station_callsign, operator, contest, upload_id)
+                num_qsos = adif_upload(cursor, content, station_callsign, operator, upload_id)
             elif logtype == 'cabrillo':
                 num_qsos = cabrillo_upload(cursor, content, upload_id)
 

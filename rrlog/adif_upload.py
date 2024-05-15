@@ -1,3 +1,4 @@
+import json
 from django.db import transaction
 from rrlog import adif_io, country
 from rrlog.utils import lower, upper, concat
@@ -20,7 +21,7 @@ contest =    coalesce(excluded.contest, log.contest),
 adif = excluded.adif
 """
 
-def adif_upload(cursor, content, station_callsign, operator, contest, upload_id):
+def adif_upload(cursor, content, station_callsign, operator, upload_id):
     with transaction.atomic():
         qsos, adif_headers = adif_io.read_from_string(content)
         upload_start, upload_stop = None, None
@@ -39,7 +40,7 @@ def adif_upload(cursor, content, station_callsign, operator, contest, upload_id)
             if qso_station == qso_operator:
                 qso_operator = None
 
-            if not station_callsign and not operator:
+            if not qso_station:
                 raise Exception(f"{start} {qso.get('CALL')}: QSO without STATION_CALLSIGN and OPERATOR found in log, set station and/or operator in upload form")
 
             call = upper(qso.get('CALL'))
@@ -69,9 +70,9 @@ def adif_upload(cursor, content, station_callsign, operator, contest, upload_id)
                             upper(qso.get('RST_RCVD')),
                             concat([upper(qso.get('SRX')), upper(qso.get('SRX_STRING'))]),
                             gridsquare,
-                            qso.get('CONTEST_ID') or contest,
+                            qso.get('CONTEST_ID'),
                             upload_id,
-                            qso,
+                            json.dumps(qso),
                             ])
         cursor.execute("update upload set qsos = %s, start = date_trunc('minute', %s), stop = date_trunc('minute', %s) where id = %s", [len(qsos), upload_start, upload_stop, upload_id])
 
