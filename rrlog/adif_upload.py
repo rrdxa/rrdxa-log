@@ -53,9 +53,6 @@ def adif_upload(cursor, content, station_callsign, operator, upload_id):
             mode = upper(qso.get('MODE'))
             submode = upper(qso.get('SUBMODE'))
 
-            gridsquare = qso['GRIDSQUARE'][:4].upper() \
-                if 'GRIDSQUARE' in qso else None
-
             cursor.execute(q_insert_qso,
                            [start,
                             qso_station,
@@ -69,7 +66,7 @@ def adif_upload(cursor, content, station_callsign, operator, upload_id):
                             concat([upper(qso.get('STX')), upper(qso.get('STX_STRING'))]),
                             upper(qso.get('RST_RCVD')),
                             concat([upper(qso.get('SRX')), upper(qso.get('SRX_STRING'))]),
-                            gridsquare,
+                            upper(qso.get('GRIDSQUARE')),
                             qso.get('CONTEST_ID'),
                             upload_id,
                             json.dumps(qso),
