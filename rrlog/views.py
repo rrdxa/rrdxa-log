@@ -652,7 +652,7 @@ where id = %s""", [start, stop, upload_id, upload_id])
         'qsos': qsos,
         'username': username,
         'eventlist': eventlist,
-        'mail_checked': True,
+        'mail_checked': False,
     }
     return render(request, 'rrlog/edit.html', context)
 
