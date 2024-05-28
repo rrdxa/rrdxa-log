@@ -620,10 +620,11 @@ def v_edit(request, upload_id):
                     params.append(username)
                 cursor.execute(q_update, params)
 
-            if 'event_id' in request.POST:
+            if 'event_id' in request.POST and re.match(r'^\d+$', request.POST['event_id']):
                 cursor.execute("select start, stop from event where event_id = %s", [request.POST['event_id']])
                 start, stop = cursor.fetchone()
-                cursor.execute("""\
+                if start and stop:
+                    cursor.execute("""\
 update upload set qsos =
     (select count(distinct (call, band, major_mode)) from log
      where start between %s and %s and upload = %s)
