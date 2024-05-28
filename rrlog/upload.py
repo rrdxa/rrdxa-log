@@ -10,8 +10,6 @@ def log_upload(connection, request, username):
 
     if '<EOR>' in upper_content:
         logtype = 'adif'
-        station_callsign = upper(data.get('station_callsign')) or None
-        operator = upper(data.get('operator')) or None
         contest = data.get('contest') or False
     elif 'START-OF-LOG' in upper_content:
         logtype = 'cabrillo'
@@ -19,9 +17,12 @@ def log_upload(connection, request, username):
     else:
         return None, False, "Supported log types are ADIF and Cabrillo, this seems like neither of them"
 
+    station_callsign = upper(data.get('station_callsign')) or None
+    operator = upper(data.get('operator')) or None
+
     with connection.cursor() as cursor:
-        cursor.execute("insert into upload (uploader, filename, adif) values (%s, %s, %s) returning id",
-                       [username, filename, content])
+        cursor.execute("insert into upload (uploader, station_callsign, operator, filename, adif) values (%s, %s, %s, %s, %s) returning id",
+                       [username, station_callsign, operator, filename, content])
         (upload_id,) = cursor.fetchone()
 
         try:
@@ -34,5 +35,8 @@ def log_upload(connection, request, username):
             cursor.execute("update upload set error = %s where id = %s", [str(e), upload_id])
             raise
             return None, False, e
+
+        # count number registered for this upload id
+        cursor.execute("update upload set qsos = (select count(*) from log where upload = %s) where id = %s", [upload_id, upload_id])
 
     return upload_id, contest, f"{num_qsos} QSOs recorded in database"

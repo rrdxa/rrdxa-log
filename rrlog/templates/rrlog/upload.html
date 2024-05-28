@@ -76,10 +76,10 @@ function logfile_changed (filename) {
  <td><a href="/log/logbook/?upload={{upload.id}}">{{upload.start_str|default_if_none:''}}-{{upload.stop_str|default_if_none:''}}</a><br>
      <a href="/log/download/{{upload.id}}/">{{upload.filename|default_if_none:'logfile'}}</a></td>
  <td><a href="/log/call/{{upload.station_callsign|urlencode:''}}/">{{upload.station_callsign|default_if_none:''}}</a></td>
- <td><a href="/log/call/{{upload.operator|urlencode:''}}/">{{upload.operator|default_if_none:''}}</a></td>
+ <td>{% if upload.operator != upload.station_callsign %}<a href="/log/call/{{upload.operator|urlencode:''}}/">{{upload.operator|default_if_none:''}}</a>{% endif %}</td>
  <td>{% if upload.contest %}<a href="/log/contest/{{upload.contest|urlencode:''}}/">{{upload.contest}}</a>{% endif %}</td>
- <td>{% if upload.event %}<a href="/log/event/{{upload.event|urlencode:''}}/">{{upload.event}}</a>{% else %}{% if upload.contest %}[<a href="/log/edit/{{upload.id}}/"><span style="color: red;">no event</span></a>]{% endif %}{% endif %}</td>
- <td>{% if upload.contest %}[<a href="/log/summary/{{upload.id}}/">summary</a>]{% endif %}</td>
+ <td>{% if upload.event %}<a href="/log/event/{{upload.event|urlencode:''}}/">{{upload.event}}</a>{% elif upload.contest %}[<a href="/log/edit/{{upload.id}}/"><span style="color: red;">no event</span></a>]{% endif %}</td>
+ <td>{% if upload.contest %}[<a href="/log/summary/{{upload.id}}/">summary</a>]{% else %}[<a href="/log/edit/{{upload.id}}/">edit</a>]{% endif %}</td>
  <td>{{upload.error|default_if_none:''}}</td>
  <td>
   <form action="/log/upload/" method="POST">
