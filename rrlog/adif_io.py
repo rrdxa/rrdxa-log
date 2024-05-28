@@ -64,7 +64,7 @@ def read_from_string(adif_string):
                     adif_headers[field] = value
                     cursor = value_end
             else:
-                raise AdifHeaderWithoutEOF()
+                raise AdifHeaderWithoutEOH()
                 
         
     qso = {}
