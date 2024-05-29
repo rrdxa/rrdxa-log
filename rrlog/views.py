@@ -227,10 +227,12 @@ q_members_list = """
 select string_agg(replace(rrcall, '/', '%%2F'), ',') from rrcalls;
 """
 
-# materialized because it takes 26s to execute (2024-05-04, will get worse over the year)
+# materialized because it takes 26s to execute (2024-05-04, will get worse over the year) (4s on new server; 2024-05-29)
 q_rrdxa60_top_matview = """
 create materialized view rrdxa.rrdxa60_top as
-select call, count(distinct (rroperator, band)) from (
+select call, count(distinct (rroperator, band)),
+    count(*) filter (where rroperator in ('DA0RR', 'DL60RRDXA')) as da0rr
+from (
     -- all operators that have worked a member
     select operator as call, rroperator, band
         from log_v
@@ -308,7 +310,7 @@ def v_rrdxa60(request):
         with connection.cursor() as cursor:
             #params = [f"{year}-01-01", f"{year+1}-01-01"] * 2
             #cursor.execute(q_rrdxa60_top, params)
-            cursor.execute("select * from rrdxa60_top")
+            cursor.execute("select * from rrdxa60_top where da0rr > 0")
             top_calls = namedtuplefetchall(cursor)
 
             cursor.execute(q_members_list, [])
