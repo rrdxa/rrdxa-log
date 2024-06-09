@@ -1,0 +1,67 @@
+{% extends 'rrlog/rrdxa.html' %}
+
+{% block header %}
+
+<script>
+var new_spot = function (evt) {
+    //log.innerHTML += evt.data + "\n";
+
+    const spot = JSON.parse(evt.data);
+    var row = spots.insertRow(0);
+    var cell = row.insertCell(-1); cell.innerText = spot.source;
+    var cell = row.insertCell(-1); cell.innerText = spot.spotter;
+    const ts = new Date(spot.spot_time);
+    var cell = row.insertCell(-1); cell.innerText = ts.getUTCHours() + ':' + ts.getUTCMinutes().toString().padStart(2, '0');
+    var cell = row.insertCell(-1); cell.innerText = spot.band;
+    var cell = row.insertCell(-1); cell.innerText = spot.qrg;
+    var cell = row.insertCell(-1); cell.innerText = spot.mode || '';
+    var cell = row.insertCell(-1); cell.innerHTML = "<b>" + spot.dx + "</b>";
+    var cell = row.insertCell(-1); cell.innerText = spot.dx_loc || '';
+    var cell = row.insertCell(-1); cell.innerText = spot.info || '';
+    if (spots.rows.length > 500) {
+        spots.deleteRow(-1);
+    }
+};
+
+var start_notifier = function () {
+    notifier = new WebSocket('wss://logbook.rrdxa.org/spot');
+    notifier.onmessage = new_spot;
+    notifier.onclose = start_notifier;
+};
+
+var main = function (data) {
+    var log = document.getElementById('log');
+    var spots = document.getElementById('spots');
+    start_notifier();
+};
+</script>
+
+{% endblock %}
+
+{% block bodyopts %} onload="main()" {% endblock %}
+
+{% block content %}
+
+<h1>RRDXAi Cluster</h1>
+
+<table>
+<thead>
+<tr>
+    <th>Source</th>
+    <th>Spotter</th>
+    <th>Time</th>
+    <th>Band</th>
+    <th>Freq</th>
+    <th>Mode</th>
+    <th>DX</th>
+    <th>Loc</th>
+    <th>Info</th>
+</tr>
+</thead>
+<tbody id="spots"></tbody>
+</table>
+
+<div id="log">
+</div>
+
+{% endblock %}

@@ -10,6 +10,7 @@ sudo apt install \
   postgresql-$PGVERSION-mysql-fdw \
   postgresql-plpython3-$PGVERSION \
   python3-django \
+  python3-paho-mqtt \
   python3-passlib \
   python3-psycopg2 \
   python3-pyhamtools \
@@ -47,7 +48,7 @@ curl -fsS --output /dev/null \
 
 ## Copyright
 
-Copyright (C) 2022, 2023 RRDXA
+Copyright (C) 2022-2024 RRDXA
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
