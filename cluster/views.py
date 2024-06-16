@@ -6,4 +6,4 @@ def index(request):
     context = {
         'title': 'RRDXAi Cluster',
     }
-    return render(request, 'rrcluster/index.html', context)
+    return render(request, 'cluster/index.html', context)

@@ -33,7 +33,7 @@ ALLOWED_HOSTS = ['logbook.rrdxa.org', 'localhost', '127.0.0.1']
 INSTALLED_APPS = [
     'django.contrib.humanize',
     'api',
-    'rrcluster',
+    'cluster',
     'rrlog',
     'rrmember',
 ]

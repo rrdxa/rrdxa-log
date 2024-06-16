@@ -20,7 +20,7 @@ from django.views.generic.base import TemplateView
 urlpatterns = [
     path('', TemplateView.as_view(template_name="root.html")),
     path('api/', include('api.urls')),
-    path('cluster/', include('rrcluster.urls')),
+    path('cluster/', include('cluster.urls')),
     path('log/', include('rrlog.urls')),
     path('member/', include('rrmember.urls')),
     path('robots.txt', TemplateView.as_view(template_name="robots.txt", content_type="text/plain")),
