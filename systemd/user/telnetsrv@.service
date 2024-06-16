@@ -1,0 +1,6 @@
+[Service]
+Type=simple
+ExecStart=/cb/logbook.rrdxa.org/rrdxa-log/client/telnetsrv %I
+StandardInput=socket
+StandardOutput=socket
+StandardError=journal

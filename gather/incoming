@@ -1,0 +1,98 @@
+#!/usr/bin/python3
+
+import psycopg
+import time
+
+q_process_incoming = """with incoming_d as (delete from incoming returning *),
+qrz_data as (
+select dx,
+    mode() within group (order by dx_cty) dx_cty,
+    mode() within group (order by dx_loc) dx_loc
+    from incoming_d
+    where dx_cty is not null or dx_loc is not null
+    group by dx
+/*
+union
+select spotter,
+    mode() within group (order by spotter_cty) dx_cty,
+    mode() within group (order by spotter_loc) dx_loc
+    from incoming_d
+    where spotter_cty is not null or spotter_loc is not null
+    group by spotter
+    */
+),
+insert_qrz as (
+    insert into qrz (dx, dx_cty, dx_loc)
+    select qd.dx, qd.dx_cty, qd.dx_loc from qrz_data qd left join qrz q on qd.dx = q.dx
+    where (q.dx_cty is null and qd.dx_cty is not null or q.dx_cty <> qd.dx_cty) or
+          (q.dx_loc is null and qd.dx_loc is not null or q.dx_loc <> qd.dx_loc and not qd.dx_loc like q.dx_loc||'%')
+    on conflict on constraint qrz_pkey do update
+    set ts = excluded.ts,
+        dx_cty = coalesce(excluded.dx_cty, qrz.dx_cty),
+        dx_loc = coalesce(excluded.dx_loc, qrz.dx_loc)
+),
+spot_data as (
+select
+    max(spot_time) spot_time,
+    source, band, dx,
+    mode() within group (order by dx_cty) dx_cty,
+    mode() within group (order by dx_loc) dx_loc,
+    mode() within group (order by mode) mode,
+    round(avg(qrg), 1) qrg,
+    round(avg(wpm)) wpm,
+    jsonb_agg(jsonb_strip_nulls(jsonb_build_object(
+                'cluster',     cluster,
+                'spot_time',   spot_time,
+                'spotter',     spotter,
+                'spotter_cty', spotter_cty,
+                'spotter_cont',spotter_cont,
+                'spotter_loc', spotter_loc,
+                'spotter_loc2',spotter_loc::varchar(2),
+                'spotter_loc4',spotter_loc::varchar(4),
+                'db',          db,
+                'info',        info))
+        order by spot_time desc) spots
+    from incoming_d where band is not null
+    group by source, band, dx
+)
+insert into bandmap (spot_time, source, band, dx, data)
+select spot_time, source, band, dx,
+    jsonb_build_object(
+        'spot_time', spot_time,
+        'source', source,
+        'band', band,
+        'dx', dx,
+        'dx_cty', dx_cty,
+        'dx_loc', dx_loc,
+        'dx_loc2', dx_loc::varchar(2),
+        'dx_loc4', dx_loc::varchar(4),
+        'mode', mode,
+        'qrg', qrg,
+        'wpm', wpm,
+        'spots', spots)
+    from spot_data
+
+    on conflict on constraint bandmap_pkey
+    do update set
+        spot_time = excluded.spot_time,
+        data['spot_time'] = excluded.data['spot_time'],
+        data['dx_cty'] = coalesce(excluded.data['dx_cty'], bandmap.data['dx_cty']),
+        data['dx_loc'] = coalesce(excluded.data['dx_loc'], bandmap.data['dx_loc']),
+        data['dx_loc2'] = coalesce(excluded.data['dx_loc2'], bandmap.data['dx_loc2']),
+        data['dx_loc4'] = coalesce(excluded.data['dx_loc4'], bandmap.data['dx_loc4']),
+        data['mode'] = coalesce(excluded.data['mode'], bandmap.data['mode']),
+        data['qrg'] = coalesce(excluded.data['qrg'], bandmap.data['qrg']),
+        data['wpm'] = coalesce(excluded.data['wpm'], bandmap.data['wpm']),
+        data['spots'] = cleanup_spots(jsonb_concat(excluded.data['spots'], bandmap.data['spots']))"""
+
+conn = psycopg.connect("service=rrdxa application_name=cluster_incoming", autocommit=True)
+cur = conn.cursor()
+
+while True:
+    for i in range(60):
+        cur.execute(q_process_incoming)
+        time.sleep(2)
+
+    cur.execute("delete from rrdxa.bandmap where spot_time < now() - '120min'::interval")
+    cur.execute("delete from rrdxa.notification where ts < now() - '10 min'::interval")
+    cur.execute("vacuum rrdxa.incoming, rrdxa.bandmap, rrdxa.notification")

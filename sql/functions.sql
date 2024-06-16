@@ -29,3 +29,8 @@ create or replace function rrdxa.basecall(call text)
   immutable parallel safe strict
   return (select * from regexp_split_to_table(call, '/') parts(part) order by length(part) desc limit 1);
 
+create or replace function rrdxa.strip_dash(call text)
+  returns text
+  immutable parallel safe
+  return (regexp_split_to_array(call, '-'))[1];
+

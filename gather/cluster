@@ -1,0 +1,75 @@
+#!/usr/bin/python3
+
+"""
+Connect to a DX cluster and store all spots in a PostgreSQL database
+
+Copyright (C) 2021, 2024 Christoph Berg DF7CB
+License: MIT
+"""
+
+import psycopg
+import socket
+import select
+import sys
+import time
+import re
+import clusterutils
+
+hostname = sys.argv[1]
+port = int(sys.argv[2]) if len(sys.argv) > 2 else 8000
+cluster = hostname.split('.')[-2]
+m = re.search('(\d)', cluster)
+mycall = "DA0RR-" + m.group(1)
+
+conn = psycopg.connect(f"service=rrdxa application_name={cluster}", autocommit=True)
+cur = conn.cursor()
+
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.connect((hostname, port))
+s.send(mycall.encode('UTF-8') + b"\r\n")
+
+# DX de IK5WOB:     3520.0  IQ5PJ        Coltano Marconi Award          1656Z JN53
+# DX de W2CCC:     50313.0  WA5TKU       em13<>fn23 ft8                 1656Z FN23
+# DX de EA5IKT:     7057.0  EA4TL        dme-10059 cq                   1656Z
+# DX de ON4PE:     21074.0  PY4PDO       Db -7                          1656Z JO10
+# DX de EA1JW:      7062.0  EA1FHQ       EO-1467 DME-33043              1656Z
+# DX de F4CXO:     28019.9  PP5VZ        JN26PP<>GG52RJ 529             1657Z
+# DX de EA5D:      14081.0  N8JJM        FT4 -11 IM99XX<>EN72           1657Z IM99
+# DX de KE1DX:     21029.8  LU/CE3CT                                    1657Z FN31
+
+dx_re = re.compile('DX de (\S+): *([\d.]+) +([^ ]+) +(\S(?:.*\S)?)? +(\d\d\d\d)Z *(.*[^\a ])?')
+
+def dx(msg):
+    line = msg.decode(encoding='UTF-8', errors='replace')
+    if m := re.match(dx_re, line):
+
+        if m.group(4) and re.search(r'BEACON|NCDXF B', m.group(4)): return # ignore beacons
+
+        spot = {'source': 'cluster',
+                'cluster': cluster,
+                'spotter': m.group(1),
+                'qrg': m.group(2),
+                'dx': m.group(3),
+                'info': m.group(4),
+                'spot_time': clusterutils.str_to_timestamp(m.group(5)),
+                'spotter_loc': m.group(6),
+                }
+
+        clusterutils.parse_cluster_info(m.group(4), spot)
+        clusterutils.insert_spot(cur, spot)
+
+    else:
+        print("<", line)
+
+buf = b""
+while True:
+    r, w, x = select.select([s], [], [], None)
+    if s in r:
+        data = s.recv(1024)
+        if not data:
+            exit(1)
+        buf += data
+        while b"\r\n" in buf:
+            pos = buf.index(b"\r\n")
+            dx(buf[:pos])
+            buf = buf[pos+2:]

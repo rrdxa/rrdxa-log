@@ -1,0 +1,48 @@
+#!/usr/bin/python3
+
+import psycopg
+import requests
+import json
+import time
+import dateutil.parser
+import pytz
+import clusterutils
+
+# [{"info": "FT8", "dx_country": "Greece", "de_latitude": 39.2, "dx_latitude": 39.2, "dx_longitude": -20.5, "de_call": "SV6SYQ-@", "frequency": 144175.6, "time": "2024-06-08T19:03:04", "dx_call": "SV6HHD", "de_longitude": -20.5, "id": 62941307}]
+
+conn = psycopg.connect("service=rrdxa application_name=dxsummit", autocommit=True)
+cur = conn.cursor()
+
+max_spot_time = clusterutils.last_spot(cur, 'cluster', 'dxsummit')
+max_id = 0
+
+while True:
+    data = requests.get('http://www.dxsummit.fi/api/v1/spots')
+    spots = json.loads(data.content)
+
+    new_max_id = max_id
+    for summit_spot in reversed(spots):
+        # skip spots seen in previous sessions
+        if max_spot_time and pytz.utc.localize(dateutil.parser.parse(summit_spot['time'])) <= max_spot_time:
+            continue
+        # skip spots already seen in this session
+        if summit_spot['id'] <= max_id:
+            continue
+        new_max_id = max(new_max_id, summit_spot['id'])
+
+        spot = {'source': 'cluster',
+                'cluster': 'dxsummit',
+                'spotter': summit_spot['de_call'],
+                'spot_time': summit_spot['time'],
+                'qrg': summit_spot['frequency'],
+                'dx': summit_spot['dx_call'],
+                'info': summit_spot['info'],
+                }
+
+        clusterutils.parse_cluster_info(summit_spot['info'], spot)
+        clusterutils.insert_spot(cur, spot)
+
+    max_id = new_max_id
+    max_spot_time = None # rely on id after first round
+
+    time.sleep(15)

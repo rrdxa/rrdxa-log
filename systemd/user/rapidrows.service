@@ -1,0 +1,8 @@
+[Service]
+Type=exec
+ExecStart=/usr/local/bin/rapidrows -y /cb/logbook.rrdxa.org/rrdxa-log/client/rapidrows.yaml
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target

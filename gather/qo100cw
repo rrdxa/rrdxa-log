@@ -1,0 +1,53 @@
+#!/usr/bin/python3
+
+import re
+import psycopg
+import os
+from telethon import TelegramClient, events, sync
+import clusterutils
+
+conn = psycopg.connect("service=rrdxa application_name=qo100", autocommit=True)
+cur = conn.cursor()
+
+# DX de DK0SB-#  : 10489529.3 PT9AL        12 dB 20 WPM CQ           0911Z
+re1 = re.compile(r'DX de ([^\s:]*)\s*: +([\d.]+) +([^ ]+) +([0-9-]+) dB +([0-9-]+) WPM +(\S(?:.*\S)?)? +(\d\d\d\d)Z')
+
+def dx(msg):
+    if m := re.match(re1, msg):
+        print(msg)
+        try:
+
+            spot = {'source': 'cluster',
+                    'cluster': 'qo100',
+                    'mode': 'CW',
+                    'spotter': m.group(1),
+                    'qrg': m.group(2),
+                    'dx': m.group(3),
+                    'db': m.group(4),
+                    'wpm': m.group(5),
+                    'info': m.group(6),
+                    'spot_time': clusterutils.str_to_timestamp(m.group(7)),
+                    }
+
+            clusterutils.parse_cluster_info(m.group(4), spot)
+            clusterutils.insert_spot(cur, spot)
+
+        except Exception as e:
+            print(e)
+            exit(1) # exit since telethon catches the error otherwise
+    else:
+        print("<", msg, flush=True)
+
+api_id = int(os.environ['API_ID'])
+api_hash = os.environ['API_HASH']
+
+client = TelegramClient('qo100', api_id, api_hash)
+client.start()
+
+#channel_id = -1374475291
+#@client.on(events.NewMessage(chats = channel_id))
+@client.on(events.NewMessage(pattern='DX de '))
+async def handler(event):
+    dx(event.raw_text)
+
+client.run_until_disconnected()

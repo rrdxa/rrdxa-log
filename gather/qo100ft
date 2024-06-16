@@ -1,0 +1,65 @@
+#!/usr/bin/python3
+
+import psycopg
+import requests
+import json
+import time
+import re
+import clusterutils
+
+# {"data":{"last_messages":[{"report_skimmer":10,"date":"2024-06-09","time":"14:04:00","frequency":1244,"message":"LX1X EW2MS KO34","timestamp":1717941840},{"report_skimmer":17,"date":"2024-06-09","time":"14:04:00","frequency":1512,"message":"LX1X A71UN LL55","timestamp":1717941840}]}}
+
+conn = psycopg.connect(f"service=rrdxa application_name=qo100ft", autocommit=True)
+cur = conn.cursor()
+
+def qo100ft_spots(mode, max_spot_time):
+    new_spot_time = max_spot_time
+
+    data = requests.get(f"https://qo100dx.club/{mode}-skimmer/last-messages",
+                        headers={"X-Requested-With": "XMLHttpRequest"})
+    spots = json.loads(data.content)
+    if not 'data' in spots:
+        print("Missing data key in", spots)
+        return new_spot_time
+
+    for ft_spot in spots['data']['last_messages']:
+        # skip spots seen in previous sessions
+        ts = clusterutils.int_to_timestamp(ft_spot['timestamp'])
+        if ts <= max_spot_time:
+            continue
+        new_spot_time = max(new_spot_time, ts)
+
+        spot = {'source': 'pskreporter',
+                'cluster': f"qo100dx",
+                'spotter': 'QO100DX-#',
+                'spot_time': ft_spot['date'] + ' ' + ft_spot['time'],
+                'mode': mode.upper(),
+                'qrg': round(10489540.0 + ft_spot['frequency'] / 1000.0, 1),
+                #'dx': ft_spot['dx_call'],
+                'info': ft_spot['message'],
+                }
+
+        if m := re.match(r'\S+ (\S+) (?:R?[+-]\d+|73|RR73|RRR)$', ft_spot['message']): # parse reports before locators to catch RR73
+            spot['dx'] = m.group(1)
+        elif m := re.match(r'(?:CQ(?: \S+i)?|\S+) (\S+) ([A-R][A-R][0-9][0-9])$', ft_spot['message']):
+            spot['dx'], spot['dx_loc'] = m.groups()
+        elif m := re.match(r'CQ (\S+)$', ft_spot['message']):
+            spot['dx'] = m.group(1)
+        else:
+            print("??", ft_spot)
+            continue
+
+        clusterutils.insert_spot(cur, spot)
+
+    return new_spot_time
+
+max_spot_time = {
+        'ft4': clusterutils.last_spot(cur, 'pskreporter', 'qo100ft4'),
+        'ft8': clusterutils.last_spot(cur, 'pskreporter', 'qo100ft8'),
+        }
+
+while True:
+    for mode in ('ft8', 'ft4'):
+        max_spot_time[mode] = qo100ft_spots(mode, max_spot_time[mode])
+
+    time.sleep(15)

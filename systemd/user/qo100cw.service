@@ -1,0 +1,11 @@
+[Service]
+Type=exec
+Environment=API_ID=xxxxxxxx
+Environment=API_HASH=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+WorkingDirectory=/cb/logbook.rrdxa.org/run
+ExecStart=/cb/logbook.rrdxa.org/rrdxa-log/gather/qo100cw
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target

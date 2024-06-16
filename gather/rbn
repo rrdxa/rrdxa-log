@@ -1,0 +1,64 @@
+#!/usr/bin/python3
+
+"""
+Connect to reversebeacon.net and store all spots in a PostgreSQL database
+
+Copyright (C) 2021, 2024 Christoph Berg DF7CB
+License: MIT
+"""
+
+import psycopg
+import socket
+import select
+import re
+import sys
+import clusterutils
+
+conn = psycopg.connect("service=rrdxa application_name=rbn", autocommit=True)
+cur = conn.cursor()
+
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.connect(("arcluster.reversebeacon.net", 7000))
+
+s.send(b"DA0RR-1\r\n")
+
+# DX de DF2CK-#:   14009.8  EA8VI          CW     3 dB  23 WPM  CQ      0838Z
+# DX de IK4VET-#: 14022.90  9A2N           CW    19 dB  29 WPM  CQ      0940Z
+# DX de LZ7AA-#:   14070.8  IZ4ISM         PSK31 19 dB  31 BPS  CQ      0936Z
+# DX de G4ZFE-#:   14071.0  IZ5GUB         PSK31 20 dB  31 BPS  CQ      0942Z
+dx_re = re.compile('DX de (\S+): +([\d.]+) +([^ ]+) +(\S+) +([0-9-]+) dB +([0-9-]+) +(?:WPM|BPS) +(\S(?:.*\S)?)? +(\d\d\d\d)Z')
+
+def dx(msg):
+    line = msg.decode(encoding='UTF-8', errors='replace')
+    if m := re.match(dx_re, line):
+        if re.search(r'BEACON|NCDXF B', m.group(7)): return # ignore beacons
+
+        spot = {'source': 'rbn',
+                'spotter': m.group(1),
+                'qrg': m.group(2),
+                'dx': m.group(3),
+                'mode': m.group(4),
+                'db': m.group(5),
+                'wpm': m.group(6),
+                'info': m.group(7),
+                'spot_time': clusterutils.str_to_timestamp(m.group(8)),
+                }
+
+        clusterutils.parse_cluster_info(m.group(7), spot)
+        clusterutils.insert_spot(cur, spot)
+
+    else:
+        print("<", line)
+
+buf = b""
+while True:
+    r, w, x = select.select([s], [], [], None)
+    if s in r:
+        data = s.recv(1024)
+        if not data:
+            exit(1)
+        buf += data
+        while b"\r\n" in buf:
+            pos = buf.index(b"\r\n")
+            dx(buf[:pos])
+            buf = buf[pos+2:]
