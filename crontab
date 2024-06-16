@@ -1,0 +1,3 @@
+1 * * * * psql -qtXf /cb/logbook.rrdxa.org/rrdxa-log/cron.sql rrdxa
+1 3 * * * psql -qX -o /dev/null -c 'select schedule_events()' rrdxa
+2 3 * * 0 cd /cb/logbook.rrdxa.org/rrdxa-log && ./download-clublogxml
