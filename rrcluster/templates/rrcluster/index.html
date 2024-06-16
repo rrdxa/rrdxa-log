@@ -3,36 +3,94 @@
 {% block header %}
 
 <script>
-var new_spot = function (evt) {
-    //log.innerHTML += evt.data + "\n";
-
-    const spot = JSON.parse(evt.data);
+var add_spot = function (spot) {
     var row = spots.insertRow(0);
+
     var cell = row.insertCell(-1); cell.innerText = spot.source;
-    var cell = row.insertCell(-1); cell.innerText = spot.spotter;
+    //if (spot.spots[0].cluster)
+    //    cell.innerText += ' ' + spot.spots[0].cluster;
+    var cell = row.insertCell(-1);
+    if (spot.spots && spot.spots[0])
+        cell.innerText = spot.spots[0].spotter;
     const ts = new Date(spot.spot_time);
     var cell = row.insertCell(-1); cell.innerText = ts.getUTCHours() + ':' + ts.getUTCMinutes().toString().padStart(2, '0');
-    var cell = row.insertCell(-1); cell.innerText = spot.band;
+    var cell = row.insertCell(-1); cell.innerText = spot.band || '??';
     var cell = row.insertCell(-1); cell.innerText = spot.qrg;
     var cell = row.insertCell(-1); cell.innerText = spot.mode || '';
+    if (spot.mode == "CW" && spot.wpm)
+        cell.innerText += " " + spot.wpm + " wpm";
     var cell = row.insertCell(-1); cell.innerHTML = "<b>" + spot.dx + "</b>";
-    var cell = row.insertCell(-1); cell.innerText = spot.dx_loc || '';
-    var cell = row.insertCell(-1); cell.innerText = spot.info || '';
+    if (spot.extra && spot.extra.rrdxa_member) {
+        if (spot.dx != spot.extra.rrdxa_member)
+            cell.innerHTML += ' ' + spot.extra.rrdxa_member;
+        row.style.backgroundColor = "green";
+    }
+    var cell = row.insertCell(-1);
+    if (spot.dx_loc)
+        cell.innerText = spot.dx_loc.substr(0, 6);
+    var cell = row.insertCell(-1);
+    if (spot.spots && spot.spots[0] && spot.spots[0].info)
+        cell.innerText = spot.spots[0].info;
+
     if (spots.rows.length > 500) {
         spots.deleteRow(-1);
     }
 };
 
+var new_spot = function (evt) {
+    const spot = JSON.parse(evt.data);
+    add_spot(spot);
+};
+
+var connect = function () {
+    connected.innerText = "🟢";
+};
+
+var reconnect = function () {
+    connected.innerText = "🔴";
+    console.log("Disconnected from websocket, reconnecting in 2s ...");
+    setTimeout(start_notifier, 2000);
+};
+
 var start_notifier = function () {
+    console.log("Connecting to websocket");
     notifier = new WebSocket('wss://logbook.rrdxa.org/spot');
+    notifier.onopen = connect;
+    notifier.onclose = reconnect;
     notifier.onmessage = new_spot;
-    notifier.onclose = start_notifier;
+};
+
+var load_old_spots = function (channel) {
+    request = new XMLHttpRequest;
+    request.open('GET', '/api/spots/'+channel, true);
+
+    request.onload = function() {
+        if (request.status >= 200 && request.status < 400){
+            // Success!
+            data = JSON.parse(request.responseText);
+            for (spot of data) {
+                add_spot(spot);
+            }
+        } else {
+            // We reached our target server, but it returned an error
+            console.log('Could not load old spots');
+        }
+    };
+
+    request.onerror = function() {
+        // There was a connection error of some sort
+        console.log('Could not load old spots');
+    };
+
+    request.send();
 };
 
 var main = function (data) {
     var log = document.getElementById('log');
     var spots = document.getElementById('spots');
+    var connected = document.getElementById('connected');
     start_notifier();
+    load_old_spots('cluster');
 };
 </script>
 
@@ -42,7 +100,7 @@ var main = function (data) {
 
 {% block content %}
 
-<h1>RRDXAi Cluster</h1>
+<h1>RRDXAi Cluster <span id="connected">🔴</span></h1>
 
 <table>
 <thead>
