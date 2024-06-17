@@ -59,7 +59,7 @@
  <td>{{qso.freq|default_if_none:''}}</td>
  <td>{% spaceless %}
      <a href="{{urlpath}}{% relative_url 'major_mode' qso.major_mode request.GET.urlencode %}">{{qso.major_mode}}</a>
-     {% if qso.major_mode != qso.mode %}
+     {% if qso.mode and qso.major_mode != qso.mode %}
        {% if qso.submode %}
          (<a href="{{urlpath}}{% relative_url 'submode' qso.submode request.GET.urlencode %}">{{qso.mode}}/{{qso.submode}}</a>)
        {% else %}

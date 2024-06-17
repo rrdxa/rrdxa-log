@@ -45,7 +45,7 @@ where id = %s
 
 q_qso_summary = """
 with log_with_op_time as (
-    select call, band, mode, dxcc,
+    select call, band, coalesce(mode, major_mode::text) mode, dxcc,
         tstzrange(
         case
             --when lag(start) over (order by start) is null then start - '1 min'::interval
