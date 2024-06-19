@@ -3,35 +3,61 @@
 import psycopg
 import json
 import sys
+import datetime
 
 def print_spot(m):
-    spotter = m['spots'][0]['spotter'] if 'spots' in m else '??'
+    spot = m['spots'][0] if 'spots' in m and len(m['spots'][0]) > 0 else {}
+    spotter = spot.get('spotter') or '??'
     qrg = m.get('qrg') or '??'
     dx = m.get('dx') or '??'
-    info = m.get('info') or ''
-    if not info:
-        if 'wpm' in m and m['wpm'] is not None:
-            info += f"{m['wpm']} wpm "
+
+    if 'info' in spot and spot['info'] is not None:
+        info = f"{spot['info']} " # space at end so we can append more items
+    elif 'mode' in m and m['mode'] is not None:
+        info = f"{m['mode']} "
+    else:
+        info = ""
+
+    if 'db' in spot and spot['db'] is not None and 'dB' not in info:
+        info += f"{spot['db']} dB "
+    if 'wpm' in m and m['wpm'] is not None and 'WPM' not in info:
+        info += f"{m['wpm']} WPM "
+    if 'cluster' in spot:
+        info += f"[{spot['cluster']}] "
+    else:
+        info += f"[{m['source']}] "
+
     ts = m['spot_time'][11:13] + m['spot_time'][14:16]
-    spotter_loc = m.get('spotter_loc') or ''
+    spotter_loc = spot.get('spotter_loc') or ''
     # try to match the original cluster column layout as close as possible, but without truncating dx and qrg
     # DX de IK5WOB:     3520.0  IQ5PJ        Coltano Marconi Award          1656Z JN53
-    print(f"DX de {spotter[:9]+':':10} {qrg:7}  {dx:12} {info[:30]:30} {ts}Z {spotter_loc}", end="\r\n", flush=True)
+    print(f"DX de {spotter[:10]+':':11}{qrg:7}  {dx:12} {info[:30]:30} {ts}Z {spotter_loc[:6]}", end="\r\n", flush=True)
 
-print("Login: ", end='', flush=True)
+# ask for call (used as channel name)
+print("login: ", end='', flush=True)
 call = input()
 if not call:
     exit(0)
 call = call.strip().upper()
-print(f"Hello {call}", end="\r\n", flush=True)
-print(f"{call} connected", file=sys.stderr)
 
+# check if channel exists, else use "cluster"
 conn = psycopg.connect("service=rrdxa application_name=telnetsrv", autocommit=True)
 cur = conn.cursor()
-channel = psycopg.sql.Identifier(call).as_string(conn)
+cur.execute("select exists (select from rule where channel = %s)", [call])
+have_channel = cur.fetchone()[0]
+channel = call if have_channel else 'cluster'
+channel_ident = psycopg.sql.Identifier(channel).as_string(conn)
 
 # listen first so we don't miss any notification while old spots are loaded
-conn.execute(f"listen {channel}");
+conn.execute(f"listen {channel_ident}");
+
+# print welcome message
+print(f"{call} connected on channel {channel}", file=sys.stderr, flush=True)
+print(f"Hello {call}, this is DA0RR", end="\r\n", flush=True)
+print(f"Listening for spots on channel {channel_ident}", end="\r\n", flush=True)
+print(f"Loading up to 500 old spots", end="\r\n", flush=True)
+now = datetime.datetime.now(tz=datetime.UTC).strftime("%d-%b-%Y %H%MZ")
+print(f"{call} de DA0RR {now} RRDXAi >", end="\r\n", flush=True)
 
 # load up to 500 spots from the last 30min
 cur.execute("""select data from
@@ -39,12 +65,12 @@ cur.execute("""select data from
      from bandmap join rule on data @@ jsfilter
      where channel = %s and spot_time > now() - '30min'::interval
      order by spot_time desc limit 500)
-    order by spot_time""", [call])
+    order by spot_time""", [channel])
 for (m,) in cur.fetchall():
     print_spot(m)
 
 # listen again to put the channel name into pg_stat_activity.query
-conn.execute(f"listen {channel}");
+conn.execute(f"listen {channel_ident}");
 
 # main loop
 try:
@@ -54,4 +80,4 @@ try:
 except (BrokenPipeError, KeyboardInterrupt):
     pass
 
-print(f"{call} disconnected", file=sys.stderr)
+print(f"{call} disconnected from channel {channel}", file=sys.stderr, flush=True)
