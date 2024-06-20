@@ -17,7 +17,7 @@ def dx(msg):
         print(msg)
         try:
 
-            spot = {'source': 'cluster',
+            spot = {'source': 'rbn',
                     'cluster': 'qo100',
                     'mode': 'CW',
                     'spotter': m.group(1),
