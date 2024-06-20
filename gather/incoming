@@ -31,6 +31,14 @@ insert_qrz as (
         dx_cty = coalesce(excluded.dx_cty, qrz.dx_cty),
         dx_loc = coalesce(excluded.dx_loc, qrz.dx_loc)
 ),
+spot_stats as (
+    insert into stats_incoming (source, cluster, spots)
+    select source, cluster, count(*) from incoming_d group by source, cluster
+    on conflict on constraint stats_incoming_key do update
+    set last_time = now(),
+        batches = stats_incoming.batches + 1,
+        spots = stats_incoming.spots + excluded.spots
+),
 spot_data as (
 select
     max(spot_time) spot_time,

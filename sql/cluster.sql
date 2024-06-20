@@ -94,6 +94,18 @@ create trigger incoming_trigger
     before insert on rrdxa.incoming
     for each row execute function incoming_trigger();
 
+create unlogged table rrdxa.stats_incoming (
+    source text not null,
+    cluster text,
+    constraint stats_incoming_key unique nulls not distinct (source, cluster),
+    first_time timestamptz not null default now(),
+    last_time timestamptz not null default now(),
+    batches bigint not null default 1,
+    spots bigint not null
+);
+
+comment on table rrdxa.stats_incoming is 'Spot counts per source/cluster';
+
 -- bandmap: where all spots are stored (aggregated from incoming by gather/incoming)
 
 create unlogged table rrdxa.bandmap (
