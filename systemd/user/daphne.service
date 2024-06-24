@@ -1,0 +1,9 @@
+[Service]
+Type=exec
+WorkingDirectory=/cb/logbook.rrdxa.org/rrdxa-log
+ExecStart=/usr/bin/daphne -p 8001 rrdxa.asgi:application
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target

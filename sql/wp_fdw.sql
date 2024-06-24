@@ -21,7 +21,7 @@ create materialized view rrdxa.wordpress_users as select * from wordpress.:"user
 create index on rrdxa.wordpress_users (upper(user_login));
 analyze rrdxa.wordpress_users;
 
-create or replace function user_roles(capabilities text)
+create or replace function rrdxa.user_roles(capabilities text)
     returns text[]
     language sql
     return

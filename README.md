@@ -4,7 +4,7 @@ Rhein Ruhr DX Association Logbook
 ## Required packages
 
 ```
-PGVERSION=15
+PGVERSION=16
 sudo apt install \
   postgresql-$PGVERSION \
   postgresql-$PGVERSION-mysql-fdw \
@@ -14,7 +14,12 @@ sudo apt install \
   python3-passlib \
   python3-psycopg2 \
   python3-pyhamtools \
-  python3-requests
+  python3-requests \
+  \
+  daphne \
+  python3-django-channels \
+  python3-channels-redis \
+  redis-server \
 ```
 
 ## Installation
