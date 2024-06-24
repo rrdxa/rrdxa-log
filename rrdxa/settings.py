@@ -31,6 +31,9 @@ ALLOWED_HOSTS = ['logbook.rrdxa.org', 'localhost', '127.0.0.1']
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
+    #'channels',
+    #'channels_postgres',
     'django.contrib.humanize',
     'api',
     'cluster',
@@ -58,7 +61,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'rrdxa.wsgi.application'
-
+ASGI_APPLICATION = "rrdxa.asgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
@@ -67,7 +70,27 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'rrdxa',
-    }
+    },
+    #'channels_postgres': {
+    #    'ENGINE': 'django.db.backends.postgresql',
+    #    'NAME': 'rrdxa',
+    #},
+}
+
+CHANNEL_LAYERS = {
+    'default': {
+        #'BACKEND': 'channels_postgres.core.PostgresChannelLayer',
+        #'CONFIG': {
+        #    'ENGINE': 'django.db.backends.postgresql',
+        #    'NAME': 'rrdxa',
+        #    'config': {
+        #    }
+        #},
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
+        },
+    },
 }
 
 # Internationalization

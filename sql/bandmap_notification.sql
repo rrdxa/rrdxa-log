@@ -55,6 +55,10 @@ begin
             data['worked_loc'] = to_jsonb(worked_loc);
             data['spots'] = jsonb_build_array(data['spots'][0]);
             perform pg_notify(n_channel, jsonb_strip_nulls(data)::varchar(7999));
+            perform pg_notify('spot', jsonb_build_object(
+                    'channel', to_jsonb(n_channel),
+                    'spot', jsonb_strip_nulls(data)
+                )::varchar(7999));
         end if;
     end loop;
 

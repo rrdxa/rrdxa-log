@@ -3,8 +3,14 @@
 {% block header %}
 
 <script>
+var spots_table;
+var connected_led;
+var channel_input;
+var current_channel = '';
+var ws;
+
 var add_spot = function (spot) {
-    var row = spots.insertRow(0);
+    var row = spots_table.insertRow(0);
 
     var cell = row.insertCell(-1); cell.innerText = spot.source;
     //if (spot.spots[0].cluster)
@@ -32,65 +38,69 @@ var add_spot = function (spot) {
     if (spot.spots && spot.spots[0] && spot.spots[0].info)
         cell.innerText = spot.spots[0].info;
 
-    if (spots.rows.length > 500) {
-        spots.deleteRow(-1);
+    if (spots_table.rows.length > 500) {
+        spots_table.deleteRow(-1);
     }
 };
 
 var new_spot = function (evt) {
     const spot = JSON.parse(evt.data);
-    add_spot(spot);
+    if (spot.spot) // one spot
+        add_spot(spot.spot);
+    if (spot.spots) // answer to {"load":xx}
+        for (s of spot.spots)
+            add_spot(s);
 };
 
 var connect = function () {
-    connected.innerText = "🟢";
+    connected_led.innerText = "🟢";
+    ws.send(JSON.stringify({ "channel": current_channel }));
+    if (spots_table.rows.length == 0) {
+        ws.send(JSON.stringify({
+            "load": 500,
+        }));
+    }
 };
 
 var reconnect = function () {
-    connected.innerText = "🔴";
+    connected_led.innerText = "🔴";
     console.log("Disconnected from websocket, reconnecting in 2s ...");
     setTimeout(start_notifier, 2000);
 };
 
 var start_notifier = function () {
     console.log("Connecting to websocket");
-    notifier = new WebSocket('wss://logbook.rrdxa.org/spot');
-    notifier.onopen = connect;
-    notifier.onclose = reconnect;
-    notifier.onmessage = new_spot;
+    if (ws) {
+        ws.onclose = undefined;
+        ws.close();
+    }
+    ws = new WebSocket("ws://localhost:8000/ws/spot/");
+    ws.onopen = connect;
+    ws.onclose = reconnect;
+    ws.onmessage = new_spot;
 };
 
-var load_old_spots = function (channel) {
-    request = new XMLHttpRequest;
-    request.open('GET', '/api/spots/'+channel, true);
+var set_channel = function () {
+    const channel = channel_input.value;
+    if (!channel || channel == current_channel) return;
+    console.log("Switching to channel " + channel);
 
-    request.onload = function() {
-        if (request.status >= 200 && request.status < 400){
-            // Success!
-            data = JSON.parse(request.responseText);
-            for (spot of data) {
-                add_spot(spot);
-            }
-        } else {
-            // We reached our target server, but it returned an error
-            console.log('Could not load old spots');
-        }
-    };
+    while (spots_table.rows.length > 0)
+        spots_table.deleteRow(-1);
 
-    request.onerror = function() {
-        // There was a connection error of some sort
-        console.log('Could not load old spots');
-    };
-
-    request.send();
+    current_channel = channel;
+    ws.send(JSON.stringify({
+        "channel": current_channel,
+        "load": 500,
+    }));
 };
 
 var main = function (data) {
-    var log = document.getElementById('log');
-    var spots = document.getElementById('spots');
-    var connected = document.getElementById('connected');
+    spots_table = document.getElementById('spots_table');
+    connected_led = document.getElementById('connected_led');
+    channel_input = document.getElementById('channel_input');
+    current_channel = channel_input.value;
     start_notifier();
-    load_old_spots('cluster');
 };
 </script>
 
@@ -100,7 +110,12 @@ var main = function (data) {
 
 {% block content %}
 
-<h1>RRDXAi Cluster <span id="connected">🔴</span></h1>
+<h1>RRDXAi Cluster <span id="connected_led">🔴</span></h1>
+
+<div>
+<input type="text" value="cluster" id="channel_input">
+<input type="submit" value="Set" onclick="set_channel()">
+</div>
 
 <table>
 <thead>
@@ -116,10 +131,7 @@ var main = function (data) {
     <th>Info</th>
 </tr>
 </thead>
-<tbody id="spots"></tbody>
+<tbody id="spots_table"></tbody>
 </table>
-
-<div id="log">
-</div>
 
 {% endblock %}
