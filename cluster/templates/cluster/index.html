@@ -74,7 +74,7 @@ var start_notifier = function () {
         ws.onclose = undefined;
         ws.close();
     }
-    ws = new WebSocket("ws://localhost:8000/ws/spot/");
+    ws = new WebSocket("wss://logbook.rrdxa.org/ws/spot/");
     ws.onopen = connect;
     ws.onclose = reconnect;
     ws.onmessage = new_spot;
