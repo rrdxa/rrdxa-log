@@ -1,8 +1,26 @@
 import json
 
 from asgiref.sync import async_to_sync
+import channels.layers
 from channels.generic.websocket import WebsocketConsumer
 from django.db import connection
+
+class PGConsumer(WebsocketConsumer):
+
+    def connect(self):
+        self.channel_layer = channels.layers.get_channel_layer()
+        self.accept()
+
+    # Receive message from WebSocket
+    def receive(self, text_data):
+        try:
+            text_data_json = json.loads(text_data)
+        except json.decoder.JSONDecodeError:
+            return
+
+        if 'channel' in text_data_json and 'spot' in text_data_json:
+            async_to_sync(self.channel_layer.group_send)(text_data_json['channel'],
+                {'type': 'spot_message', "spot": text_data_json['spot']})
 
 class SpotConsumer(WebsocketConsumer):
 

@@ -1,0 +1,21 @@
+#!/usr/bin/python3
+
+import psycopg
+from websocket import create_connection
+import json
+
+conn = psycopg.connect("service=rrdxa application_name=notify_channels", autocommit=True)
+
+ws = create_connection("ws://localhost:8001/ws/notify/")
+
+conn.execute("LISTEN spot")
+
+for notify in conn.notifies():
+
+    txt = notify.payload
+    try:
+        spot = json.loads(txt)
+    except json.decoder.JSONDecodeError:
+        continue
+
+    ws.send(txt)
