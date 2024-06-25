@@ -285,6 +285,13 @@ create unlogged table rrdxa.notification (
 
 comment on table rrdxa.notification is 'Cache of sent notifications to implement mute windows';
 
+create unlogged table rrdxa.stats_notification (
+    channel text constraint stats_notification_pkey primary key,
+    first_time timestamptz not null default now(),
+    last_time timestamptz not null default now(),
+    notifies bigint not null default 1
+);
+
 \ir bandmap_notification.sql
 
 comment on function rrdxa.bandmap_notification is 'Notify clients about new spots';

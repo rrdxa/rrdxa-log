@@ -59,6 +59,11 @@ begin
                     'channel', to_jsonb(n_channel),
                     'spot', jsonb_strip_nulls(data)
                 )::varchar(7999));
+
+            insert into rrdxa.stats_notification (channel) values (n_channel)
+            on conflict on constraint stats_notification_pkey
+            do update set last_time = now(), notifies = stats_notification.notifies + 1;
+
         end if;
     end loop;
 
