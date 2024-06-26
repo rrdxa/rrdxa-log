@@ -2,6 +2,7 @@
 
 import psycopg
 import json
+import re
 import sys
 import datetime
 
@@ -33,51 +34,50 @@ def print_spot(m):
     # DX de IK5WOB:     3520.0  IQ5PJ        Coltano Marconi Award          1656Z JN53
     print(f"DX de {spotter[:10]+':':11}{qrg:7}  {dx:12} {info[:30]:30} {ts}Z {spotter_loc[:6]}", end="\r\n", flush=True)
 
-# ask for call (used as channel name)
-print("login: ", end='', flush=True)
-call = input()
-if not call:
-    exit(0)
-call = call.strip().upper()
-
-# check if channel exists, else use "cluster"
-conn = psycopg.connect("service=rrdxa application_name=telnetsrv", autocommit=True)
-cur = conn.cursor()
-cur.execute("select exists (select from rule where channel = %s)", [call])
-have_channel = cur.fetchone()[0]
-channel = call if have_channel else 'cluster'
-channel_ident = psycopg.sql.Identifier(channel).as_string(conn)
-
-# listen first so we don't miss any notification while old spots are loaded
-conn.execute(f"listen {channel_ident}");
-
-# print welcome message
-print(f"{call} connected on channel {channel}", file=sys.stderr, flush=True)
-print(f"Hello {call}, this is DA0RR", end="\r\n", flush=True)
-print(f"Listening for spots on channel {channel_ident}", end="\r\n", flush=True)
-print(f"Loading up to 500 old spots", end="\r\n", flush=True)
-now = datetime.datetime.now(tz=datetime.UTC).strftime("%d-%b-%Y %H%MZ")
-print(f"{call} de DA0RR {now} RRDXAi >", end="\r\n", flush=True)
-
-# load up to 500 spots from the last 30min
-cur.execute("""select data from
-    (select spot_time, jsonb_set_lax(data, '{spots}', jsonb_build_array(data['spots'][0])) as data
-     from bandmap join rule on data @@ jsfilter
-     where channel = %s and spot_time > now() - '30min'::interval
-     order by spot_time desc limit 500)
-    order by spot_time""", [channel])
-for (m,) in cur.fetchall():
-    print_spot(m)
-
-# listen again to put the channel name into pg_stat_activity.query
-conn.execute(f"listen {channel_ident}");
-
-# main loop
 try:
+    # ask for call (used as channel name)
+    print("login: ", end='', flush=True)
+    call = input().strip().upper()
+    if not call or not re.match(r'[A-Z0-9/#-]{3,12}$', call):
+        print("No call, no login.", flush=True)
+        exit(0)
+
+    # check if channel exists, else use "cluster"
+    conn = psycopg.connect("service=rrdxa application_name=telnetsrv", autocommit=True)
+    cur = conn.cursor()
+    cur.execute("select true from rule where channel = %s", [call])
+    have_channel = cur.fetchone()
+    channel = call if have_channel else 'cluster'
+    channel_ident = psycopg.sql.Identifier(channel).as_string(conn)
+
+    # listen first so we don't miss any notification while old spots are loaded
+    conn.execute(f"listen {channel_ident}");
+
+    # print welcome message
+    print(f"{call} connected on channel {channel}", file=sys.stderr, flush=True)
+    print(f"Hello {call}, this is DA0RR", end="\r\n", flush=True)
+    print(f"Listening for spots on channel {channel_ident}", end="\r\n", flush=True)
+    print(f"Loading up to 500 old spots", end="\r\n", flush=True)
+    now = datetime.datetime.now(tz=datetime.UTC).strftime("%d-%b-%Y %H%MZ")
+    print(f"{call} de DA0RR {now} RRDXAi >", end="\r\n", flush=True)
+
+    # load up to 500 spots from the last 30min
+    cur.execute("""select data from
+        (select spot_time, jsonb_set_lax(data, '{spots}', jsonb_build_array(data['spots'][0])) as data
+         from bandmap join rule on data @@ jsfilter
+         where channel = %s and spot_time > now() - '30min'::interval
+         order by spot_time desc limit 500)
+        order by spot_time""", [channel])
+    for (m,) in cur.fetchall():
+        print_spot(m)
+
+    # listen again to put the channel name into pg_stat_activity.query
+    conn.execute(f"listen {channel_ident}");
+
+    # main loop
     for notify in conn.notifies():
         m = json.loads(notify.payload)
         print_spot(m)
-except (BrokenPipeError, KeyboardInterrupt):
-    pass
 
-print(f"{call} disconnected from channel {channel}", file=sys.stderr, flush=True)
+except (BrokenPipeError, ConnectionResetError, KeyboardInterrupt, UnicodeDecodeError):
+    pass
