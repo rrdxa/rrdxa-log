@@ -6,6 +6,8 @@
 var spots_table;
 var connected_led;
 var channel_input;
+var message_span;
+var rule_ul;
 var current_channel = '';
 var ws;
 
@@ -43,13 +45,59 @@ var add_spot = function (spot) {
     }
 };
 
-var new_spot = function (evt) {
-    const spot = JSON.parse(evt.data);
-    if (spot.spot) // one spot
-        add_spot(spot.spot);
-    if (spot.spots) // answer to {"load":xx}
-        for (s of spot.spots)
+var parse_rule = function (rule) {
+    //message_span.innerText = JSON.stringify(rule);
+    rule_ul.replaceChildren();
+
+    for (const r of rule.rule) {
+        var li = document.createElement("li");
+        var text = "";
+        if (r.include) {
+            for (const [key, val] of Object.entries(r.include)) {
+                text += "Include " + key + ": ";
+                for (const v of val) {
+                    text += v + " ";
+                }
+            }
+            text += "\n";
+        }
+        if (r.include_spots) {
+            for (const [key, val] of Object.entries(r.include_spots)) {
+                text += "Include spotter " + key + ": ";
+                for (const v of val) {
+                    text += v + " ";
+                }
+            }
+            text += "\n";
+        }
+        if (r.exclude) {
+            text += "Exclude: ";
+            for (const [key, val] of Object.entries(r.exclude)) {
+                text += "Exclude " + key + ": ";
+                for (const v of val) {
+                    text += v + " ";
+                }
+            }
+            text += "\n";
+        }
+        li.appendChild(document.createTextNode(text));
+        rule_ul.appendChild(li);
+    }
+};
+
+var ws_message = function (evt) {
+    const data = JSON.parse(evt.data);
+    if (data.spot) // one spot
+        add_spot(data.spot);
+    if (data.spots) { // answer to {"load":xx}
+        for (const s of data.spots)
             add_spot(s);
+        message_span.innerText = "";
+    }
+    if (data.message)
+        message_span.innerText = data.message;
+    if (data.rule)
+        parse_rule(data.rule);
 };
 
 var connect = function () {
@@ -77,16 +125,14 @@ var start_notifier = function () {
     ws = new WebSocket("wss://logbook.rrdxa.org/ws/spot/");
     ws.onopen = connect;
     ws.onclose = reconnect;
-    ws.onmessage = new_spot;
+    ws.onmessage = ws_message;
 };
 
-var set_channel = function () {
+var set_channel = function (e) {
     const channel = channel_input.value;
     if (!channel || channel == current_channel) return;
     console.log("Switching to channel " + channel);
-
-    while (spots_table.rows.length > 0)
-        spots_table.deleteRow(-1);
+    message_span.innerText = "Switching to channel " + channel + " ...";
 
     current_channel = channel;
     ws.send(JSON.stringify({
@@ -95,10 +141,17 @@ var set_channel = function () {
     }));
 };
 
+var clear_spots = function () {
+    while (spots_table.rows.length > 0)
+        spots_table.deleteRow(-1);
+};
+
 var main = function (data) {
     spots_table = document.getElementById('spots_table');
     connected_led = document.getElementById('connected_led');
     channel_input = document.getElementById('channel_input');
+    message_span = document.getElementById('message_span');
+    rule_ul = document.getElementById('rule_ul');
     current_channel = channel_input.value;
     start_notifier();
 };
@@ -112,9 +165,18 @@ var main = function (data) {
 
 <h1>RRDXAi Cluster <span id="connected_led">🔴</span></h1>
 
+<div><span id="message_span"></span></div>
+
 <div>
+<form id="channel_form" onsubmit="set_channel(); return false;">
 <input type="text" value="cluster" id="channel_input">
-<input type="submit" value="Set" onclick="set_channel()">
+<input type="submit" value="Set">
+</form>
+</div>
+
+<div>
+<ul id="rule_ul">
+</ul>
 </div>
 
 <table>

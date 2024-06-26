@@ -1,4 +1,5 @@
 import json
+import re
 
 from asgiref.sync import async_to_sync
 import channels.layers
@@ -22,22 +23,21 @@ class PGConsumer(WebsocketConsumer):
             async_to_sync(self.channel_layer.group_send)(text_data_json['channel'],
                 {'type': 'spot_message', "spot": text_data_json['spot']})
 
+        elif 'channel' in text_data_json and 'rule' in text_data_json:
+            async_to_sync(self.channel_layer.group_send)(text_data_json['channel'],
+                {'type': 'rule_message', "rule": text_data_json['rule']})
+
 class SpotConsumer(WebsocketConsumer):
 
     def connect(self):
-        self.spot_channel = "cluster"
-
-        # Join room group
-        async_to_sync(self.channel_layer.group_add)(
-            self.spot_channel, self.channel_name)
-
+        self.spot_channel = None
         self.accept()
 
     def disconnect(self, close_code):
         # Leave room group
-        async_to_sync(self.channel_layer.group_discard)(
-            self.spot_channel, self.channel_name
-        )
+        if self.spot_channel:
+            async_to_sync(self.channel_layer.group_discard)(
+                self.spot_channel, self.channel_name)
 
     # Receive message from WebSocket
     def receive(self, text_data):
@@ -47,9 +47,25 @@ class SpotConsumer(WebsocketConsumer):
             return
 
         if 'channel' in text_data_json:
-            async_to_sync(self.channel_layer.group_discard)(
-                self.spot_channel, self.channel_name)
-            self.spot_channel = text_data_json["channel"]
+            new_channel = text_data_json['channel']
+            if not re.match(r'[\w.-]{1,99}$', new_channel): # django-channels namespace
+                return
+
+            with connection.cursor() as cursor:
+                cursor.execute("select timeout::text, rule from rule where channel = %s", [new_channel])
+                data = cursor.fetchone()
+                if data is None:
+                    self.send(text_data=json.dumps({"message": f"Channel {new_channel} does not exist"}))
+                    return
+                else:
+                    timeout = data[0]
+                    rule = json.loads(data[1])
+                    self.send(text_data=json.dumps({"rule": {"timeout": timeout, "rule": rule}}))
+
+            if self.spot_channel:
+                async_to_sync(self.channel_layer.group_discard)(
+                    self.spot_channel, self.channel_name)
+            self.spot_channel = new_channel
             print(f"switching to {self.spot_channel}")
             async_to_sync(self.channel_layer.group_add)(
                 self.spot_channel, self.channel_name)
@@ -68,3 +84,7 @@ class SpotConsumer(WebsocketConsumer):
 
         # Send message to WebSocket
         self.send(text_data=json.dumps({"spot": spot}))
+
+    def rule_message(self, event):
+        rule = event["rule"]
+        self.send(text_data=json.dumps({"rule": rule}))

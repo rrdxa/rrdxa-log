@@ -213,7 +213,7 @@ create trigger bandmap_trigger
 
 -- rule: notification rules on channels
 
-create or replace function rrdxa.rule_json_to_jsquery(rule jsonb)
+create or replace function rrdxa.rule_object_to_jsquery(rule jsonb)
     returns text
     immutable
     return (with
@@ -241,6 +241,12 @@ create or replace function rrdxa.rule_json_to_jsquery(rule jsonb)
             ('not (' || excl_rule.str || ')'))
         from incl_rule, incl_spots_rule, excl_rule);
 
+create or replace function rrdxa.rule_array_to_jsquery(rule jsonb)
+    returns text
+    immutable
+    return (select string_agg('(' || rrdxa.rule_object_to_jsquery(value) || ')', ' or ')
+	from jsonb_array_elements(rule));
+
 /*
 select rule_json_to_jsquery('{
 "include": {
@@ -260,17 +266,35 @@ select rule_json_to_jsquery('{
 comment on function rrdxa.rule_json_to_jsquery is 'Transform a filter specification in JSON format to jsquery';
 
 create table rrdxa.rule (
-    id int primary key generated always as identity,
-    channel text not null,
+    channel text primary key,
     timeout interval, -- make these global channel options?
     filter_worked boolean default false,
     filter_cty boolean default false,
     filter_loc boolean default false,
     rule jsonb not null,
-    jsfilter jsquery generated always as (rule_json_to_jsquery(rule)::jsquery) stored
+    jsfilter jsquery generated always as (rule_array_to_jsquery(rule)::jsquery) stored
 );
 
 comment on table rrdxa.rule is 'Notification rules for channels';
+
+create or replace function rrdxa.rule_update_trigger()
+    returns trigger
+    language plpgsql
+as $$
+begin
+    perform pg_notify('rule_update',
+	jsonb_build_object(
+	    'channel', to_jsonb(new.channel),
+	    'rule', jsonb_build_object(
+		'rule', new.rule,
+		'timeout', to_jsonb(new.timeout)))::varchar(7999));
+    return new;
+end;
+$$;
+
+create trigger rule_update
+    after insert or update on rrdxa.rule
+    for each row execute function rule_update_trigger();
 
 -- notification: NOTIFY clients about new spots
 

@@ -8,6 +8,7 @@ conn = psycopg.connect("service=rrdxa application_name=notify_channels", autocom
 
 ws = create_connection("ws://localhost:8001/ws/notify/")
 
+conn.execute("LISTEN rule_update")
 conn.execute("LISTEN spot")
 
 for notify in conn.notifies():
@@ -18,4 +19,8 @@ for notify in conn.notifies():
     except json.decoder.JSONDecodeError:
         continue
 
-    ws.send(txt)
+    try:
+        ws.send(txt)
+    except BrokenPipeError:
+        print("Websocket closed", flush=True)
+        exit(1)
