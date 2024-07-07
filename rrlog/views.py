@@ -22,7 +22,7 @@ order by start {} limit {}
 """
 
 q_log_dupecheck = """
-select *, row_number() over (partition by call, band, major_mode order by start) from log_v
+select *, row_number() over (partition by call, band, major_mode, mode, submode order by start) from log_v
 {}
 order by start {} limit {}
 """
@@ -628,7 +628,7 @@ def v_edit(request, upload_id):
                 if start and stop:
                     cursor.execute("""\
 update upload set qsos =
-    (select count(distinct (call, band, major_mode)) from log
+    (select count(distinct (call, band, major_mode, mode, submode)) from log
      where start between %s and %s and upload = %s)
 where id = %s""", [start, stop, upload_id, upload_id])
 
