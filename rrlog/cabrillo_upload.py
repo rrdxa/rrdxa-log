@@ -43,14 +43,20 @@ def cabrillo_upload(cursor, content, upload_id):
                 raise Exception(f"Band {qso['band']} is not supported yet, please contact DF7CB")
 
             major_mode = qso['mode'].upper()
+            # CW
             if major_mode == 'CW':
                 mode = 'CW'
+            # PHONE
             elif major_mode == 'PH':
                 major_mode = 'PHONE'
                 mode = 'SSB'
             elif major_mode == 'FM':
                 major_mode = 'PHONE'
                 mode = 'FM'
+            elif major_mode == 'AM':
+                major_mode = 'PHONE'
+                mode = 'AM'
+            # DIGI
             elif major_mode == 'RY':
                 major_mode = 'DIGI'
                 mode = 'RTTY'
@@ -59,6 +65,10 @@ def cabrillo_upload(cursor, content, upload_id):
                 mode = 'PSK'
             elif major_mode == 'DG':
                 major_mode = 'DIGI'
+                mode = None
+            # FT8
+            elif major_mode == 'FT':
+                major_mode = 'FT8'
                 mode = None
             else:
                 raise Exception(f"Cabillo mode {major_mode} is not supported yet, please contact DF7CB")
