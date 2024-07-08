@@ -43,6 +43,7 @@ def cabrillo_upload(cursor, content, upload_id):
                 raise Exception(f"Band {qso['band']} is not supported yet, please contact DF7CB")
 
             major_mode = qso['mode'].upper()
+            submode = None
             # CW
             if major_mode == 'CW':
                 mode = 'CW'
@@ -60,7 +61,14 @@ def cabrillo_upload(cursor, content, upload_id):
             elif major_mode == 'RY':
                 major_mode = 'DIGI'
                 mode = 'RTTY'
-            elif major_mode in ('PS', 'PK'):
+            elif major_mode in ('PS', 'PK', 'PM', 'PO'):
+                # https://www.rdrclub.ru/index.php/russian-ww-psk-contest/49-rus-ww-psk-rules
+                if major_mode == 'PS':
+                    submode = 'PSK31'
+                elif major_mode == 'PM':
+                    submode = 'PSK63'
+                elif major_mode == 'PO':
+                    submode = 'PSK125'
                 major_mode = 'DIGI'
                 mode = 'PSK'
             elif major_mode == 'DG':
@@ -75,13 +83,14 @@ def cabrillo_upload(cursor, content, upload_id):
 
             cursor.execute("""\
 insert into log
-(start, station_callsign, operator, call, dxcc, band, freq, major_mode, mode, rsttx, extx, rstrx, exrx, contest, upload)
-values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+(start, station_callsign, operator, call, dxcc, band, freq, major_mode, mode, submode, rsttx, extx, rstrx, exrx, contest, upload)
+values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
 on conflict on constraint log_pkey do update set
 operator = coalesce(excluded.operator, log.operator),
 dxcc =     coalesce(excluded.dxcc, log.dxcc),
 freq =     coalesce(excluded.freq, log.freq),
 mode =     coalesce(excluded.mode, log.mode),
+submode =  coalesce(excluded.submode, log.submode),
 rsttx =    excluded.rsttx,
 extx =     excluded.extx,
 rstrx =    excluded.rstrx,
@@ -94,7 +103,7 @@ upload =   excluded.upload
                             call,
                             dxcc,
                             band, freq,
-                            major_mode, mode,
+                            major_mode, mode, submode,
                             qso['rsttx'], qso['extx'],
                             qso['rstrx'], qso['exrx'],
                             contest,
