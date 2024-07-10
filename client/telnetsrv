@@ -1,10 +1,11 @@
 #!/usr/bin/python3
 
-import psycopg
-import json
-import re
-import sys
 import datetime
+import json
+import psycopg
+import re
+import select
+import sys
 
 def print_spot(m):
     spot = m['spots'][0] if 'spots' in m and len(m['spots'][0]) > 0 else {}
@@ -34,6 +35,10 @@ def print_spot(m):
     # DX de IK5WOB:     3520.0  IQ5PJ        Coltano Marconi Award          1656Z JN53
     print(f"DX de {spotter[:10]+':':11}{qrg:7}  {dx:12} {info[:30]:30} {ts}Z {spotter_loc[:6]}", end="\r\n", flush=True)
 
+def prompt():
+    now = datetime.datetime.now(tz=datetime.UTC).strftime("%d-%b-%Y %H%MZ")
+    print(f"{call} de DA0RR {now} RRDXAi >", end="\r\n", flush=True)
+
 try:
     # ask for call (used as channel name)
     print("login: ", end='', flush=True)
@@ -58,8 +63,7 @@ try:
     print(f"Hello {call}, this is DA0RR", end="\r\n", flush=True)
     print(f"Listening for spots on channel {channel_ident}", end="\r\n", flush=True)
     print(f"Loading up to 500 old spots", end="\r\n", flush=True)
-    now = datetime.datetime.now(tz=datetime.UTC).strftime("%d-%b-%Y %H%MZ")
-    print(f"{call} de DA0RR {now} RRDXAi >", end="\r\n", flush=True)
+    prompt()
 
     # load up to 500 spots from the last 30min
     cur.execute("""select data from
@@ -75,9 +79,16 @@ try:
     conn.execute(f"listen {channel_ident}");
 
     # main loop
-    for notify in conn.notifies():
-        m = json.loads(notify.payload)
-        print_spot(m)
+    while True:
+        r, w, x = select.select([conn, sys.stdin], [], [])
+        if conn in r:
+            notify = next(conn.notifies())
+            m = json.loads(notify.payload)
+            print_spot(m)
+        if sys.stdin in r:
+            cmd = input()
+            print("<", cmd, file=sys.stderr, flush=True)
+            prompt()
 
-except (BrokenPipeError, ConnectionResetError, KeyboardInterrupt, UnicodeDecodeError):
+except (BrokenPipeError, ConnectionResetError, EOFError, KeyboardInterrupt, UnicodeDecodeError):
     pass
