@@ -78,6 +78,17 @@ class SpotConsumer(WebsocketConsumer):
                 spots = cursor.fetchone()[0] or '[]'
                 self.send(text_data=json.dumps({"spots": json.loads(spots)}))
 
+        if 'delete_rule' in text_data_json:
+            with connection.cursor() as cursor:
+                path = text_data_json['delete_rule']
+                cursor.execute("select rrdxa.rule_delete_entry(%s, %s)", [self.spot_channel, f"{{{path}}}"])
+
+        if 'add_rule' in text_data_json and 'val' in text_data_json:
+            with connection.cursor() as cursor:
+                path = text_data_json['add_rule']
+                val = text_data_json['val']
+                cursor.execute("select rrdxa.rule_add_entry(%s, %s, %s)", [self.spot_channel, f"{{{path}}}", val])
+
     # Receive spot message from PostgreSQL
     def spot_message(self, event):
         spot = event["spot"]

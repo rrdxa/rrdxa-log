@@ -45,44 +45,103 @@ var add_spot = function (spot) {
     }
 };
 
+var add_rule_form = function(row) {
+    let text = `<form onsubmit="add_rule('${row}'); return false;">`;
+    text += `<select id="select_${row}">
+<optgroup label="Include spots">
+  <option value="include dx">DX</option>
+  <option value="include cty">Country</option>
+  <option value="include cont">Continent</option>
+</optgroup>
+<optgroup label="Include spotters">
+  <option value="include_spots spotter">Spotter</option>
+  <option value="include_spots spotter_cty">Spotter country</option>
+  <option value="include_spots spotter_cont">Spotter continent</option>
+</optgroup>
+<optgroup label="Exclude spots">
+  <option value="exclude dx">not DX</option>
+  <option value="exclude cty">not country</option>
+  <option value="exclude cont">not continent</option>
+</optgroup>
+</select>`;
+    text += `<input id="add_rule_${row}">`;
+    text += `<input type="submit" value="Add"></form>`;
+    return text;
+};
+
+var add_rule = function(row) {
+
+    let select = document.getElementById("select_" + row);
+    let keys = select.value.split(" ", 2);
+    let section = keys[0];
+    let key = keys[1];
+    let input = document.getElementById("add_rule_" + row);
+    let val = input.value;
+
+    message_span.innerText = "Updating filter rules ...";
+    ws.send(JSON.stringify({
+        "add_rule": `${row},${section},${key}`,
+        "val": val,
+    }));
+};
+
+var delete_rule = function(path) {
+    message_span.innerText = "Updating filter rules ...";
+    ws.send(JSON.stringify({
+        "delete_rule": path,
+    }));
+};
+
 var parse_rule = function (rule) {
     //message_span.innerText = JSON.stringify(rule);
     rule_ul.replaceChildren();
 
+    let row = 0;
     for (const r of rule.rule) {
-        var li = document.createElement("li");
         var text = "";
         if (r.include) {
             for (const [key, val] of Object.entries(r.include)) {
-                text += "Include " + key + ": ";
+                let col = 0;
                 for (const v of val) {
-                    text += v + " ";
+                    text += `<input type="submit" onclick="delete_rule('${row},include,${key},${col}')" value="${key} ${v}"> `;
+                    col++;
                 }
             }
-            text += "\n";
         }
         if (r.include_spots) {
             for (const [key, val] of Object.entries(r.include_spots)) {
-                text += "Include spotter " + key + ": ";
+                let col = 0;
                 for (const v of val) {
-                    text += v + " ";
+                    text += `<input type="submit" onclick="delete_rule('${row},include_spots,${key},${col}')" value="${key} ${v}"> `;
+                    col++;
                 }
             }
-            text += "\n";
         }
         if (r.exclude) {
-            text += "Exclude: ";
             for (const [key, val] of Object.entries(r.exclude)) {
-                text += "Exclude " + key + ": ";
+                let col = 0;
                 for (const v of val) {
-                    text += v + " ";
+                    text += `<input type="submit" onclick="delete_rule('${row},exclude,${key},${col}')" value="not ${key} ${v}" style="color: red;"> `;
+                    col++;
                 }
             }
-            text += "\n";
         }
-        li.appendChild(document.createTextNode(text));
+
+        text += add_rule_form(row);
+        let t = document.createElement('span');
+        t.innerHTML = text;
+        let li = document.createElement("li");
+        li.appendChild(t);
         rule_ul.appendChild(li);
+        row++;
     }
+
+        text = "Add rule:" + add_rule_form(row);
+        let t = document.createElement('span');
+        t.innerHTML = text;
+        let li = document.createElement("li");
+        li.appendChild(t);
+        rule_ul.appendChild(li);
 };
 
 var ws_message = function (evt) {
@@ -90,20 +149,27 @@ var ws_message = function (evt) {
     if (data.spot) // one spot
         add_spot(data.spot);
     if (data.spots) { // answer to {"load":xx}
+        clear_spots();
         for (const s of data.spots)
             add_spot(s);
         message_span.innerText = "";
     }
     if (data.message)
         message_span.innerText = data.message;
-    if (data.rule)
+    if (data.rule) {
         parse_rule(data.rule);
+        message_span.innerText = "Loading spots ...";
+        ws.send(JSON.stringify({
+            "load": 500,
+        }));
+    }
 };
 
 var connect = function () {
     connected_led.innerText = "🟢";
     ws.send(JSON.stringify({ "channel": current_channel }));
     if (spots_table.rows.length == 0) {
+        message_span.innerText = "Loading spots ...";
         ws.send(JSON.stringify({
             "load": 500,
         }));
@@ -168,9 +234,9 @@ var main = function (data) {
 <div><span id="message_span"></span></div>
 
 <div>
-<form id="channel_form" onsubmit="set_channel(); return false;">
+<form onsubmit="set_channel(); return false;">
 <input type="text" value="cluster" id="channel_input">
-<input type="submit" value="Set">
+<input type="submit" value="Set channel">
 </form>
 </div>
 

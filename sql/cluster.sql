@@ -213,6 +213,13 @@ create trigger bandmap_trigger
 
 -- rule: notification rules on channels
 
+create or replace function rrdxa.jsonb_arraymatch_to_jsquery(key text, arr text)
+    returns text
+    immutable
+    return case when arr = '[]' then '"false"'
+        else format('(%s in (%s))', to_jsonb(key), substr(arr, 2, length(arr)-2))
+    end;
+
 create or replace function rrdxa.rule_object_to_jsquery(rule jsonb)
     returns text
     immutable
@@ -220,25 +227,25 @@ create or replace function rrdxa.rule_object_to_jsquery(rule jsonb)
         incl_rule as (
             select string_agg(case value
                 when 'true' then to_json(key)::text -- true -> key exists check
-                else format('(%s in (%s))', to_json(key), substr(value, 2, length(value)-2)) -- array -> match values
+                else rrdxa.jsonb_arraymatch_to_jsquery(key, value) -- array -> match values
                 end, ' and ') str
             from jsonb_each_text(rule->'include') where value <> '[]'),
         incl_spots_rule as (
             select string_agg(case value
                 when 'true' then to_json(key)::text -- true -> key exists check
-                else format('(%s in (%s))', to_json(key), substr(value, 2, length(value)-2)) -- array -> match values
+                else rrdxa.jsonb_arraymatch_to_jsquery(key, value) -- array -> match values
                 end, ' and ') str
             from jsonb_each_text(rule->'include_spots') where value <> '[]'),
         excl_rule as (
             select string_agg(case value
                 when 'true' then to_json(key)::text
-                else format('(%s in (%s))', to_json(key), substr(value, 2, length(value)-2))
+                else rrdxa.jsonb_arraymatch_to_jsquery(key, value)
                 end, ' or ') str
             from jsonb_each_text(rule->'exclude') where value <> '[]')
-        select concat_ws(' and ',
+        select nullif(concat_ws(' and ',
             incl_rule.str,
             ('spots.#(' || incl_spots_rule.str || ')'),
-            ('not (' || excl_rule.str || ')'))
+            ('not (' || excl_rule.str || ')')), '')
         from incl_rule, incl_spots_rule, excl_rule);
 
 create or replace function rrdxa.rule_array_to_jsquery(rule jsonb)
@@ -247,8 +254,10 @@ create or replace function rrdxa.rule_array_to_jsquery(rule jsonb)
     return (select string_agg('(' || rrdxa.rule_object_to_jsquery(value) || ')', ' or ')
 	from jsonb_array_elements(rule));
 
+comment on function rrdxa.rule_array_to_jsquery is 'Transform a filter specification in JSON format to jsquery';
+
 /*
-select rule_json_to_jsquery('{
+select rule_array_to_jsquery('{
 "include": {
     "dx": ["DF7CB", "DL5VT"],
     "band": ["15m"],
@@ -263,7 +272,56 @@ select rule_json_to_jsquery('{
 }'::jsonb);
 */
 
-comment on function rrdxa.rule_json_to_jsquery is 'Transform a filter specification in JSON format to jsquery';
+create or replace function rrdxa.rule_create_channel(channel text)
+    returns void
+    return (insert into rule 
+    return jsonb_set(rule, path, (rule #> path) - element);
+
+create or replace function rrdxa.rule_add_entry(p_channel text, p_path text, p_element text)
+    returns void
+    language plpgsql
+as $$
+declare
+    res jsonb;
+    p_arr text[];
+    p_jsonb jsonb;
+    msg text;
+begin
+    p_arr := p_path; -- raise warning below when casts fail
+    p_jsonb := to_jsonb(p_element);
+    select rule #> p_arr into res from rule where channel = p_channel;
+    if res is null then
+        update rule set rule[p_arr[1]][p_arr[2]][p_arr[3]] = '[]' where channel = p_channel;
+    end if;
+    update rule set rule = jsonb_insert(rule, p_arr || array['-1'], p_jsonb, true) where channel = p_channel;
+exception when others then
+    get stacked diagnostics msg := message_text;
+    raise warning 'rule_add_entry(%,%,%) failed: %', p_channel, p_path, p_jsonb, msg;
+end;
+$$;
+
+comment on function rrdxa.rule_add_entry is 'Add new rule element at 3-level path';
+
+create or replace function rrdxa.rule_delete_entry(p_channel text, p_path text)
+    returns void
+    language plpgsql
+as $$
+declare
+    p_arr text[];
+    msg text;
+begin
+    p_arr := p_path;
+    update rule set rule = rule #- p_arr where channel = p_channel;
+    update rule set rule = rule #- p_arr[1:3] where channel = p_channel and rule #> p_arr[1:3] = '[]';
+    update rule set rule = rule #- p_arr[1:2] where channel = p_channel and rule #> p_arr[1:2] = '{}';
+    update rule set rule = rule #- p_arr[1:1] where channel = p_channel and rule #> p_arr[1:1] = '{}';
+exception when others then
+    get stacked diagnostics msg := message_text;
+    raise warning 'rule_delete_entry(%,%) failed: %', p_channel, p_arr, msg;
+end;
+$$;
+
+comment on function rrdxa.rule_delete_entry is 'Delete rule element at 4-level path';
 
 create table rrdxa.rule (
     channel text primary key,
