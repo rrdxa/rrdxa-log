@@ -2,6 +2,7 @@
 Type=exec
 WorkingDirectory=/cb/logbook.rrdxa.org/rrdxa-log
 ExecStart=/cb/logbook.rrdxa.org/rrdxa-log/gather/cluster dxc.pi4cc.nl
+SyslogIdentifier=pi4cc
 Restart=always
 RestartSec=10
 

@@ -2,6 +2,7 @@
 Type=exec
 WorkingDirectory=/cb/logbook.rrdxa.org/rrdxa-log
 ExecStart=/cb/logbook.rrdxa.org/rrdxa-log/gather/cluster dxc.ve7cc.net 23
+SyslogIdentifier=ve7cc
 Restart=always
 RestartSec=10
 

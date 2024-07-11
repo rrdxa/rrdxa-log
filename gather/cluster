@@ -59,7 +59,7 @@ def dx(msg):
         clusterutils.insert_spot(cur, spot)
 
     else:
-        print("<", line)
+        print("<", line, flush=True)
 
 buf = b""
 while True:

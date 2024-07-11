@@ -2,6 +2,7 @@
 Type=exec
 WorkingDirectory=/cb/logbook.rrdxa.org/rrdxa-log
 ExecStart=/cb/logbook.rrdxa.org/rrdxa-log/gather/cluster db0sue.de
+SyslogIdentifier=db0sue
 Restart=always
 RestartSec=10
 
