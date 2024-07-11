@@ -33,5 +33,6 @@ def certificate(call, name, date, member_no):
 
 if __name__ == '__main__':
     import sys
-    pdf = certificate('DF7CB', 'Christoph Berg', '2024-03-24', 999)
+    #pdf = certificate('DF7CB', 'Christoph Berg', '2024-03-24', 999)
+    pdf = certificate(*sys.argv[1:])
     sys.stdout.buffer.write(pdf)
