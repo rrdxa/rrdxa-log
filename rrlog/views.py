@@ -148,10 +148,10 @@ def get_request_qsos(request, quals, params):
         elif key == 'dxcc':
             quals.append("log.dxcc = %s") # ambiguous column name
             params += [param]
-        elif key == 'year' and re.match('\d{4}$', param):
+        elif key == 'year' and re.match(r'\d{4}$', param):
             quals.append("start >= %s and start < %s")
             params += [f"{param}-01-01", f"{int(param)+1}-01-01"]
-        elif key == 'month' and re.match('\d{4}-\d{1,2}$', param):
+        elif key == 'month' and re.match(r'\d{4}-\d{1,2}$', param):
             quals.append("start >= %s and start < %s::timestamptz + '1 month'::interval")
             params += [f"{param}-01", f"{param}-01"]
         elif key in ('station_callsign', 'operator', 'call', 'country',
@@ -660,7 +660,7 @@ where id = %s""", [start, stop, upload_id, upload_id])
 
 def v_members(request):
     with connection.cursor() as cursor:
-        cursor.execute("select call, callsigns from members where call ~ '\d' and public order by call")
+        cursor.execute(r"select call, callsigns from members where call ~ '\d' and public order by call")
         members = namedtuplefetchall(cursor)
 
         cursor.execute(q_members_list, [])
