@@ -16,6 +16,24 @@ def last_spot(cur, source, cluster):
     cur.execute("select max((value->>'spot_time')::timestamptz) from bandmap, jsonb_array_elements(data['spots']) where source = %s and value->>'cluster' = %s", [source, cluster])
     return cur.fetchone()[0] or int_to_timestamp(0)
 
+dx_re = re.compile(r'DX de ([\w\d/#-]+):? *([\d.]+) +([^ ]+) +(\S(?:.*\S)?)? +(\d\d\d\d)Z *(.*[^\a ])?')
+
+def parse_spot(line, source=None, cluster=None):
+    m = re.match(dx_re, line)
+
+    if not m:
+        return None
+
+    return {'source': source,
+            'cluster': cluster,
+            'spotter': m.group(1),
+            'qrg': m.group(2),
+            'dx': m.group(3),
+            'info': m.group(4),
+            'spot_time': str_to_timestamp(m.group(5)),
+            'spotter_loc': m.group(6),
+            }
+
 mode_re = r'CW|SSB|LSB|USB|FM|RTTY|PSK\d*|FT\d+|MSK\d*'
 loc_re = r'\b[A-R][A-R][0-9][0-9](?:[A-X][A-X](?:[0-9][0-9](?:[A-X][A-X])?)?)?'
 
@@ -48,3 +66,32 @@ def insert_spot(cur, spot):
                 ', '.join('%s' for x in spot.values()) +
                 ")",
                 [x for x in spot.values()])
+
+def format_spot(m):
+    spot = m['spots'][0] if 'spots' in m and len(m['spots'][0]) > 0 else {}
+    spotter = spot.get('spotter') or '??'
+    qrg = m.get('qrg') or '??'
+    dx = m.get('dx') or '??'
+
+    if 'info' in spot and spot['info'] is not None:
+        info = f"{spot['info']} " # space at end so we can append more items
+    elif 'mode' in m and m['mode'] is not None:
+        info = f"{m['mode']} "
+    else:
+        info = ""
+
+    if 'db' in spot and spot['db'] is not None and 'dB' not in info:
+        info += f"{spot['db']} dB "
+    if 'wpm' in m and m['wpm'] is not None and 'WPM' not in info:
+        info += f"{m['wpm']} WPM "
+    if 'cluster' in spot:
+        info += f"[{spot['cluster']}] "
+    else:
+        info += f"[{m['source']}] "
+
+    ts = m['spot_time'][11:13] + m['spot_time'][14:16]
+    spotter_loc = spot.get('spotter_loc') or ''
+
+    # try to match the original cluster column layout as close as possible, but without truncating dx and qrg
+    # DX de IK5WOB:     3520.0  IQ5PJ        Coltano Marconi Award          1656Z JN53
+    return f"DX de {spotter[:10]+':':11}{qrg:7}  {dx:12} {info[:30]:30} {ts}Z {spotter_loc[:6]}"

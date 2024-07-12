@@ -6,45 +6,31 @@ import psycopg
 import re
 import select
 import sys
-
-def print_spot(m):
-    spot = m['spots'][0] if 'spots' in m and len(m['spots'][0]) > 0 else {}
-    spotter = spot.get('spotter') or '??'
-    qrg = m.get('qrg') or '??'
-    dx = m.get('dx') or '??'
-
-    if 'info' in spot and spot['info'] is not None:
-        info = f"{spot['info']} " # space at end so we can append more items
-    elif 'mode' in m and m['mode'] is not None:
-        info = f"{m['mode']} "
-    else:
-        info = ""
-
-    if 'db' in spot and spot['db'] is not None and 'dB' not in info:
-        info += f"{spot['db']} dB "
-    if 'wpm' in m and m['wpm'] is not None and 'WPM' not in info:
-        info += f"{m['wpm']} WPM "
-    if 'cluster' in spot:
-        info += f"[{spot['cluster']}] "
-    else:
-        info += f"[{m['source']}] "
-
-    ts = m['spot_time'][11:13] + m['spot_time'][14:16]
-    spotter_loc = spot.get('spotter_loc') or ''
-    # try to match the original cluster column layout as close as possible, but without truncating dx and qrg
-    # DX de IK5WOB:     3520.0  IQ5PJ        Coltano Marconi Award          1656Z JN53
-    print(f"DX de {spotter[:10]+':':11}{qrg:7}  {dx:12} {info[:30]:30} {ts}Z {spotter_loc[:6]}", end="\r\n", flush=True)
+import clusterutils
 
 def prompt():
     now = datetime.datetime.now(tz=datetime.UTC).strftime("%d-%b-%Y %H%MZ")
     print(f"{call} de DA0RR {now} RRDXAi >", end="\r\n", flush=True)
+
+def handle_cmd(line):
+    if line == '':
+        pass
+    elif spot := clusterutils.parse_spot(cmd, source='cluster', cluster=call):
+        if '#' in spot['spotter']:
+            spot['source'] = 'rbn'
+        clusterutils.parse_cluster_info(spot['info'], spot)
+        clusterutils.insert_spot(cur, spot)
+        print("Spot received:", spot, file=sys.stderr, flush=True)
+    else:
+        print("Unknown command", cmd, end='\r\n', flush=True)
+        print("Unknown command", cmd, file=sys.stderr, flush=True)
 
 try:
     # ask for call (used as channel name)
     print("login: ", end='', flush=True)
     call = input().strip().upper()
     if not call or not re.match(r'[A-Z0-9/#-]{3,12}$', call):
-        print("No call, no login.", flush=True)
+        print("No call, no login.", end='\r\n', flush=True)
         exit(0)
 
     # check if channel exists, else use "cluster"
@@ -73,7 +59,7 @@ try:
          order by spot_time desc limit 500)
         order by spot_time""", [channel])
     for (m,) in cur.fetchall():
-        print_spot(m)
+        print(clusterutils.format_spot(m), end='\r\n', flush=True)
 
     # listen again to put the channel name into pg_stat_activity.query
     conn.execute(f"listen {channel_ident}");
@@ -84,10 +70,10 @@ try:
         if conn in r:
             notify = next(conn.notifies())
             m = json.loads(notify.payload)
-            print_spot(m)
+            print(clusterutils.format_spot(m), end='\r\n', flush=True)
         if sys.stdin in r:
-            cmd = input()
-            print("<", cmd, file=sys.stderr, flush=True)
+            cmd = input().strip()
+            handle_cmd(cmd)
             prompt()
 
 except (BrokenPipeError, ConnectionResetError, EOFError, KeyboardInterrupt, UnicodeDecodeError):

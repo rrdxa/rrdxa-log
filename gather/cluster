@@ -18,7 +18,7 @@ import clusterutils
 hostname = sys.argv[1]
 port = int(sys.argv[2]) if len(sys.argv) > 2 else 8000
 cluster = hostname.split('.')[-2]
-m = re.search('(\d)', cluster)
+m = re.search(r'(\d)', cluster)
 mycall = "DA0RR-" + m.group(1)
 
 conn = psycopg.connect(f"service=rrdxa application_name={cluster}", autocommit=True)
@@ -37,25 +37,14 @@ s.send(mycall.encode('UTF-8') + b"\r\n")
 # DX de EA5D:      14081.0  N8JJM        FT4 -11 IM99XX<>EN72           1657Z IM99
 # DX de KE1DX:     21029.8  LU/CE3CT                                    1657Z FN31
 
-dx_re = re.compile('DX de (\S+): *([\d.]+) +([^ ]+) +(\S(?:.*\S)?)? +(\d\d\d\d)Z *(.*[^\a ])?')
-
 def dx(msg):
     line = msg.decode(encoding='UTF-8', errors='replace')
-    if m := re.match(dx_re, line):
+    spot = clusterutils.parse_spot(line, source='cluster', cluster=cluster)
 
-        if m.group(4) and re.search(r'BEACON|NCDXF B', m.group(4)): return # ignore beacons
+    if spot:
+        if spot.info and re.search(r'BEACON|NCDXF B', spot.info): return # ignore beacons
 
-        spot = {'source': 'cluster',
-                'cluster': cluster,
-                'spotter': m.group(1),
-                'qrg': m.group(2),
-                'dx': m.group(3),
-                'info': m.group(4),
-                'spot_time': clusterutils.str_to_timestamp(m.group(5)),
-                'spotter_loc': m.group(6),
-                }
-
-        clusterutils.parse_cluster_info(m.group(4), spot)
+        clusterutils.parse_cluster_info(spot.info, spot)
         clusterutils.insert_spot(cur, spot)
 
     else:
