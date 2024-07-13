@@ -18,6 +18,7 @@ argparser = argparse.ArgumentParser(description="Connect to DX cluster and store
 argparser.add_argument("-s", "--source", help="Source name in spots", default='cluster')
 argparser.add_argument("-c", "--cluster", help="Cluster name in spots")
 argparser.add_argument("-m", "--mycall")
+argparser.add_argument("-C", "--cmd", nargs='*', help="Send cluster command")
 argparser.add_argument("host")
 argparser.add_argument("port", default=8000, nargs='?')
 args = argparser.parse_args()
@@ -33,7 +34,7 @@ cur = conn.cursor()
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect((args.host, int(args.port)))
-s.send(args.mycall.encode('UTF-8') + b"\r\n")
+login = False
 
 # DX de IK5WOB:     3520.0  IQ5PJ        Coltano Marconi Award          1656Z JN53
 # DX de W2CCC:     50313.0  WA5TKU       em13<>fn23 ft8                 1656Z FN23
@@ -45,6 +46,7 @@ s.send(args.mycall.encode('UTF-8') + b"\r\n")
 # DX de KE1DX:     21029.8  LU/CE3CT                                    1657Z FN31
 
 def dx(msg):
+    global login
     line = msg.decode(encoding='UTF-8', errors='replace')
     spot = clusterutils.parse_spot(line, source=args.source, cluster=args.cluster)
 
@@ -55,7 +57,13 @@ def dx(msg):
         clusterutils.insert_spot(cur, spot)
 
     else:
-        print("<", line, flush=True)
+        print("<", line.replace('\a', '^G'), flush=True)
+
+        if not login and ('login:' in line or 'enter your call:' in line):
+            for i in [args.mycall] + args.cmd:
+                print(i)
+                s.send(i.encode('UTF-8') + b"\r\n")
+            login = True
 
 buf = b""
 while True:
@@ -69,3 +77,6 @@ while True:
             pos = buf.index(b"\r\n")
             dx(buf[:pos])
             buf = buf[pos+2:]
+        if b'login:' in buf:
+            dx(buf)
+            buf = b""
