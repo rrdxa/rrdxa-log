@@ -10,23 +10,30 @@ License: MIT
 import psycopg
 import socket
 import select
-import sys
-import time
 import re
 import clusterutils
+import argparse
 
-hostname = sys.argv[1]
-port = int(sys.argv[2]) if len(sys.argv) > 2 else 8000
-cluster = hostname.split('.')[-2]
-m = re.search(r'(\d)', cluster)
-mycall = "DA0RR-" + m.group(1)
+argparser = argparse.ArgumentParser(description="Connect to DX cluster and store spots in PostgreSQL")
+argparser.add_argument("-s", "--source", help="Source name in spots", default='cluster')
+argparser.add_argument("-c", "--cluster", help="Cluster name in spots")
+argparser.add_argument("-m", "--mycall")
+argparser.add_argument("host")
+argparser.add_argument("port", default=8000, nargs='?')
+args = argparser.parse_args()
 
-conn = psycopg.connect(f"service=rrdxa application_name={cluster}", autocommit=True)
+if not args.cluster:
+    args.cluster = args.host.split('.')[-2]
+if not args.mycall:
+    m = re.search(r'(\d)', args.cluster)
+    args.mycall = "DA0RR-" + m.group(1)
+
+conn = psycopg.connect(f"service=rrdxa application_name={args.source}/{args.cluster}", autocommit=True)
 cur = conn.cursor()
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.connect((hostname, port))
-s.send(mycall.encode('UTF-8') + b"\r\n")
+s.connect((args.host, int(args.port)))
+s.send(args.mycall.encode('UTF-8') + b"\r\n")
 
 # DX de IK5WOB:     3520.0  IQ5PJ        Coltano Marconi Award          1656Z JN53
 # DX de W2CCC:     50313.0  WA5TKU       em13<>fn23 ft8                 1656Z FN23
@@ -39,12 +46,12 @@ s.send(mycall.encode('UTF-8') + b"\r\n")
 
 def dx(msg):
     line = msg.decode(encoding='UTF-8', errors='replace')
-    spot = clusterutils.parse_spot(line, source='cluster', cluster=cluster)
+    spot = clusterutils.parse_spot(line, source=args.source, cluster=args.cluster)
 
     if spot:
-        if spot.info and re.search(r'BEACON|NCDXF B', spot.info): return # ignore beacons
+        if spot['info'] and re.search(r'BEACON|NCDXF B', spot['info']): return # ignore beacons
 
-        clusterutils.parse_cluster_info(spot.info, spot)
+        clusterutils.parse_cluster_info(spot['info'], spot)
         clusterutils.insert_spot(cur, spot)
 
     else:
