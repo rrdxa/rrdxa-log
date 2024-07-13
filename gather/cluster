@@ -60,7 +60,7 @@ def dx(msg):
         print("<", line.replace('\a', '^G'), flush=True)
 
         if not login and ('login:' in line or 'enter your call:' in line):
-            for i in [args.mycall] + args.cmd:
+            for i in [args.mycall] + (args.cmd or []):
                 print(i)
                 s.send(i.encode('UTF-8') + b"\r\n")
             login = True
