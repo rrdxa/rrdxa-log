@@ -10,6 +10,7 @@ License: MIT
 import psycopg
 import socket
 import select
+import sys
 import re
 import clusterutils
 import argparse
@@ -52,6 +53,8 @@ def dx(msg):
 
     if spot:
         if spot['info'] and re.search(r'BEACON|NCDXF B', spot['info']): return # ignore beacons
+        if sys.stdout.isatty():
+            print(line, flush=True)
 
         clusterutils.parse_cluster_info(spot['info'], spot)
         clusterutils.insert_spot(cur, spot)
@@ -59,9 +62,9 @@ def dx(msg):
     else:
         print("<", line.replace('\a', '^G'), flush=True)
 
-        if not login and ('login:' in line or 'enter your call:' in line):
+        if not login and ('login:' in line or 'enter your call' in line):
             for i in [args.mycall] + (args.cmd or []):
-                print(i)
+                print(i, flush=True)
                 s.send(i.encode('UTF-8') + b"\r\n")
             login = True
 
@@ -77,6 +80,6 @@ while True:
             pos = buf.index(b"\r\n")
             dx(buf[:pos])
             buf = buf[pos+2:]
-        if b'login:' in buf:
+        if b'login:' in buf or b'enter your call' in buf:
             dx(buf)
             buf = b""
