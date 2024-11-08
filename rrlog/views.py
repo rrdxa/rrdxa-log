@@ -420,13 +420,14 @@ def v_events(request):
     return render_with_username_cookie(request, 'rrlog/events.html', context, username)
 
 q_event = """
-with events as (
+with uploads as (
 select station_callsign,
     id as upload_id,
     nullif(operators, station_callsign) operators,
     contest,
     qsos,
     claimed_score,
+    max(claimed_score) over (order by qsos rows unbounded preceding) previous_score,
     category_assisted,
     category_band,
     category_mode,
@@ -439,11 +440,10 @@ select station_callsign,
 from upload u join event e on u.event_id = e.event_id
 where e.event = %s
     and qsos > 0
-order by qsos desc nulls last, claimed_score desc nulls last
 )
-select * from events
+(select * from uploads order by coalesce(claimed_score, previous_score) desc nulls last, qsos desc nulls last)
 union all
-select count(*)::text, -1, null, null, sum(qsos), sum(claimed_score), null, null, null, null, null, null, null, null, null from events
+select count(*)::text, -1, null, null, sum(qsos), sum(claimed_score), null, null, null, null, null, null, null, null, null, null from uploads
 """
 
 def v_event(request, event):
