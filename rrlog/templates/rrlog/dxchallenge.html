@@ -1,0 +1,48 @@
+{% extends 'rrlog/rrdxa.html' %}
+{% load humanize %}
+
+{% block header %}
+<script>
+var hilight = function(call) {
+    const collection = document.getElementsByClassName(call);
+    for (let i = 0; i < collection.length; i++) {
+        collection[i].style.backgroundColor = "red";
+    }
+};
+var dehilight = function(call) {
+    const collection = document.getElementsByClassName(call);
+    for (let i = 0; i < collection.length; i++) {
+        collection[i].style.backgroundColor = "white";
+    }
+};
+</script>
+{% endblock %}
+
+{% block content %}
+<h1>{{title}}</h1>
+
+<p>
+<a href="https://rrdxa.org/rrdxa-challenge-rules/">Zu den Challenge-Regeln</a> |
+<a href="/log/dxchallenge/{{year|add:'-1'}}/">{{year|add:'-1'}} &lt;&lt;</a> |
+<a href="/log/dxchallenge/{{year|add:'1'}}/">&gt;&gt; {{year|add:'1'}}</a>
+</p>
+
+<table border=0>
+<thead>
+<tr>
+ <th>CW</th>
+ <th>PHONE</th>
+ <th>DIGI</th>
+ <th>FT8</th>
+</tr>
+</thead>
+
+<tr>
+<td valign="top"> {% for entry in entries.CW %}    {{entry.rank}} <span onmouseenter="hilight('{{entry.call}}')" onmouseleave="dehilight('{{entry.call}}')" class="{{entry.call}}">{{entry.call}}</span> {{entry.bandslots}} <br> {% endfor %} </td>
+<td valign="top"> {% for entry in entries.PHONE %} {{entry.rank}} <span onmouseenter="hilight('{{entry.call}}')" onmouseleave="dehilight('{{entry.call}}')" class="{{entry.call}}">{{entry.call}}</span> {{entry.bandslots}} <br> {% endfor %} </td>
+<td valign="top"> {% for entry in entries.DIGI %}  {{entry.rank}} <span onmouseenter="hilight('{{entry.call}}')" onmouseleave="dehilight('{{entry.call}}')" class="{{entry.call}}">{{entry.call}}</span> {{entry.bandslots}} <br> {% endfor %} </td>
+<td valign="top"> {% for entry in entries.FT8 %}   {{entry.rank}} <span onmouseenter="hilight('{{entry.call}}')" onmouseleave="dehilight('{{entry.call}}')" class="{{entry.call}}">{{entry.call}}</span> {{entry.bandslots}} <br> {% endfor %} </td>
+</tr>
+</table>
+
+{% endblock %}

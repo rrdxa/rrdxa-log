@@ -366,10 +366,35 @@ def v_challenge(request, year=None):
                 for x in zip(entry.upload_ids, entry.station_callsigns, entry.event_qsos, entry.events, entry.event_vhf)]
 
     context = {
-        'title': f"RRDXA Challenge {year}",
+        'title': f"RRDXA Contest Challenge {year}",
+        'year': year,
         'entries': entries,
     }
     return render(request, 'rrlog/challenge.html', context)
+
+q_dxchallenge = """
+select *, rank() over (partition by major_mode order by count desc) from
+(select major_mode, rrmember, count(*) from bandpoints where year = %s group by 1, 2);
+"""
+
+def v_dxchallenge(request, year=None):
+    if year is None:
+        today = datetime.date.today()
+        year = today.year
+
+    entries = {"CW": [], "PHONE": [], "DIGI": [], "FT8": [], "unknown": []}
+    with connection.cursor() as cursor:
+        cursor.execute(q_dxchallenge, [year])
+        for row in cursor.fetchall():
+            entries[row[0]].append({'call': row[1], 'bandslots': row[2], 'rank': row[3]})
+
+    context = {
+        'title': f"RRDXA DX Challenge {year}",
+        'year': year,
+        'modes': ['CW', 'PHONE', 'DIGI', 'FT8'],
+        'entries': entries,
+    }
+    return render(request, 'rrlog/dxchallenge.html', context)
 
 q_schedules = """select
  schedule.cabrillo_name,
