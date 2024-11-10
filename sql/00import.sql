@@ -6,8 +6,8 @@ begin;
 \ir mode.sql
 \ir contest.sql
 \ir log.sql
-\ir bandpoints.sql
 \ir schedule.sql
+\ir ../dxchallenge/bandpoints.sql
 commit;
 
 \ir wp_fdw.sql
