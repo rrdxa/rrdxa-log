@@ -34,9 +34,10 @@ delete from previous_bandpoints;
 insert into previous_bandpoints select * from bandpoints;
 
 insert into bandpoints_history
-select 'yesterday'::date, rrmember, major_mode, band, count(distinct dxcc), array_agg(distinct dxcc)
+select 'yesterday'::date, *, rank() over (partition by major_mode, band order by count desc) from
+(select rrmember, major_mode, band, count(distinct dxcc), array_agg(distinct dxcc)
     from bandpoints
     where year = extract(year from 'yesterday'::date)
-    group by grouping sets((rrmember, major_mode), (rrmember, major_mode, band));
+    group by grouping sets((rrmember, major_mode), (rrmember, major_mode, band)));
 
 commit;

@@ -23,6 +23,7 @@ create table rrdxa.bandpoints_history (
     band band,
     count int,
     dxccs smallint[],
+    rank int,
     constraint bandpoints_history_key unique nulls distinct (date, rrmember, major_mode, band)
 );
 
