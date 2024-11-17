@@ -16,11 +16,14 @@ Including another URLconf
 
 from django.urls import include, path
 from django.views.generic.base import TemplateView
+from django.contrib import admin
 
 urlpatterns = [
     path('', TemplateView.as_view(template_name="root.html")),
+    path('admin/', admin.site.urls),
     path('api/', include('api.urls')),
     path('cluster/', include('cluster.urls')),
+    path('dxchallenge/', include('dxchallenge.urls')),
     path('log/', include('rrlog.urls')),
     path('member/', include('rrmember.urls')),
     path('robots.txt', TemplateView.as_view(template_name="robots.txt", content_type="text/plain")),

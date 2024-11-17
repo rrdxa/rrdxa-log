@@ -27,3 +27,11 @@ create table rrdxa.bandpoints_history (
     constraint bandpoints_history_key unique nulls distinct (date, rrmember, major_mode, band)
 );
 
+    select distinct start::date, major_mode, band, dxcc, count(*)
+    from log
+    where
+        major_mode <> 'unknown' and
+        band <> 'unknown' and
+        dxcc between 1 and 950
+    group by 1, 2, 3, 4
+    order by 1, 2, 3, 4;

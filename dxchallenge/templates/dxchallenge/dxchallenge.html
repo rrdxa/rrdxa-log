@@ -23,8 +23,8 @@ var dehilight = function(call) {
 
 <p>
 <a href="https://rrdxa.org/rrdxa-challenge-rules/">Zu den Challenge-Regeln</a> |
-<a href="/log/dxchallenge/{{year|add:'-1'}}/">{{year|add:'-1'}} &lt;&lt;</a> |
-<a href="/log/dxchallenge/{{year|add:'1'}}/">&gt;&gt; {{year|add:'1'}}</a>
+<a href="/dxchallenge/{{year|add:'-1'}}/">{{year|add:'-1'}} &lt;&lt;</a> |
+<a href="/dxchallenge/{{year|add:'1'}}/">&gt;&gt; {{year|add:'1'}}</a>
 </p>
 
 <table border=0>
@@ -42,6 +42,7 @@ var dehilight = function(call) {
 <td valign="top"> {% for entry in entries.PHONE %} {{entry.rank}} <span onmouseenter="hilight('{{entry.call}}')" onmouseleave="dehilight('{{entry.call}}')" class="{{entry.call}}">{{entry.call}}</span> {{entry.bandslots}} <br> {% endfor %} </td>
 <td valign="top"> {% for entry in entries.DIGI %}  {{entry.rank}} <span onmouseenter="hilight('{{entry.call}}')" onmouseleave="dehilight('{{entry.call}}')" class="{{entry.call}}">{{entry.call}}</span> {{entry.bandslots}} <br> {% endfor %} </td>
 <td valign="top"> {% for entry in entries.FT8 %}   {{entry.rank}} <span onmouseenter="hilight('{{entry.call}}')" onmouseleave="dehilight('{{entry.call}}')" class="{{entry.call}}">{{entry.call}}</span> {{entry.bandslots}} <br> {% endfor %} </td>
+<td valign="top"> <div id="map" class="map" style="resize: vertical; overflow: hidden;"></div> </td>
 </tr>
 </table>
 
