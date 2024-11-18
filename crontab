@@ -3,7 +3,7 @@
 
 # daily
 1 3 * * * psql -qX -o /dev/null -c 'select schedule_events()' rrdxa
-5 11 * * * /cb/logbook.rrdxa.org/rrdxa-log/dxchallenge/dxchallenge-mail
+5 11 * * * /cb/logbook.rrdxa.org/rrdxa-log/dxchallenge/dxchallenge-mail --mail
 
 # weekly
 2 3 * * 0 cd /cb/logbook.rrdxa.org/rrdxa-log && ./download-clublogxml

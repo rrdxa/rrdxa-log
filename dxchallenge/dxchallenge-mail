@@ -1,74 +1,71 @@
 #!/usr/bin/python3
 
+import argparse
 import psycopg
 from psycopg.rows import namedtuple_row
 from email.message import EmailMessage
 from email.headerregistry import Address
 import smtplib
 
+argparser = argparse.ArgumentParser(description="Send the RRDXA DX Challenge status mail")
+argparser.add_argument("-m", "--mail")
+args = argparser.parse_args()
+
 conn = psycopg.connect("service=rrdxa", autocommit=False)
 cur = conn.cursor(row_factory=namedtuple_row)
 
-def format_qsos(qsos):
-    msg = ""
-    for qso in qsos:
-        msg += f"        {qso['start']} {qso['rrmember']}"
-        if qso['station_callsign'] and qso['station_callsign'] != qso['rrmember']:
-            msg += f" ({qso['station_callsign']})"
-        if qso['operator'] and qso['operator'] != qso['rrmember']:
-            msg += f" ({qso['operator']})"
-        msg += f" {qso['band']} {qso['mode']}"
-        if qso['submode']:
-            msg += f" {qso['submode']}"
-        msg += f" {qso['call']}\n"
-    return msg + "\n"
+def format_qso(qso):
+    msg = f"  {qso.major_mode} {qso.pfx} {qso.band}: {qso.start} {qso.rrmember}"
+    if qso.station_callsign and qso.station_callsign != qso.rrmember:
+        msg += f" ({qso.station_callsign})"
+    if qso.operator and qso.operator != qso.rrmember:
+        msg += f" ({qso.operator})"
+    msg += f" {qso.mode}"
+    if qso.submode:
+        msg += f" {qso.submode}"
+    msg += f" {qso.call} ({qso.country.title()})\n"
+    return msg
 
-msg = "RRDXA DX Challenge\n\n"
+msg = "RRDXA DX Challenge\n"
 
 q = """
-select major_mode, country, array_agg(row_to_json(b)) as qsos from bandpoints b
+select b.*, dxcc.pfx, dxcc.country from bandpoints b
     join dxcc on b.dxcc = dxcc.dxcc
     where year = extract(year from 'yesterday'::date) and
     not exists (select from previous_bandpoints pb where b.major_mode = pb.major_mode and b.dxcc = pb.dxcc and year = extract(year from 'yesterday'::date))
-    group by major_mode, country
-    order by major_mode, country;
+    order by major_mode, pfx, band, rrmember;
 """
 cur.execute(q)
 if cur.rowcount > 0:
-    msg += "Neue 2024-ATNO in der RRDXA:\n\n"
+    msg += "\nNeue 2024-ATNO in der RRDXA:\n"
     for row in cur.fetchall():
-        msg += f"    {row.major_mode}: {row.country.title()}\n"
-        msg += format_qsos(row.qsos)
+        msg += format_qso(row)
 
 q = """
-select major_mode, country, band, array_agg(row_to_json(b)) as qsos from bandpoints b
+select b.*, dxcc.pfx, dxcc.country from bandpoints b
     join dxcc on b.dxcc = dxcc.dxcc
     where year = extract(year from 'yesterday'::date) and
     not exists (select from previous_bandpoints pb where b.major_mode = pb.major_mode and b.dxcc = pb.dxcc and b.band = pb.band and year = extract(year from 'yesterday'::date))
-    group by major_mode, band, country
-    order by major_mode, band, country;
+    order by major_mode, pfx, band, rrmember;
 """
 cur.execute(q)
 if cur.rowcount > 0:
-    msg += "Neue Bandslots in der RRDXA:\n\n"
+    msg += "\nNeue Bandslots in der RRDXA:\n"
     for row in cur.fetchall():
-        msg += f"    {row.major_mode} {row.band}: {row.country.title()}\n"
-        msg += format_qsos(row.qsos)
+        msg += format_qso(row)
 
 q = """
-select major_mode, rrmember, array_agg(row_to_json(b)) as qsos from bandpoints b
+select b.*, dxcc.pfx, dxcc.country from bandpoints b
     join dxcc on b.dxcc = dxcc.dxcc
     where year = extract(year from 'yesterday'::date) and
     not exists (select from previous_bandpoints pb where b.major_mode = pb.major_mode and b.rrmember = pb.rrmember and year = extract(year from 'yesterday'::date))
-    group by major_mode, rrmember
-    order by major_mode, rrmember;
+    order by major_mode, pfx, band, rrmember;
 """
 cur.execute(q)
 if cur.rowcount > 0:
-    msg += "Neue DXer mit ersten Bandpunkten:\n\n"
+    msg += "\nNeue DXer mit ersten Bandpunkten:\n"
     for row in cur.fetchall():
-        msg += f"    {row.major_mode} {row.rrmember}:\n"
-        msg += format_qsos(row.qsos)
+        msg += format_qso(row)
 
 q = """
 select *, rank() over (partition by major_mode order by count desc) from
@@ -76,20 +73,19 @@ select *, rank() over (partition by major_mode order by count desc) from
 """
 cur.execute(q)
 mode = None
-msg += "DX-Spiegel:\n"
+msg += "\nDX-Spiegel:"
 for row in cur.fetchall():
     if row.major_mode != mode:
         mode = row.major_mode
         n = 0
-        msg += f"\n    {mode}:\n"
+        msg += f"\n  {mode}:\n"
     if n % 4 == 0:
-        msg += "        "
+        msg += "    "
     msg += f"{row.rank} {row.rrmember} {row.count}  "
     if n % 4 == 3:
         msg += "\n"
     n += 1
-msg += "\n\n"
-
+msg += "\n"
 
 #\echo Most wanted countries
 #select major_mode, dxcc, count(*) from bandpoints group by major_mode, dxcc order by major_mode, count(*), dxcc;
@@ -98,32 +94,30 @@ msg += "\n\n"
 #select major_mode, dxcc, band, count(*) from bandpoints group by major_mode, dxcc, band order by major_mode, count(*), dxcc, band;
 
 q = """
-select major_mode, country, band, array_agg(row_to_json(b)) as qsos from bandpoints b
+select b.*, dxcc.pfx, dxcc.country from bandpoints b
     join dxcc on b.dxcc = dxcc.dxcc
     where year = extract(year from 'yesterday'::date) and
     not exists (select from previous_bandpoints pb where b.major_mode = pb.major_mode and b.rrmember = pb.rrmember and b.dxcc = pb.dxcc and b.band = pb.band and year = extract(year from 'yesterday'::date))
-    group by major_mode, band, country
-    order by major_mode, band, country;
+    order by major_mode, pfx, band, rrmember;
 """
 cur.execute(q)
 if cur.rowcount > 0:
-    msg += "Neue Bandpunkte gearbeitet:\n\n"
+    msg += "\nNeue Bandpunkte gearbeitet:\n"
     for row in cur.fetchall():
-        msg += f"    {row.major_mode} {row.band} {row.country.title()}:\n"
-        msg += format_qsos(row.qsos)
+        msg += format_qso(row)
 
+if args.mail:
+    cur.execute("""
+    delete from previous_bandpoints;
+    insert into previous_bandpoints select * from bandpoints;
 
-cur.execute("""
-delete from previous_bandpoints;
-insert into previous_bandpoints select * from bandpoints;
-
-insert into bandpoints_history
-select 'yesterday'::date, *, rank() over (partition by major_mode, band order by count desc) from
-(select rrmember, major_mode, band, count(dxcc), array_agg(distinct dxcc)
-    from bandpoints
-    where year = extract(year from 'yesterday'::date)
-    group by grouping sets((rrmember, major_mode), (rrmember, major_mode, band)));
-""")
+    insert into bandpoints_history
+    select 'yesterday'::date, *, rank() over (partition by major_mode, band order by count desc) from
+    (select rrmember, major_mode, band, count(dxcc), array_agg(distinct dxcc)
+        from bandpoints
+        where year = extract(year from 'yesterday'::date)
+        group by grouping sets((rrmember, major_mode), (rrmember, major_mode, band)));
+    """)
 
 conn.commit()
 
