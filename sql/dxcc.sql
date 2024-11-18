@@ -4,7 +4,8 @@ create table rrdxa.dxcc (
     dxcc smallint primary key,
     country text not null,
     deleted boolean not null,
-    cont rrdxa.continent
+    cont rrdxa.continent,
+    pfx text
 );
 
 \copy rrdxa.dxcc (dxcc, country, deleted) from 'sql/dxcc.data'
