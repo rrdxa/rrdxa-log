@@ -2,24 +2,22 @@
 {% load humanize %}
 
 {% block header %}
-<script>
-var hilight = function(call) {
-    const collection = document.getElementsByClassName(call);
-    for (let i = 0; i < collection.length; i++) {
-        collection[i].style.backgroundColor = "red";
-    }
-};
-var dehilight = function(call) {
-    const collection = document.getElementsByClassName(call);
-    for (let i = 0; i < collection.length; i++) {
-        collection[i].style.backgroundColor = "white";
-    }
-};
-</script>
+<script src="/static/ol.js"></script>
+<link rel="stylesheet" href="/static/ol.css">
+
+<style>
+  .map {
+    max-width: 100%;
+    width: 100%;
+    aspect-ratio: 2.15 / 1;
+  }
+</style>
 {% endblock %}
 
 {% block content %}
 <h1>{{title}}</h1>
+
+<div id="map" class="map" style="resize: vertical; overflow: hidden;"></div>
 
 <p>
 <a href="https://rrdxa.org/rrdxa-challenge-rules/">Zu den Challenge-Regeln</a> |
@@ -38,12 +36,51 @@ var dehilight = function(call) {
 </thead>
 
 <tr>
-<td valign="top"> {% for entry in entries.CW %}    {{entry.rank}} <span onmouseenter="hilight('{{entry.call}}')" onmouseleave="dehilight('{{entry.call}}')" class="{{entry.call}}">{{entry.call}}</span> {{entry.bandslots}} <br> {% endfor %} </td>
-<td valign="top"> {% for entry in entries.PHONE %} {{entry.rank}} <span onmouseenter="hilight('{{entry.call}}')" onmouseleave="dehilight('{{entry.call}}')" class="{{entry.call}}">{{entry.call}}</span> {{entry.bandslots}} <br> {% endfor %} </td>
-<td valign="top"> {% for entry in entries.DIGI %}  {{entry.rank}} <span onmouseenter="hilight('{{entry.call}}')" onmouseleave="dehilight('{{entry.call}}')" class="{{entry.call}}">{{entry.call}}</span> {{entry.bandslots}} <br> {% endfor %} </td>
-<td valign="top"> {% for entry in entries.FT8 %}   {{entry.rank}} <span onmouseenter="hilight('{{entry.call}}')" onmouseleave="dehilight('{{entry.call}}')" class="{{entry.call}}">{{entry.call}}</span> {{entry.bandslots}} <br> {% endfor %} </td>
-<td valign="top"> <div id="map" class="map" style="resize: vertical; overflow: hidden;"></div> </td>
+<td valign="top" width="12%"> {% for entry in entries.CW %}    <span onmouseenter="hilight('{{entry.call}}', 'CW')"    onmouseleave="dehilight('{{entry.call}}')" class="{{entry.call}}">{{entry.rank}} {{entry.call}} {{entry.bandslots}}</span> <br> {% endfor %} </td>
+<td valign="top" width="12%"> {% for entry in entries.PHONE %} <span onmouseenter="hilight('{{entry.call}}', 'PHONE')" onmouseleave="dehilight('{{entry.call}}')" class="{{entry.call}}">{{entry.rank}} {{entry.call}} {{entry.bandslots}}</span> <br> {% endfor %} </td>
+<td valign="top" width="12%"> {% for entry in entries.DIGI %}  <span onmouseenter="hilight('{{entry.call}}', 'DIGI')"  onmouseleave="dehilight('{{entry.call}}')" class="{{entry.call}}">{{entry.rank}} {{entry.call}} {{entry.bandslots}}</span> <br> {% endfor %} </td>
+<td valign="top" width="12%"> {% for entry in entries.FT8 %}   <span onmouseenter="hilight('{{entry.call}}', 'FT8')"   onmouseleave="dehilight('{{entry.call}}')" class="{{entry.call}}">{{entry.rank}} {{entry.call}} {{entry.bandslots}}</span> <br> {% endfor %} </td>
+<td valign="top" width="52%">
+<div id="datadiv"></div>
+</td>
 </tr>
 </table>
+
+<script type="text/javascript" src="/static/map.js"></script>
+
+<script>
+var data = {{data|safe}};
+
+var datadiv = document.getElementById("datadiv");
+var hilight = function(call, mode) {
+    const collection = document.getElementsByClassName(call);
+    for (let i = 0; i < collection.length; i++) {
+        collection[i].style.backgroundColor = "red";
+    }
+    var text = `${call} worked these entities in ${mode}:\n`;
+    /*
+    data[mode][call].forEach(function(dxcc) { text += " " + dxcc; });
+    vectorSource.forEachFeature(function(feature) {
+        var id = feature.getProperties()["id"];
+        feature.setId(id);
+        return false; // continue scan
+    });
+    */
+    //feature = vectorSource.getFeatureById("230");
+    //overSource.addFeature(feature);
+    //text += feature;
+    var dxccs = data[mode][call].map(i => dxcc[i]);
+    vectorSource.addFeatures(dxccs);
+    datadiv.innerText = text;
+};
+var dehilight = function(call) {
+    const collection = document.getElementsByClassName(call);
+    for (let i = 0; i < collection.length; i++) {
+        collection[i].style.backgroundColor = "white";
+    }
+    vectorSource.clear();
+    datadiv.innerText = "";
+};
+</script>
 
 {% endblock %}
