@@ -32,7 +32,14 @@ def certificate(call, name, date, member_no):
     return buf.getvalue()
 
 if __name__ == '__main__':
+    import psycopg
     import sys
-    #pdf = certificate('DF7CB', 'Christoph Berg', '2024-03-24', 999)
-    pdf = certificate(*sys.argv[1:])
+
+    conn = psycopg.connect("service=rrdxa")
+    cur = conn.cursor()
+    call = sys.argv[1]
+    cur.execute("select call, display_name, current_date::text, member_no from members where call = %s", [call])
+    data = cur.fetchone()
+
+    pdf = certificate(*data)
     sys.stdout.buffer.write(pdf)
