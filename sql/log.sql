@@ -36,12 +36,12 @@ create table rrdxa.upload (
 create or replace view rrdxa.upload_operators as
     select id,
         station_callsign,
-        coalesce(nullif(op, ''), nullif(operator, ''), station_callsign) as operator,
+        op operator,
         qsos,
         array_length(ops, 1) n_operators,
         event_id
     from rrdxa.upload,
-        regexp_split_to_array(coalesce(nullif(operators, ''), station_callsign), '[\s,]+') as ops,
+        regexp_split_to_array(coalesce(nullif(operators, ''), nullif(operator, ''), rrdxa.basecall(station_callsign)), '[\s,]+') as ops,
         unnest(ops) as u(op)
     where qsos > 0;
 
