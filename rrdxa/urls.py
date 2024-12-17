@@ -23,6 +23,7 @@ urlpatterns = [
     #path('admin/', admin.site.urls),
     path('api/', include('api.urls')),
     path('cluster/', include('cluster.urls')),
+    path('contestchallenge/', include('contestchallenge.urls')),
     path('dxchallenge/', include('dxchallenge.urls')),
     path('log/', include('rrlog.urls')),
     path('member/', include('rrmember.urls')),

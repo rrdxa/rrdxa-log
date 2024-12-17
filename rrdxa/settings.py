@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     'api',
     'cluster',
+    'contestchallenge',
     'dxchallenge',
     'rrlog',
     'rrmember',
