@@ -2,7 +2,11 @@
 {% load humanize %}
 
 {% block content %}
-<h1>RRDXA entries in {{event}}</h1>
+<h1>RRDXA entries in {{event.event}}</h1>
+
+<div>
+{{event.start}} - {{event.stop}}
+</div>
 
 <table border=0>
 <thead>

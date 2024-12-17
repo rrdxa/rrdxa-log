@@ -452,9 +452,15 @@ def v_event(request, event):
         cursor.execute(q_event, [event])
         entries = namedtuplefetchall(cursor)
 
+        cursor.execute("select event, start_str(start) start, stop_str(stop) stop, vhf from event where event = %s", [event])
+        event_data = namedtuplefetchall(cursor)
+
+    if not event_data:
+        return render(request, 'rrlog/generic.html', { 'message': "No such event" }, status=404)
+
     context = {
         'title': event,
-        'event': event,
+        'event': event_data[0],
         'entries': entries,
     }
     return render(request, 'rrlog/event.html', context)
