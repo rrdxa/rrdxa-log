@@ -401,7 +401,7 @@ def v_events(request):
 
         with connection.cursor() as cursor:
             is_vhf = 'vhf' in request.POST
-            cursor.execute("insert into event (event, start, stop, author, vhf) values (%s, %s, %s, %s, %s, %s)",
+            cursor.execute("insert into event (event, start, stop, author, vhf) values (%s, %s, %s, %s, %s)",
                            [request.POST['event'], request.POST['start'], request.POST['end'], username, is_vhf])
             connection.commit()
 
