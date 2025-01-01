@@ -350,11 +350,7 @@ group by 1
 order by score desc, qsos desc, call
 """
 
-def v_challenge(request, year=None):
-    if year is None:
-        today = datetime.date.today()
-        year = today.year
-
+def v_challenge(request, year=2024):
     with connection.cursor() as cursor:
         cursor.execute(q_challenge, [f"{year}-01-01", f"{year+1}-01-01"])
         entries = namedtuplefetchall(cursor)
@@ -366,7 +362,7 @@ def v_challenge(request, year=None):
                 for x in zip(entry.upload_ids, entry.station_callsigns, entry.event_qsos, entry.events, entry.event_vhf)]
 
     context = {
-        'title': f"RRDXA Contest Challenge {year}",
+        'title': f"RRDXA 6x60 Contest Challenge {year}",
         'year': year,
         'entries': entries,
     }
