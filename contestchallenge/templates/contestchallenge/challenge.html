@@ -5,7 +5,7 @@
 <h1>{{title}}</h1>
 
 <p>
-<a href="https://rrdxa.org/rrdxa-challenge-rules/">Zu den Challenge-Regeln</a> |
+<a href="https://rrdxa.org/contest-challenge-2025/">Zu den Challenge-Regeln</a> |
 <a href="/contestchallenge/{{year|add:'-1'}}/">{{year|add:'-1'}} &lt;&lt;</a> |
 <a href="/contestchallenge/{{year|add:'1'}}/">&gt;&gt; {{year|add:'1'}}</a>
 </p>
@@ -47,5 +47,38 @@
 <span style="font-weight: bold;">big event</span>
 </em>
 </div>
+
+<h1>UKW Contest Challenge {{year}}</h1>
+
+<table border=0>
+<thead>
+<tr>
+ <th>#</th>
+ <th>Call</th>
+ <th>QSOs</th>
+ <th>Multi</th>
+ <th>Score</th>
+ <th>Events</th>
+</tr>
+</thead>
+
+{% for entry in ukw_entries %}
+ <tr>
+ <td style="text-align: right;">{{entry.rank}}</td>
+ <td><a href="/log/call/{{entry.call|urlencode:''}}/"><b>{{entry.call}}</b></a></td>
+ <td style="text-align: right;">{{entry.qsos|intcomma}}</td>
+ <td style="text-align: right;">{{entry.multis|intcomma}}</td>
+ <td style="text-align: right;"><b>{{entry.score|intcomma}}</b></td>
+ <td>
+ <div class="hover-expand">
+ {% for event in entry.events %}
+ <a href="/log/event/{{event.event|urlencode:''}}/"><span style="{% if event.big %}font-weight: bold;{% endif %}">{{event.event}}</span></a>
+ ({% if entry.call != event.station_callsign %}{{event.station_callsign}} {% endif %}<a href="/log/summary/{{event.upload_id|urlencode:''}}/">{{event.qsos}}</a>){% if not forloop.last %},{% endif %}
+ {% endfor %}
+ </div>
+ </td>
+ </tr>
+{% endfor %}
+</table>
 
 {% endblock %}
