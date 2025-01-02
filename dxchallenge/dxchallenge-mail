@@ -113,10 +113,14 @@ if args.mail:
 
     insert into bandpoints_history
     select 'yesterday'::date, *, rank() over (partition by major_mode, band order by count desc) from
-    (select rrmember, major_mode, band, count(dxcc), array_agg(distinct dxcc)
+    (select rrmember,
+        coalesce(major_mode::text, 'MIXED') as major_mode,
+        coalesce(band::text, 'ALL') as band,
+        count(dxcc),
+        array_agg(distinct dxcc)
         from bandpoints
         where year = extract(year from 'yesterday'::date)
-        group by grouping sets((rrmember, major_mode), (rrmember, major_mode, band)));
+        group by grouping sets((rrmember, major_mode), (rrmember, major_mode, band), (rrmember, band), (rrmember))) order by major_mode, band, count desc;
     """)
 
 conn.commit()
