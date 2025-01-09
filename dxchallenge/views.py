@@ -13,10 +13,14 @@ from rrdxa import settings
 
 from rrlog.utils import namedtuplefetchall, band_sort
 
+major_modes = ['CW', 'PHONE', 'DIGI', 'FT8', 'MIXED']
 
 q_dxchallenge = """
-select *, rank() over (partition by major_mode order by bandslots desc) from
-(select major_mode, rrmember, count(*) as bandslots, array_agg(distinct dxcc) as dxccs from bandpoints where year = %s group by 1, 2);
+select coalesce(major_mode::text, 'MIXED') as major_mode, rrmember, bandslots, dxccs, rank() over (partition by major_mode order by bandslots desc) from
+(select major_mode, rrmember, count(distinct (band, dxcc)) as bandslots, array_agg(distinct dxcc) as dxccs
+    from bandpoints
+    where year = %s
+    group by grouping sets ((1, 2), (2)));
 """
 
 def v_dxchallenge(request, year=None):
@@ -24,8 +28,8 @@ def v_dxchallenge(request, year=None):
         today = datetime.date.today()
         year = today.year
 
-    entries = {"CW": [], "PHONE": [], "DIGI": [], "FT8": []}
-    data = {"CW": {}, "PHONE": {}, "DIGI": {}, "FT8": {}}
+    entries = {x: [] for x in major_modes}
+    data = {x: {} for x in major_modes}
     with connection.cursor() as cursor:
         cursor.execute(q_dxchallenge, [year])
         for row in namedtuplefetchall(cursor):
@@ -35,7 +39,7 @@ def v_dxchallenge(request, year=None):
     context = {
         'title': f"RRDXA DX Challenge {year}",
         'year': year,
-        'modes': ['CW', 'PHONE', 'DIGI', 'FT8'],
+        'modes': major_modes,
         'entries': entries,
         'data': json.dumps(data),
     }

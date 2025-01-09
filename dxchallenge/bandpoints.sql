@@ -7,8 +7,7 @@ select * from (
     where
         major_mode <> 'unknown' and
         band <> 'unknown' and
-        dxcc between 1 and 950 and
-        start < current_date
+        dxcc between 1 and 950
 ) where row_number = 1;
 
 create table rrdxa.previous_bandpoints as

@@ -17,6 +17,10 @@
 {% block content %}
 <h1>{{title}}</h1>
 
+<div>
+<a href="https://rrdxa.org/dx-challenge-2025/">Zu den Challenge-Regeln</a>
+</div>
+
 <div id="map" class="map" style="resize: vertical; overflow: hidden;"></div>
 
 <p>
@@ -32,6 +36,7 @@
  <th>PHONE</th>
  <th>DIGI</th>
  <th>FT8</th>
+ <th>MIXED</th>
 </tr>
 </thead>
 
@@ -40,7 +45,8 @@
 <td valign="top" width="12%"> {% for entry in entries.PHONE %} <span onmouseenter="hilight('{{entry.call}}', 'PHONE')" onmouseleave="dehilight('{{entry.call}}')" class="{{entry.call}}">{{entry.rank}} {{entry.call}} {{entry.bandslots}}</span> <br> {% endfor %} </td>
 <td valign="top" width="12%"> {% for entry in entries.DIGI %}  <span onmouseenter="hilight('{{entry.call}}', 'DIGI')"  onmouseleave="dehilight('{{entry.call}}')" class="{{entry.call}}">{{entry.rank}} {{entry.call}} {{entry.bandslots}}</span> <br> {% endfor %} </td>
 <td valign="top" width="12%"> {% for entry in entries.FT8 %}   <span onmouseenter="hilight('{{entry.call}}', 'FT8')"   onmouseleave="dehilight('{{entry.call}}')" class="{{entry.call}}">{{entry.rank}} {{entry.call}} {{entry.bandslots}}</span> <br> {% endfor %} </td>
-<td valign="top" width="52%">
+<td valign="top" width="12%"> {% for entry in entries.MIXED %} <span onmouseenter="hilight('{{entry.call}}', 'MIXED')"   onmouseleave="dehilight('{{entry.call}}')" class="{{entry.call}}">{{entry.rank}} {{entry.call}} {{entry.bandslots}}</span> <br> {% endfor %} </td>
+<td valign="top" width="40%">
 <div id="datadiv"></div>
 </td>
 </tr>
