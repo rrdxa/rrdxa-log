@@ -6,7 +6,10 @@ create table rrdxa.event (
     stop timestamptz(0) not null,
     author text,
     created timestamptz(0) not null default now(),
-    vhf boolean not null default false
+    vhf boolean not null default false,
+    constraint event_name_includes_year check (event ~ to_char(start, 'YY')),
+    constraint event_min_duration check (stop >= start + '30min'::interval),
+    constraint event_max_duration check (stop <= start + '7d'::interval)
 );
 
 comment on column rrdxa.event.event is 'Unique name of this event, e.g. "WAG 2023"';
