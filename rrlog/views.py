@@ -402,7 +402,7 @@ def v_events(request):
             connection.commit()
 
     with connection.cursor() as cursor:
-        cursor.execute(q_events, [0, 500])
+        cursor.execute(q_events, [0, 1000])
         events = namedtuplefetchall(cursor)
         cursor.execute(q_schedules)
         schedules = namedtuplefetchall(cursor)
