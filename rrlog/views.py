@@ -32,7 +32,7 @@ select event, cabrillo_name, vhf,
 month_str(e.start), start_str(e.start), stop_str(e.stop),
 count(u)
 from event e left join upload u on e.event_id = u.event_id
-where e.start >= now() - '1 year'::interval
+where e.start >= now() - '2 year'::interval
 group by e.event_id
 having count(u) >= %s
 order by e.start desc
