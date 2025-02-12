@@ -44,6 +44,7 @@ select event_id, event,
 month_str(start), start_str(start), stop_str(stop)
 from event e
 where start >= now() - '1 year'::interval
+    and qsos > 0
 order by start desc
 limit 100
 """
