@@ -4,7 +4,7 @@ refresh materialized view rrdxa.members;
 refresh materialized view rrdxa.rrcalls;
 
 -- refresh pre-calculated data
-refresh materialized view rrdxa.rrdxa60_top;
+--refresh materialized view rrdxa.rrdxa60_top;
 refresh materialized view rrdxa.bandpoints;
 
 -- delete uploads that have no QSOs
