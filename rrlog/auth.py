@@ -1,7 +1,7 @@
 from django.db import connection
 from django.shortcuts import render
 import base64
-from passlib.hash import phpass
+from passlib.hash import bcrypt, phpass
 import functools
 
 def basic_auth(request):
@@ -25,8 +25,20 @@ def basic_auth(request):
 
     username, user_password = userdata
 
-    if not phpass.verify(password, user_password):
-        print("wrong password for user {username}")
+    # Wordpress 6.8 switched from phpass ($P$) to custom sha256+bcrypt ($wp$2y$).
+    # Since that isn't supported by passlib yet, we deploy
+    # https://wordpress.org/plugins/password-hash/ on the Wordpress side so
+    # it's writing standard bcrypt ($2y$) now.
+    if user_password[:2] == '$2':
+        hash_method = bcrypt
+    elif user_password[:3] == '$P$':
+        hash_method = phpass
+    else:
+        print(f"unknown password hash scheme for user {username} {user_password}")
+        return False, "Login failed, please reset your password at rrdxa.org"
+
+    if not hash_method.verify(password, user_password):
+        print(f"wrong password for user {username}")
         return False, "Login failed"
 
     return True, username
