@@ -8,7 +8,6 @@ import time
 from rrlog.auth import auth_required
 from rrlog.utils import namedtuplefetchall
 from .certificate import certificate
-import lib.adif_export as adif_export
 
 def member_data(call):
     with connection.cursor() as cursor:
