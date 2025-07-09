@@ -18,10 +18,11 @@ rstrx =      coalesce(excluded.rstrx, log.rstrx),
 exrx =       coalesce(excluded.exrx, log.exrx),
 gridsquare = coalesce(excluded.gridsquare, log.gridsquare),
 contest =    coalesce(excluded.contest, log.contest),
+upload =     case when %s then excluded.upload else log.upload end,
 adif = excluded.adif
 """
 
-def adif_upload(cursor, content, station_callsign, operator, upload_id):
+def adif_upload(cursor, content, station_callsign, operator, upload_id, contest):
     with transaction.atomic():
         qsos, adif_headers = adif_io.read_from_string(content)
         upload_start, upload_stop = None, None
@@ -70,6 +71,7 @@ def adif_upload(cursor, content, station_callsign, operator, upload_id):
                             qso.get('CONTEST_ID'),
                             upload_id,
                             json.dumps(qso),
+                            contest # contest uploads overwrite old upload ids, other uploads do not
                             ])
         cursor.execute("update upload set qsos = %s, start = date_trunc('minute', %s), stop = date_trunc('minute', %s) where id = %s", [len(qsos), upload_start, upload_stop, upload_id])
 

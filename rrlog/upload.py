@@ -10,7 +10,7 @@ def log_upload(connection, request, username):
 
     if '<EOR>' in upper_content:
         logtype = 'adif'
-        contest = data.get('contest') or False
+        contest = True if data.get('contest') else False
     elif 'START-OF-LOG' in upper_content:
         logtype = 'cabrillo'
         contest = True
@@ -27,7 +27,7 @@ def log_upload(connection, request, username):
 
         try:
             if logtype == 'adif':
-                num_qsos = adif_upload(cursor, content, station_callsign, operator, upload_id)
+                num_qsos = adif_upload(cursor, content, station_callsign, operator, upload_id, contest)
             elif logtype == 'cabrillo':
                 num_qsos = cabrillo_upload(cursor, content, upload_id)
 
