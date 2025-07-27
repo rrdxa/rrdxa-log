@@ -1,4 +1,5 @@
 from rrlog.utils import namedtuplefetchall
+from rrdxa import settings
 from email.message import EmailMessage
 from email.headerregistry import Address
 import smtplib
@@ -149,6 +150,6 @@ def post_summary(data, summary, subject, send=True):
         msg['X-Contest'] = data.contest
         msg.set_content(mail)
         with smtplib.SMTP('localhost') as smtp:
-            smtp.send_message(msg)
+            smtp.send_message(msg, from_addr=settings.MAIL_FROM)
 
     return mail
