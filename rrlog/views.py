@@ -2,9 +2,6 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse, FileResponse
 from django.db import connection
 
-import psycopg2, psycopg2.extras
-psycopg2.extensions.register_adapter(dict, psycopg2.extras.Json)
-
 import datetime
 import re
 
