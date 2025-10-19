@@ -13,8 +13,8 @@ from rrlog.utils import namedtuplefetchall, band_sort
 q_challenge = """
 with raw as (
     select u.id as upload_id, u.station_callsign, u.operator, qsos / n_operators as qsos,
-        e.event, e.event ~ '^(CQ-WW|CQ-WPX|WW-?DIGI|(DARC-)?WAEDC|WAG)' as big,
-        row_number() over (partition by operator, e.event ~ '^(CQ-WW|CQ-WPX|WW-?DIGI|(DARC-)?WAEDC|WAG)' order by qsos desc, u.id) as extra_contests
+        e.event, e.event ~ '^(CQ-WW|CQ-WPX|WW-?DIGI|(DARC-)?WAEDC|(DARC-)?WAG)' as big,
+        row_number() over (partition by operator, e.event ~ '^(CQ-WW|CQ-WPX|WW-?DIGI|(DARC-)?WAEDC|(DARC-)?WAG)' order by qsos desc, u.id) as extra_contests
     from upload_operators u
         join event e on u.event_id = e.event_id
         join rrcalls rr on u.operator = rr.rrcall -- limit to RRDXA members
