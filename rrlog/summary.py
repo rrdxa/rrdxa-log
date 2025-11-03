@@ -143,7 +143,7 @@ def post_summary(data, summary, subject, send=True):
     # send it
     if send:
         msg = EmailMessage()
-        msg['From'] = Address(display_name=f"{data.uploader} via rrdxa.org",  addr_spec="logbook@rrdxa.org")
+        msg['From'] = Address(display_name=f"{data.uploader} via rrdxa.org",  addr_spec="noreply@rrdxa.org")
         msg['Reply-To'] = Address(display_name=f"RRDXA",  addr_spec="rrdxa@mailman.qth.net")
         msg['To'] = Address(display_name=f"{data.contest} score submission", addr_spec="rrdxa@mailman.qth.net")
         msg['Subject'] = subject
