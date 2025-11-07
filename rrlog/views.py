@@ -59,6 +59,7 @@ select coalesce(operator, station_callsign) as operator,
   count(distinct gridsquare) as grids,
   count(distinct (gridsquare, band, major_mode)) filter (where gridsquare is not null) as grids_band_mode
 from log
+  join rrcalls on coalesce(operator, station_callsign) = rrcalls.rrcall
 where start >= %s::date and start < %s::date + %s::interval and band <> 'unknown' and major_mode <> 'unknown' {}
 group by coalesce(operator, station_callsign)
 order by score desc
