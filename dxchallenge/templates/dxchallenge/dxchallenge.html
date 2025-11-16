@@ -26,7 +26,7 @@
 
 <div id="map" class="map" style="resize: vertical; overflow: hidden;"></div>
 
-<table border=0>
+<table border=0 width="100%">
 <thead>
 <tr>
  <th>CW</th>
@@ -60,9 +60,14 @@ var hilight = function(call, mode) {
     for (let i = 0; i < collection.length; i++) {
         collection[i].style.backgroundColor = "red";
     }
-    var text = `${call} worked these entities in ${mode}:\n`;
+    var len = data[mode][call].length;
+    var ctys = [];
+    data[mode][call].forEach(function(dxcc_id) {
+        var properties = dxcc_data[dxcc_id].getProperties();
+        ctys.push(properties['cty']);
+    });
+    var text = `${call} worked ${len} distinct entities in ${mode}:\n` + ctys.sort().join(" ");
     /*
-    data[mode][call].forEach(function(dxcc) { text += " " + dxcc; });
     vectorSource.forEachFeature(function(feature) {
         var id = feature.getProperties()["id"];
         feature.setId(id);
@@ -72,7 +77,7 @@ var hilight = function(call, mode) {
     //feature = vectorSource.getFeatureById("230");
     //overSource.addFeature(feature);
     //text += feature;
-    var dxccs = data[mode][call].map(i => dxcc[i]);
+    var dxccs = data[mode][call].map(i => dxcc_data[i]);
     vectorSource.addFeatures(dxccs);
     datadiv.innerText = text;
 };

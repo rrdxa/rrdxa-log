@@ -106,12 +106,12 @@ const map = new ol.Map({
 });
 
 // after loading, move all features (DXCC entities) to a dictionary
-var dxcc = {};
+var dxcc_data = {};
 var source_loaded = function(evt) {
     vectorSource.removeEventListener('change', source_loaded);
     vectorSource.forEachFeature(function(feature) {
         const id = feature.getProperties()['dxcc'];
-        dxcc[id] = feature;
+        dxcc_data[id] = feature;
     });
     vectorSource.clear();
 };
