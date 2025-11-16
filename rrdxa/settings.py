@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     #'channels',
     #'channels_postgres',
     'django.contrib.humanize',
+    'django.contrib.staticfiles',
     'api',
     'cluster',
     'contestchallenge',

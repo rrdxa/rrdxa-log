@@ -79,7 +79,7 @@ var mapstyle = function (feature) {
 
 
 var vectorSource = new ol.source.Vector({
-    url: '/static/dxcc.json',
+    url: '/static/dxchallenge/dxcc.json',
     format: new ol.format.GeoJSON(),
 });
 var vectorLayer = new ol.layer.Vector({

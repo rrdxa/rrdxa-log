@@ -1,9 +1,10 @@
 {% extends 'rrlog/rrdxa.html' %}
 {% load humanize %}
+{% load static %}
 
 {% block header %}
-<script src="/static/ol.js"></script>
-<link rel="stylesheet" href="/static/ol.css">
+<script src="{% static 'dxchallenge/ol.js' %}"></script>
+<link rel="stylesheet" href="{% static 'dxchallenge/ol.css' %}">
 
 <style>
   .map {
@@ -48,7 +49,7 @@
 </tr>
 </table>
 
-<script type="text/javascript" src="/static/map.js"></script>
+<script type="text/javascript" src="{% static 'dxchallenge/map.js' %}"></script>
 
 <script>
 var data = {{data|safe}};
