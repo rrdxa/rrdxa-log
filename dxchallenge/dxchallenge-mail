@@ -14,83 +14,17 @@ args = argparser.parse_args()
 conn = psycopg.connect("service=rrdxa", autocommit=False)
 cur = conn.cursor(row_factory=namedtuple_row)
 
-if args.mail:
-    cur.execute("""
-    delete from previous_bandpoints;
-    insert into previous_bandpoints select * from bandpoints;
+cur.execute("select current_date")
+[today] = cur.fetchone()
 
-    insert into bandpoints_history
-    select 'yesterday'::date, *, rank() over (partition by major_mode, band order by count desc) from
-    (select rrmember,
-        coalesce(major_mode::text, 'MIXED') as major_mode,
-        coalesce(band::text, 'ALL') as band,
-        count(dxcc),
-        array_agg(distinct dxcc)
-        from bandpoints
-        where year = extract(year from 'yesterday'::date)
-        group by grouping sets((rrmember, major_mode), (rrmember, major_mode, band), (rrmember, band), (rrmember))) order by major_mode, band, count desc;
-    """)
-
-#def format_qso(qso):
-#    txt = f"  {qso.major_mode} {qso.pfx} {qso.band}: {qso.start} {qso.rrmember}"
-#    if qso.station_callsign and qso.station_callsign != qso.rrmember:
-#        txt += f" ({qso.station_callsign})"
-#    if qso.operator and qso.operator != qso.rrmember:
-#        txt += f" ({qso.operator})"
-#    txt += f" {qso.mode}"
-#    if qso.submode:
-#        txt += f" {qso.submode}"
-#    txt += f" {qso.call} ({qso.country.title()})\n"
-#    return txt
-
-cur.execute("select current_date - 1")
-[yesterday] = cur.fetchone()
-
-txt = f"RRDXA DX Challenge Stand {yesterday}"
-
-#q = """
-#select b.*, dxcc.pfx, dxcc.country from bandpoints b
-#    join dxcc on b.dxcc = dxcc.dxcc
-#    where year = extract(year from 'yesterday'::date) and
-#    not exists (select from previous_bandpoints pb where b.major_mode = pb.major_mode and b.dxcc = pb.dxcc and year = extract(year from 'yesterday'::date))
-#    order by major_mode, pfx, band, rrmember;
-#"""
-#cur.execute(q)
-#if cur.rowcount > 0:
-#    txt += "\nNeue 2024-ATNO in der RRDXA:\n"
-#    for row in cur.fetchall():
-#        txt += format_qso(row)
-#
-#q = """
-#select b.*, dxcc.pfx, dxcc.country from bandpoints b
-#    join dxcc on b.dxcc = dxcc.dxcc
-#    where year = extract(year from 'yesterday'::date) and
-#    not exists (select from previous_bandpoints pb where b.major_mode = pb.major_mode and b.dxcc = pb.dxcc and b.band = pb.band and year = extract(year from 'yesterday'::date))
-#    order by major_mode, pfx, band, rrmember;
-#"""
-#cur.execute(q)
-#if cur.rowcount > 0:
-#    txt += "\nNeue Bandslots in der RRDXA:\n"
-#    for row in cur.fetchall():
-#        txt += format_qso(row)
-#
-#q = """
-#select b.*, dxcc.pfx, dxcc.country from bandpoints b
-#    join dxcc on b.dxcc = dxcc.dxcc
-#    where year = extract(year from 'yesterday'::date) and
-#    not exists (select from previous_bandpoints pb where b.major_mode = pb.major_mode and b.rrmember = pb.rrmember and year = extract(year from 'yesterday'::date))
-#    order by major_mode, pfx, band, rrmember;
-#"""
-#cur.execute(q)
-#if cur.rowcount > 0:
-#    txt += "\nNeue DXer mit ersten Bandpunkten:\n"
-#    for row in cur.fetchall():
-#        txt += format_qso(row)
+txt = f"RRDXA DX Challenge Stand {today}"
 
 q = """
-select major_mode, rank, rrmember, count from bandpoints_history
-where date = current_date - 1 and band = 'ALL'
-order by array_position('{CW,PHONE,DIGI,FT8,MIXED}', major_mode), rank;
+select coalesce(major_mode::text, 'MIXED') as major_mode, rrmember, bandslots, rank() over (partition by major_mode order by bandslots desc) from
+(select major_mode, rrmember, count(distinct (band, dxcc)) as bandslots
+    from bandpoints
+    where year = extract(year from now())
+    group by grouping sets ((1, 2), (2)));
 """
 cur.execute(q)
 mode = None
@@ -101,30 +35,11 @@ for row in cur.fetchall():
         txt += f"\n\n{mode}:\n"
     if n % 5 == 0:
         txt += "  "
-    txt += f"{row.rank:3} {row.rrmember:6} {row.count:4}  "
+    txt += f"{row.rank:3} {row.rrmember:6} {row.bandslots:4}  "
     if n % 5 == 4:
         txt += "\n"
     n += 1
 txt += "\n\nhttps://logbook.rrdxa.org/dxchallenge/\n"
-
-#\echo Most wanted countries
-#select major_mode, dxcc, count(*) from bandpoints group by major_mode, dxcc order by major_mode, count(*), dxcc;
-#
-#\echo Most wanted bandslots
-#select major_mode, dxcc, band, count(*) from bandpoints group by major_mode, dxcc, band order by major_mode, count(*), dxcc, band;
-
-#q = """
-#select b.*, dxcc.pfx, dxcc.country from bandpoints b
-#    join dxcc on b.dxcc = dxcc.dxcc
-#    where year = extract(year from 'yesterday'::date) and
-#    not exists (select from previous_bandpoints pb where b.major_mode = pb.major_mode and b.rrmember = pb.rrmember and b.dxcc = pb.dxcc and b.band = pb.band and year = extract(year from 'yesterday'::date))
-#    order by major_mode, pfx, band, rrmember;
-#"""
-#cur.execute(q)
-#if cur.rowcount > 0:
-#    txt += "\nNeue Bandpunkte gearbeitet:\n"
-#    for row in cur.fetchall():
-#        txt += format_qso(row)
 
 # send it
 if args.mail:
@@ -132,12 +47,10 @@ if args.mail:
     msg['From'] = Address(display_name=f"RRDXA DX Challenge",  addr_spec="noreply@rrdxa.org")
     msg['Reply-To'] = Address(display_name=f"RRDXA",  addr_spec="rrdxa@mailman.qth.net")
     msg['To'] = Address(display_name=f"RRDXA", addr_spec="rrdxa@mailman.qth.net")
-    msg['Subject'] = f"DX Challenge {yesterday}"
+    msg['Subject'] = f"DX Challenge {today}"
     msg.set_content(txt)
     with smtplib.SMTP('localhost') as smtp:
         smtp.send_message(msg)
-
-    conn.commit()
 
 else:
     print(txt)
