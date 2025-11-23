@@ -120,5 +120,3 @@ RRDXA_ADMINS = [
         'DK2DQ',
         'DL9DAN',
         ]
-
-MAIL_FROM = 'cb@df7cb.de'

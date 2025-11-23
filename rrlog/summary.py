@@ -151,6 +151,6 @@ def post_summary(data, summary, subject, send=True):
         msg['X-Contest'] = data.contest
         msg.set_content(mail)
         with smtplib.SMTP('localhost') as smtp:
-            smtp.send_message(msg, from_addr=settings.MAIL_FROM)
+            smtp.send_message(msg)
 
     return mail
