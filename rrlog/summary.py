@@ -90,11 +90,11 @@ def get_summary(cursor, upload_id):
 
     subject = f"{data.station_callsign} "
     subject += data.event or data.contest or ''
-    if data.category_operator: subject += f" {data.category_operator}"
-    if data.category_band and data.category_band != 'ALL': subject += f" {data.category_band}"
-    if data.category_mode: subject += f" {data.category_mode}"
-    if data.category_power: subject += f" {data.category_power}"
-    if data.category_assisted: subject += f" {data.category_assisted}"
+    if data.category_operator: subject += f" {data.category_operator.title()}"
+    if data.category_band and data.category_band != 'ALL': subject += f" {data.category_band.title()}"
+    if data.category_mode: subject += f" {data.category_mode.title()}"
+    if data.category_power: subject += f" {data.category_power.title()}"
+    if data.category_assisted: subject += f" {data.category_assisted.title()}"
 
     return data, summary, subject
 
