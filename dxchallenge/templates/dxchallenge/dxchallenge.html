@@ -22,6 +22,11 @@
 <a href="https://rrdxa.org/dx-challenge-2025/">Zu den Challenge-Regeln</a> |
 <a href="/dxchallenge/{{year|add:'-1'}}/">{{year|add:'-1'}} &lt;&lt;</a> |
 <a href="/dxchallenge/{{year|add:'1'}}/">&gt;&gt; {{year|add:'1'}}</a>
+{% if not band %}
+| <a href="./"><b>ALL</b></a>
+{% else %}
+| <a href="./">ALL</a>
+{% endif %}
 {% for b in bands %}
 {% if b == band %}
 | <a href="./"><b>{{b}}</b></a>
