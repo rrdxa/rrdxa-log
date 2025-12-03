@@ -31,13 +31,13 @@ ALLOWED_HOSTS = ['logbook.rrdxa.org', 'localhost', '127.0.0.1']
 # Application definition
 
 INSTALLED_APPS = [
-    'daphne',
+    #'daphne',
     #'channels',
     #'channels_postgres',
     'django.contrib.humanize',
     'django.contrib.staticfiles',
     'api',
-    'cluster',
+    #'cluster',
     'contestchallenge',
     'dxchallenge',
     'rrlog',
