@@ -8,6 +8,7 @@ import re
 
 from rrdxa import settings
 
+from rrlog.auth import basic_auth, auth_required
 from rrlog.utils import namedtuplefetchall, band_sort
 
 major_modes = ['CW', 'PHONE', 'DIGI', 'FT8', 'MIXED']
@@ -21,6 +22,7 @@ select coalesce(major_mode::text, 'MIXED') as major_mode, rrmember, bandslots, d
     group by grouping sets ((1, 2), (2)));
 """
 
+@auth_required
 def v_dxchallenge(request, year=None):
     if year is None:
         today = datetime.date.today()

@@ -8,6 +8,7 @@ import re
 
 from rrdxa import settings
 
+from rrlog.auth import basic_auth, auth_required
 from rrlog.utils import namedtuplefetchall, band_sort
 
 q_challenge = """
@@ -69,6 +70,7 @@ group by operator
 order by count(*) * sum(qsos) desc
 """
 
+@auth_required
 def v_contestchallenge(request, year=None):
     if year is None:
         today = datetime.date.today()

@@ -72,6 +72,7 @@ def render_with_username_cookie(request, page, context, username):
         response.set_cookie('username', username)
     return response
 
+@auth_required
 def v_index(request):
     limit = 10
 
@@ -103,6 +104,7 @@ def v_index(request):
             }
     return render(request, 'rrlog/index.html', context)
 
+@auth_required
 def v_mao(request):
     limit = 100
 
@@ -173,15 +175,19 @@ def generic_view(request, title, quals, params):
     context = { 'title': title, 'qsos': qsos, 'show_main_link': True }
     return render(request, 'rrlog/log.html', context)
 
+@auth_required
 def v_logbook(request):
     return generic_view(request, "Logbook", [], [])
 
+@auth_required
 def v_dxcc(request, dxcc):
     return generic_view(request, f"Log entries from {dxcc}", ['country = %s'], [dxcc])
 
+@auth_required
 def v_grid(request, grid):
     return generic_view(request, f"Log entries from gridsquare {grid}", ['gridsquare = %s'], [grid])
 
+@auth_required
 def v_contest(request, contest):
     return generic_view(request, f"Log entries from {contest}", ['contest = %s'], [contest])
 
@@ -208,6 +214,7 @@ where station_callsign = %s
 order by u.start desc
 """
 
+@auth_required
 def v_call(request, call):
     with connection.cursor() as cursor:
         cursor.execute(q_call_events, [call])
@@ -349,6 +356,7 @@ group by 1
 order by score desc, qsos desc, call
 """
 
+@auth_required
 def v_challenge(request, year=2024):
     with connection.cursor() as cursor:
         cursor.execute(q_challenge, [f"{year}-01-01", f"{year+1}-01-01"])
@@ -382,6 +390,7 @@ q_schedules = """select
 from schedule
 order by month, (week+8) % 8, dow, start"""
 
+@auth_required
 def v_events(request):
     username = None
 
@@ -442,6 +451,7 @@ union all
 select count(*)::text, -1, null, null, sum(qsos), sum(claimed_score), null, null, null, null, null, null, null, null, null, null from uploads
 """
 
+@auth_required
 def v_event(request, event):
     with connection.cursor() as cursor:
         cursor.execute(q_event, [event])
@@ -460,9 +470,11 @@ def v_event(request, event):
     }
     return render(request, 'rrlog/event.html', context)
 
+@auth_required
 def v_log(request, log):
     return generic_view(request, f"QSOs in upload {log}", 'where upload = %s', [log])
 
+@auth_required
 def v_month(request, year, month):
     with connection.cursor() as cursor:
         date = f"{year}-{month:02}-01"
@@ -487,6 +499,7 @@ def v_month(request, year, month):
     }
     return render(request, 'rrlog/month.html', context)
 
+@auth_required
 def v_year(request, year):
     with connection.cursor() as cursor:
         date = f"{year}-01-01"
@@ -579,6 +592,7 @@ def v_download(request, upload_id):
     response.set_cookie('username', username)
     return response
 
+@auth_required
 def v_summary(request, upload_id):
     # username cookie is not secure, we show extra controls based on it, but
     # still require authentication to actually use them
