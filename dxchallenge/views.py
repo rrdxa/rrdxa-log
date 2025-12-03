@@ -14,12 +14,18 @@ from rrlog.utils import namedtuplefetchall, band_sort
 major_modes = ['CW', 'PHONE', 'DIGI', 'FT8', 'MIXED']
 
 q_dxchallenge = """
-select coalesce(major_mode::text, 'MIXED') as major_mode, rrmember, bandslots, dxccs, rank() over (partition by major_mode order by bandslots desc) from
+select
+  nullif(rank() over (partition by major_mode order by case when rrmember is null then 100000 else bandslots end desc) - 1, 0) as rank,
+  coalesce(major_mode::text, 'MIXED') as major_mode,
+  coalesce(rrmember, 'RRDXA') as rrmember,
+  bandslots,
+  dxccs
+from
 (select major_mode, rrmember, count(distinct (band, dxcc)) as bandslots, array_agg(distinct dxcc) as dxccs
     from bandpoints
     where year = %s
         and (band = %s or %s is null)
-    group by grouping sets ((1, 2), (2)));
+    group by cube (1, 2));
 """
 
 @auth_required
