@@ -50,11 +50,11 @@
 </thead>
 
 <tr>
-<td valign="top" width="12%"> {% for entry in entries.CW %}    <span onmouseenter="hilight('{{entry.call}}', 'CW')"    onmouseleave="dehilight('{{entry.call}}')" class="{{entry.call}}">{{entry.rank|default_if_none:''}} {{entry.call}} {{entry.bandslots}}</span> <br> {% endfor %} </td>
-<td valign="top" width="12%"> {% for entry in entries.PHONE %} <span onmouseenter="hilight('{{entry.call}}', 'PHONE')" onmouseleave="dehilight('{{entry.call}}')" class="{{entry.call}}">{{entry.rank|default_if_none:''}} {{entry.call}} {{entry.bandslots}}</span> <br> {% endfor %} </td>
-<td valign="top" width="12%"> {% for entry in entries.DIGI %}  <span onmouseenter="hilight('{{entry.call}}', 'DIGI')"  onmouseleave="dehilight('{{entry.call}}')" class="{{entry.call}}">{{entry.rank|default_if_none:''}} {{entry.call}} {{entry.bandslots}}</span> <br> {% endfor %} </td>
-<td valign="top" width="12%"> {% for entry in entries.FT8 %}   <span onmouseenter="hilight('{{entry.call}}', 'FT8')"   onmouseleave="dehilight('{{entry.call}}')" class="{{entry.call}}">{{entry.rank|default_if_none:''}} {{entry.call}} {{entry.bandslots}}</span> <br> {% endfor %} </td>
-<td valign="top" width="12%"> {% for entry in entries.MIXED %} <span onmouseenter="hilight('{{entry.call}}', 'MIXED')"   onmouseleave="dehilight('{{entry.call}}')" class="{{entry.call}}">{{entry.rank|default_if_none:''}} {{entry.call}} {{entry.bandslots}}</span> <br> {% endfor %} </td>
+<td valign="top" width="12%"> {% for entry in entries.CW %}    <span style="cursor: pointer;" onmousedown="clicker('{{entry.call}}', 'CW')"    onmouseenter="hilight('{{entry.call}}', 'CW')"    onmouseleave="dehilight('{{entry.call}}')" class="{{entry.call}}">{{entry.rank|default_if_none:''}} {{entry.call}} {{entry.bandslots}}</span> <br> {% endfor %} </td>
+<td valign="top" width="12%"> {% for entry in entries.PHONE %} <span style="cursor: pointer;" onmousedown="clicker('{{entry.call}}', 'PHONE')" onmouseenter="hilight('{{entry.call}}', 'PHONE')" onmouseleave="dehilight('{{entry.call}}')" class="{{entry.call}}">{{entry.rank|default_if_none:''}} {{entry.call}} {{entry.bandslots}}</span> <br> {% endfor %} </td>
+<td valign="top" width="12%"> {% for entry in entries.DIGI %}  <span style="cursor: pointer;" onmousedown="clicker('{{entry.call}}', 'DIGI')"  onmouseenter="hilight('{{entry.call}}', 'DIGI')"  onmouseleave="dehilight('{{entry.call}}')" class="{{entry.call}}">{{entry.rank|default_if_none:''}} {{entry.call}} {{entry.bandslots}}</span> <br> {% endfor %} </td>
+<td valign="top" width="12%"> {% for entry in entries.FT8 %}   <span style="cursor: pointer;" onmousedown="clicker('{{entry.call}}', 'FT8')"   onmouseenter="hilight('{{entry.call}}', 'FT8')"   onmouseleave="dehilight('{{entry.call}}')" class="{{entry.call}}">{{entry.rank|default_if_none:''}} {{entry.call}} {{entry.bandslots}}</span> <br> {% endfor %} </td>
+<td valign="top" width="12%"> {% for entry in entries.MIXED %} <span style="cursor: pointer;" onmousedown="clicker('{{entry.call}}', 'MIXED')" onmouseenter="hilight('{{entry.call}}', 'MIXED')" onmouseleave="dehilight('{{entry.call}}')" class="{{entry.call}}">{{entry.rank|default_if_none:''}} {{entry.call}} {{entry.bandslots}}</span> <br> {% endfor %} </td>
 <td valign="top" width="40%">
 <div id="datadiv"></div>
 </td>
@@ -190,19 +190,31 @@ var show_dxccs = function(call, mode) {
     vectorSource.addFeatures(dxccs);
 };
 
-var hilight = function(call, mode) {
+var color_call = function(call, color) {
     const collection = document.getElementsByClassName(call);
     for (let i = 0; i < collection.length; i++) {
-        collection[i].style.backgroundColor = "red";
+        collection[i].style.backgroundColor = color;
     }
+};
+
+var clicked_call = "";
+var clicker = function(call, mode) {
+    if (clicked_call)
+        color_call(clicked_call, "white");
+    clicked_call = call;
+    color_call(call, "red");
+    show_dxccs(call, mode);
+};
+
+var hilight = function(call, mode) {
+    if (clicked_call) return;
+    color_call(call, "red");
     show_dxccs(call, mode);
 };
 
 var dehilight = function(call) {
-    const collection = document.getElementsByClassName(call);
-    for (let i = 0; i < collection.length; i++) {
-        collection[i].style.backgroundColor = "white";
-    }
+    if (clicked_call) return;
+    color_call(call, "white");
     show_dxccs("RRDXA", "MIXED");
 };
 
