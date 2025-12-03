@@ -52,6 +52,7 @@ var add_rule_form = function(row) {
   <option value="include dx">DX</option>
   <option value="include cty">Country</option>
   <option value="include cont">Continent</option>
+  <option value="include source">Source</option>
 </optgroup>
 <optgroup label="Include spotters">
   <option value="include_spots spotter">Spotter</option>
@@ -62,6 +63,7 @@ var add_rule_form = function(row) {
   <option value="exclude dx">not DX</option>
   <option value="exclude cty">not country</option>
   <option value="exclude cont">not continent</option>
+  <option value="exclude source">not source</option>
 </optgroup>
 </select>`;
     text += `<input id="add_rule_${row}">`;
