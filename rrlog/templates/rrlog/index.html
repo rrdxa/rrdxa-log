@@ -32,10 +32,6 @@
 
 {% include 'rrlog/operator_stats.html' with operators=current_month_stats month=current_month %}
 
-<h2>Current year {{current_year}} [<a href="/log/year/{{current_year}}/">view</a>]</h2>
-
-{% include 'rrlog/operator_stats.html' with operators=current_year_stats year=current_year %}
-
 <h1>250 most recent member-member QSOs [<a href="/log/logbook/">view</a>]</h1>
 
 {% include 'rrlog/qsos.html' %}

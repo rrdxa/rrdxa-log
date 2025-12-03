@@ -85,10 +85,6 @@ def v_index(request):
         cursor.execute(q_operator_stats.format(''), [date, date, '1 month', limit])
         current_month_stats = namedtuplefetchall(cursor)
 
-        date = f"{today.year}-01-01"
-        cursor.execute(q_operator_stats.format(''), [date, date, '1 year', limit])
-        current_year_stats = namedtuplefetchall(cursor)
-
         cursor.execute(q_log.format('where rroperator is not null', 'desc', 250), [])
         qsos = namedtuplefetchall(cursor)
 
@@ -97,8 +93,6 @@ def v_index(request):
             'events': events,
             'current_month': f"{today.year}-{today.month:02}",
             'current_month_stats': current_month_stats,
-            'current_year': today.year,
-            'current_year_stats': current_year_stats,
             'qsos': qsos,
             'urlpath': '/log/logbook/',
             }
