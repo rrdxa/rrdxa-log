@@ -20,12 +20,20 @@
 
 <div>
 <a href="https://rrdxa.org/dx-challenge-2025/"><b>Zu den Challenge-Regeln</b></a> |
+{% if year != 0 %}
 <a href="/dxchallenge/{{year|add:'-1'}}/">{{year|add:'-1'}} &lt;&lt;</a> |
-<a href="/dxchallenge/{{year|add:'1'}}/">&gt;&gt; {{year|add:'1'}}</a>
-{% if not band %}
-| <a href="./"><b>ALL</b></a>
+{% endif %}
+{% if year == this_year %}
+<a href="/dxchallenge/0/">&gt;&gt; All time</a>
+{% elif year == 0 %}
+<a href="/dxchallenge/{{this_year}}/">&gt;&gt; {{this_year}}</a>
 {% else %}
-| <a href="./">ALL</a>
+<a href="/dxchallenge/{{year|add:'1'}}/">&gt;&gt; {{year|add:'1'}}</a>
+{% endif %}
+{% if not band %}
+| <a href="./"><b>All Bands</b></a>
+{% else %}
+| <a href="./">All Bands</a>
 {% endif %}
 {% for b in bands %}
 {% if b == band %}
@@ -178,14 +186,18 @@ var show_dxccs = function(call, mode) {
     // text
     var len = data[mode][call].length;
     var ctys = [];
+    var dxccs = [];
     data[mode][call].forEach(function(dxcc_id) {
-        var properties = dxcc_data[dxcc_id].getProperties();
-        ctys.push(properties['cty']);
+        if (dxcc_id in dxcc_data) {
+            var properties = dxcc_data[dxcc_id].getProperties();
+            ctys.push(properties['cty']); // prefix as text
+            dxccs.push(dxcc_data[dxcc_id]); // geo features
+        } else {
+            ctys.push(`(${dxcc_id})`); // id as number (deleted entities)
+        }
     });
     var text = `${call} worked ${len} distinct entities in ${mode}:\n` + ctys.sort().join(" ");
     datadiv.innerText = text;
-    // geo features
-    var dxccs = data[mode][call].map(i => dxcc_data[i]);
     vectorSource.clear();
     vectorSource.addFeatures(dxccs);
 };

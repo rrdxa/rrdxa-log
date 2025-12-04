@@ -23,33 +23,35 @@ select
 from
 (select major_mode, rrmember, count(distinct (band, dxcc)) as bandslots, array_agg(distinct dxcc) as dxccs
     from bandpoints
-    where year = %s
+    where (year = %s or %s = 0)
         and (band = %s or %s is null)
     group by cube (1, 2));
 """
 
 @auth_required
 def v_dxchallenge(request, year=None):
-    if year is None:
-        today = datetime.date.today()
-        year = today.year
+    today = datetime.date.today()
+    this_year = today.year
+    if year is None: year = this_year
 
     band = request.GET['band'] if 'band' in request.GET else None
 
     entries = {x: [] for x in major_modes}
     data = {x: {} for x in major_modes}
     with connection.cursor() as cursor:
-        cursor.execute(q_dxchallenge, [year, band, band])
+        cursor.execute(q_dxchallenge, [year, year, band, band])
         for row in namedtuplefetchall(cursor):
             entries[row.major_mode].append({'call': row.rrmember, 'bandslots': row.bandslots, 'rank': row.rank})
             data[row.major_mode][row.rrmember] = row.dxccs
 
-        cursor.execute("select distinct band from bandpoints where year = %s order by 1", [year])
+        cursor.execute("select distinct band from bandpoints where (year = %s or %s = 0) order by 1", [year, year])
         bands = [x[0] for x in cursor.fetchall()]
 
+    title_year = year if year > 0 else "All Time"
     context = {
-        'title': f"RRDXA DX Challenge {year} {band or ''}",
+        'title': f"RRDXA DX Challenge {title_year} {band or ''}",
         'year': year,
+        'this_year': this_year,
         'band': band,
         'bands': bands,
         'modes': major_modes,
