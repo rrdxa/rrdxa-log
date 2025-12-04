@@ -198,10 +198,22 @@ var color_call = function(call, color) {
 };
 
 var clicked_call = "";
+var clicked_mode = "";
 var clicker = function(call, mode) {
-    if (clicked_call)
-        color_call(clicked_call, "white");
-    clicked_call = call;
+    if (clicked_call == call && clicked_mode == mode) {
+        // unlock hilighting again
+        clicked_call = "";
+        clicked_mode = "";
+        color_call(call, "white");
+        return; // nothing is hilighted now to signal we unlocked
+    } else {
+        // dehilight last locked call
+        if (clicked_call)
+            color_call(clicked_call, "white");
+        // lock highlighting to this call
+        clicked_call = call;
+        clicked_mode = mode;
+    }
     color_call(call, "red");
     show_dxccs(call, mode);
 };
