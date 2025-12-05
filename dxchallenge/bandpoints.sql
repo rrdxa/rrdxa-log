@@ -24,3 +24,20 @@ from (
 order by year, major_mode, rrmember;
 
 create index on rrdxa.bandpoints(year);
+
+create table rrdxa.bandpoints_status (last_refresh timestamptz);
+insert into rrdxa.bandpoints_status (last_refresh) values ('-infinity');
+
+create or replace procedure rrdxa.bandpoints_refresh()
+    language plpgsql as
+$$
+declare
+    run boolean;
+begin
+    select into run max(ts) > max(bandpoints_status.last_refresh) from rrdxa.upload, rrdxa.bandpoints_status;
+    if run then
+        update bandpoints_status set last_refresh = now();
+        refresh materialized view bandpoints;
+    end if;
+end;
+$$;

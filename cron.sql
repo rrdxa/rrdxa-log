@@ -2,9 +2,6 @@
 refresh materialized view rrdxa.members;
 refresh materialized view rrdxa.rrcalls;
 
--- refresh pre-calculated data
-refresh materialized view rrdxa.bandpoints;
-
 -- delete uploads that have no QSOs
 delete from rrdxa.upload where ts < now() - '4 week'::interval and
 id not in (with recursive upload_ids as (
