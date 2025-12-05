@@ -1,5 +1,5 @@
 # frequent
-0 */5 * * * psql -qtXf /cb/logbook.rrdxa.org/rrdxa-log/cron-frequent.sql rrdxa
+*/5 * * * * psql -qtXf /cb/logbook.rrdxa.org/rrdxa-log/cron-frequent.sql rrdxa
 
 # hourly
 0 * * * * psql -qtXf /cb/logbook.rrdxa.org/rrdxa-log/cron.sql rrdxa
