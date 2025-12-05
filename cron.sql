@@ -1,5 +1,4 @@
 -- refresh member list (including passwords)
-refresh materialized view rrdxa.wordpress_users;
 refresh materialized view rrdxa.members;
 refresh materialized view rrdxa.rrcalls;
 

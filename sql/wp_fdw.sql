@@ -17,10 +17,6 @@ import foreign schema :user limit to ("L7l2a_users") from server wordpress into 
 import foreign schema :user limit to ("L7l2a_usermeta") from server wordpress into wordpress;
 import foreign schema :user limit to ("L7l2a_bp_xprofile_data") from server wordpress into wordpress;
 
-create materialized view rrdxa.wordpress_users as select * from wordpress.:"usertable";
-create index on rrdxa.wordpress_users (upper(user_login));
-analyze rrdxa.wordpress_users;
-
 create or replace function rrdxa.user_roles(capabilities text)
     returns text[]
     language sql
