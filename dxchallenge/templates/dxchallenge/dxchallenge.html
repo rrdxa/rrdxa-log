@@ -70,7 +70,8 @@
 </table>
 
 <script>
-var data = {{data|safe}};
+var mode_member_dxccs = {{mode_member_dxccs|safe}};
+var mode_member_qsos = {{mode_member_qsos|safe}};
 
 // main vector layer
 var countryStyle = new ol.style.Style({
@@ -184,19 +185,18 @@ var datadiv = document.getElementById("datadiv");
 
 var show_dxccs = function(call, mode) {
     // text
-    var len = data[mode][call].length;
+    var len = mode_member_dxccs[mode][call].length;
     var ctys = [];
     var dxccs = [];
-    data[mode][call].forEach(function(dxcc_id) {
+    mode_member_dxccs[mode][call].forEach(function(dxcc_id) {
         if (dxcc_id in dxcc_data) {
-            var properties = dxcc_data[dxcc_id].getProperties();
-            ctys.push(properties['cty']); // prefix as text
             dxccs.push(dxcc_data[dxcc_id]); // geo features
-        } else {
-            ctys.push(`(${dxcc_id})`); // id as number (deleted entities)
         }
     });
-    var text = `${call} worked ${len} distinct entities in ${mode}:\n` + ctys.sort().join(" ");
+    var text = `${call} worked ${len} distinct entities in ${mode}:\n`;
+    mode_member_qsos[mode][call].forEach(function(qso) {
+        text += qso;
+    });
     datadiv.innerText = text;
     vectorSource.clear();
     vectorSource.addFeatures(dxccs);
