@@ -195,7 +195,7 @@ var show_dxccs = function(call, mode) {
     });
     var text = `${call} worked ${len} distinct entities in ${mode}:\n`;
     mode_member_qsos[mode][call].forEach(function(qso) {
-        text += qso;
+        text += qso + "\n";
     });
     datadiv.innerText = text;
     vectorSource.clear();

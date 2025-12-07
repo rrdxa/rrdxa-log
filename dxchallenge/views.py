@@ -29,7 +29,7 @@ from
     array_agg(distinct dxcc) as dxccs,
     array_agg(qso_ctid) as qso_ctids from
     -- get one DXCC with example QSO per member
-    (select major_mode, rrmember, band, dxcc, pfx, any_value(bandpoints.ctid) as qso_ctid
+    (select major_mode, rrmember, band, dxcc, any_value(bandpoints.ctid) as qso_ctid
         from bandpoints
         where (year = %s or %s = 0)
             and (band = %s or %s is null)

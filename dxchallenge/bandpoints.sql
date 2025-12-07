@@ -48,7 +48,7 @@ begin atomic
     select array_agg(qso_text)
     from (
         select distinct on (pfx)
-            concat_ws(' ', pfx, band, major_mode, start, station_callsign, operator, mode, submode, call) qso_text
+            concat_ws(' ', pfx, band, major_mode||':', start, station_callsign, '('||operator||')', mode, '('||submode||')', call) qso_text
         from rrdxa.bandpoints
             join dxcc on rrdxa.bandpoints.dxcc = dxcc.dxcc
         where bandpoints.ctid = any(ctids)
