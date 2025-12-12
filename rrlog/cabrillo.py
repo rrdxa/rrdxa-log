@@ -66,6 +66,7 @@ def parse(cbr):
     lengths = set()
 
     for line in cbr.splitlines():
+        if line.strip() == "": continue # skip over blank lines
         field, sep, value = line.partition(':')
         if sep == '':
             if in_data:
@@ -73,6 +74,7 @@ def parse(cbr):
             else:
                 continue
         field, value = field.upper(), value.strip()
+        if value == "": continue # skip empty fields
 
         if field == 'START-OF-LOG':
             in_data = True
