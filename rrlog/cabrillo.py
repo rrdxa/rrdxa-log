@@ -67,6 +67,7 @@ def parse(cbr):
 
     for line in cbr.splitlines():
         if line.strip() == "": continue # skip over blank lines
+        if line[0] == '#': continue # skip over comments
         field, sep, value = line.partition(':')
         if sep == '':
             if in_data:
