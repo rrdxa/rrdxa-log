@@ -63,6 +63,9 @@ def cabrillo_upload(cursor, content, upload_id):
                 mode = 'RTTY'
             elif major_mode in ('PS', 'PK', 'PM', 'PO'):
                 # https://www.rdrclub.ru/index.php/russian-ww-psk-contest/49-rus-ww-psk-rules
+                # BPSK31 - PS, BPSK63 - PM, BPSK125 - PO
+                # RSGB handles it differently: https://www.rsgbcc.org/hf/rules/2025/rautumn.shtml
+                # RTTY = RY, PSK63 = PS, SSB = PH, CW = CW
                 if major_mode == 'PS':
                     submode = 'PSK31'
                 elif major_mode == 'PM':
