@@ -51,6 +51,8 @@ def adif_upload(cursor, content, station_callsign, operator, upload_id, contest)
                 dxcc = country.lookup(call, start)
 
             freq = qso.get('FREQ')
+            if freq and ',' in freq and '.' not in freq:
+                freq = freq.replace(',', '.') # support reading Fldigi's localized numbers
             mode = upper(qso.get('MODE'))
             submode = upper(qso.get('SUBMODE'))
 
