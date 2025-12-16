@@ -75,7 +75,7 @@ def cabrillo_upload(cursor, content, upload_id):
                 major_mode = 'DIGI'
                 mode = 'PSK'
             elif major_mode == 'DG':
-                major_mode = 'DIGI'
+                major_mode = 'unknown' # sort it out manually later
                 mode = None
             # FT8
             elif major_mode == 'FT':
