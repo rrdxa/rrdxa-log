@@ -56,6 +56,7 @@ A summary of QSOs and DXCCs by band is computed from the log.
 
 Summary and soapbox will be mailed to the RRDXA reflector.">{{data.soapbox|default_if_none:''}}</textarea></td></tr>
 <tr><td>Mail auf den Reflektor</td> <td><input type="checkbox" name="reflector"{% if mail_checked %} checked{% endif %}></td></tr>
+<tr class="extraonly"><td></td><td><button name="delete" value="{{upload_id}}" type="submit">Dieses Log LÖSCHEN</button></td></tr>
 <tr><td></td><td><button type="submit">Speichern</button></td></tr>
 </table>
 </form>

@@ -515,6 +515,16 @@ def v_edit(request, upload_id):
     if request.method == 'POST':
         with connection.cursor() as cursor:
 
+            if 'delete' in request.POST:
+                upload_id = request.POST['delete']
+                q_delete = "delete from upload where id = %s"
+                params = [upload_id]
+                if username not in settings.RRDXA_ADMINS:
+                    q_delete += " and uploader = %s"
+                    params.append(username)
+                cursor.execute(q_delete, params)
+                return redirect('upload')
+
             set_fields, params = [], []
             for field in 'station_callsign', 'operator', 'contest', 'operators', 'club', 'category_operator', 'category_assisted', 'category_band', 'category_mode', 'category_overlay', 'category_power', 'category_station', 'category_time', 'category_transmitter', 'location', 'grid_locator', 'soapbox', 'claimed_score', 'computed_score', 'event_id', 'exchange':
                 if field in request.POST:
@@ -526,7 +536,7 @@ def v_edit(request, upload_id):
                     cursor.execute("update upload set event_id = null where event_id = %s and station_callsign = %s and id <> %s returning id", [request.POST['event_id'], request.POST['station_callsign'], upload_id])
                     old_id = cursor.fetchone()
                     if old_id:
-                        message += f"Die letzte Einreichung für {request.POST['station_callsign']} aus Upload {old_id} wird durch diesen Eintrag ersetzt. "
+                        message += f"Die letzte Einreichung für {request.POST['station_callsign']} aus Upload {old_id[0]} wird durch diesen Eintrag ersetzt. "
                 q_update = "update upload set " + \
                         ", ".join([f"{field} = %s" for field in set_fields]) + \
                         " where id = %s"
@@ -555,6 +565,7 @@ where id = %s""", [start, stop, upload_id, upload_id])
         # post to reflector when requested
         if request.POST.get('reflector'):
             post_summary(data, summary, subject)
+            message += f"Mail auf Reflektor gesandt. "
 
         # get all events overlapping this upload
         cursor.execute("select *, start_str(start), stop_str(stop), event_id = %s as selected from event where %s <= stop and %s >= start",
