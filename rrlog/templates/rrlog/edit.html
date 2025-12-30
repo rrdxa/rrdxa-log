@@ -60,6 +60,10 @@ Summary and soapbox will be mailed to the RRDXA reflector.">{{data.soapbox|defau
 </table>
 </form>
 
+{% if message %}
+<div><b>{{message}}</b></div>
+{% endif %}
+
 {% if summary %}
 <br>
 <table>

@@ -510,6 +510,7 @@ def v_summary(request, upload_id):
 @auth_required
 def v_edit(request, upload_id):
     username = request.username
+    message = ''
 
     if request.method == 'POST':
         with connection.cursor() as cursor:
@@ -520,6 +521,12 @@ def v_edit(request, upload_id):
                     set_fields.append(field)
                     params.append(request.POST[field] or None)
             if set_fields:
+                if 'event_id' in set_fields and request.POST['event_id'] != '' and 'station_callsign' in set_fields:
+                    # remove last contest entry from this callsign
+                    cursor.execute("update upload set event_id = null where event_id = %s and station_callsign = %s and id <> %s returning id", [request.POST['event_id'], request.POST['station_callsign'], upload_id])
+                    old_id = cursor.fetchone()
+                    if old_id:
+                        message += f"Die letzte Einreichung für {request.POST['station_callsign']} aus Upload {old_id} wird durch diesen Eintrag ersetzt. "
                 q_update = "update upload set " + \
                         ", ".join([f"{field} = %s" for field in set_fields]) + \
                         " where id = %s"
@@ -528,6 +535,7 @@ def v_edit(request, upload_id):
                     q_update += " and uploader = %s"
                     params.append(username)
                 cursor.execute(q_update, params)
+                message += f"Gespeichert. "
 
             if 'event_id' in request.POST and re.match(r'^\d+$', request.POST['event_id']):
                 cursor.execute("select start, stop from event where event_id = %s", [request.POST['event_id']])
@@ -562,6 +570,7 @@ where id = %s""", [start, stop, upload_id, upload_id])
         'username': username,
         'eventlist': eventlist,
         'mail_checked': False,
+        'message': message,
     }
     return render(request, 'rrlog/edit.html', context)
 
