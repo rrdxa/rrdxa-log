@@ -34,6 +34,11 @@ INSTALLED_APPS = [
     #'daphne',
     #'channels',
     #'channels_postgres',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.messages',
+    'django.contrib.sessions',
+    'django.contrib.admin',
     'django.contrib.humanize',
     'django.contrib.staticfiles',
     'api',
@@ -45,7 +50,14 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'django.middleware.common.CommonMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
 ]
+
+AUTHENTICATION_BACKENDS = ["rrmember.auth.WordpressAuthBackend"]
 
 ROOT_URLCONF = 'rrdxa.urls'
 
@@ -58,6 +70,8 @@ TEMPLATES = [
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
             ],
         },
     },
