@@ -10,7 +10,7 @@ create or replace function rrdxa.major_mode(mode text, submode text default null
             'SSB', 'LSB', 'USB', 'J3E',
             'FM', 'F3E', 'AM',
             'DIGITALVOICE', 'C4FM', 'DMR', 'DSTAR') then 'PHONE'
-        when upper(mode) in ('FT8', 'FT4') then 'FT8'
-        when upper(mode) = 'MFSK' and upper(submode) = 'FT4' then 'FT8'
+        when upper(mode) like 'FT%' then 'FT8'
+        when upper(mode) = 'MFSK' and upper(submode) like 'FT%' then 'FT8'
         else 'DIGI'
     end;
