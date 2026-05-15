@@ -2,6 +2,7 @@
 */5 * * * * psql -qtXf /cb/logbook.rrdxa.org/rrdxa-log/cron-frequent.sql rrdxa
 
 # hourly
+0 * * * * cd /cb/logbook.rrdxa.org/rrdxa-log && PGSERVICE=rrdxa ./manage.py sync_users
 0 * * * * psql -qtXf /cb/logbook.rrdxa.org/rrdxa-log/cron.sql rrdxa
 
 # daily

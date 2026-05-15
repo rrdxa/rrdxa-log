@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'dxchallenge',
     'rrlog',
     'rrmember',
+    'vorstand',
 ]
 
 MIDDLEWARE = [

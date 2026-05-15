@@ -1,0 +1,29 @@
+{% extends 'rrlog/rrdxa.html' %}
+
+{% block content %}
+<h1>Mitglieder</h1>
+
+<table border="0">
+<tr>
+ <th>#</th>
+ <th>Call</th>
+ <th>Name</th>
+ <th>Beitritt</th>
+ <th>bezahlt bis</th>
+ <th>Austritt</th>
+ <th>Silent Key</th>
+</tr>
+{% for member in verein %}
+<tr>
+ <td>{{member.member_no}}</td>
+ <td><a href="/admin/rrmember/vereinsmitglied/{{member.member_no|lower}}/change/">{{member.call}}</a></td>
+ <td>{{member.display_name|default_if_none:""}}</td>
+ <td>{{member.vereinsbeitritt|default_if_none:""}}</td>
+ <td>{{member.bezahlt_bis|default_if_none:""}}</td>
+ <td>{{member.vereinsaustritt|default_if_none:""}}</td>
+ <td>{{member.silent_key|default_if_none:""}}</td>
+</tr>
+{% endfor %}
+</table>
+
+{% endblock %}

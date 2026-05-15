@@ -1,9 +1,20 @@
 {% extends 'rrlog/rrdxa.html' %}
 
 {% block content %}
-<h1>{{call}} #{{data.member_no}}</h1>
+<h1>Mitgliedsdaten</h1>
 
-Hallo {{data.first_name}}!
+<ul>
+<li>Name: {{user.vereinsmitglied.display_name}}</li>
+<li>Call: {{user.vereinsmitglied.call}}</li>
+{% if user.vereinsmitglied.vereinsbeitritt %}
+<li>Beitritt zur RRDXA e.V.: {{user.vereinsmitglied.vereinsbeitritt}}</li>
+<li>Beitrag bezahlt bis: {{user.vereinsmitglied.bezahlt_bis|default_if_none:"keine Beiträge bisher"}}</li>
+{% else %}
+<li>Du bist noch kein Mitglied des RRDXA e.V.</li>
+{% endif %}
+</ul>
+
+<h2>Mitgliederservice</h2>
 
 <ul>
 {% if data.member_no %}

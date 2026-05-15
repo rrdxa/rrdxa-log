@@ -27,5 +27,6 @@ urlpatterns = [
     path('dxchallenge/', include('dxchallenge.urls')),
     path('log/', include('rrlog.urls')),
     path('member/', include('rrmember.urls')),
+    path('vorstand/', include('vorstand.urls')),
     path('robots.txt', TemplateView.as_view(template_name="robots.txt", content_type="text/plain")),
 ]

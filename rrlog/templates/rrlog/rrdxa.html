@@ -57,8 +57,9 @@ a:hover, a:active {
 [<a href="/dxchallenge/">DX Challenge</a>]
 [<a href="/log/event/">Events</a>]
 [<a href="/log/upload/">Upload</a>]
-[<a href="/member/">Member Area</a>]
+[<a href="/member/">Mitgliederbereich</a>]
 <!-- {% if username %}[{{username}}]{% endif %} -->
+{% if 'vorstand' in user.groups.all|join:"," %}[<a href="/vorstand/">Vorstand</a>]{% endif %}
 </div>
 
 <div id="content">
@@ -68,7 +69,7 @@ a:hover, a:active {
 <div id="credits">
 <br>
 <small>
-<a href="https://github.com/rrdxa/rrdxa-log">RRDXA Logbook Django app</a> by <a href="https://www.df7cb.de/df7cb/">DF7CB</a>. Copyright (C) 2022-2024 RRDXA.
+<a href="https://github.com/rrdxa/rrdxa-log">RRDXA Logbook Django app</a> by <a href="https://www.df7cb.de/df7cb/">DF7CB</a>. Copyright (C) 2022-2026 RRDXA.
 </small>
 
 </body>
