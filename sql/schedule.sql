@@ -132,6 +132,7 @@ insert into schedule values ('FT8-ACTIVITY-23CM', 'FT8-ACTIVITY 23CM', 'YYYY-MM'
 
 -- weekly contests
 insert into schedule values ('MWC', 'MWC', 'YYMMDD', null, null, null, 1, '16:30', 0, '17:30'); -- every Monday
+insert into schedule values ('TTC-SPCWC', 'TTC', 'YYYY-MM-DD', null, null, null, 2, '19:30', 0, '20:30');
 insert into schedule values ('CWT', 'CWT', 'YYMMDD 13', null, null, null, 3, '13:00', 0, '14:00');
 insert into schedule values ('MINI-TEST', 'Mini-Test', 'YYMMDD', null, null, null, 3, '17:00', 0, '19:00');
 insert into schedule values ('CWT', 'CWT', 'YYMMDD 19', null, null, null, 3, '19:00', 0, '20:00');
