@@ -3,6 +3,14 @@
 {% block content %}
 <h1>Mitglieder</h1>
 
+<p>
+<a href="/admin/rrmember/vereinsmitglied/">Zur Mitglieder-Administration</a>
+</p>
+
+{% if message %}
+<p><b>{{message}}</b></p>
+{% endif %}
+
 <table border="0">
 <tr>
  <th>#</th>
@@ -12,6 +20,7 @@
  <th>bezahlt bis</th>
  <th>Austritt</th>
  <th>Silent Key</th>
+ <th>Jahresbeitrag</th>
 </tr>
 {% for member in verein %}
 <tr>
@@ -19,9 +28,15 @@
  <td><a href="/admin/rrmember/vereinsmitglied/{{member.member_no|lower}}/change/">{{member.call}}</a></td>
  <td>{{member.display_name|default_if_none:""}}</td>
  <td>{{member.vereinsbeitritt|default_if_none:""}}</td>
- <td>{{member.bezahlt_bis|default_if_none:""}}</td>
+ <td {% if member.bezahlt_bis < next_year %}style="background-color: {% if member.bezahlt_bis < this_year %}red{% else %}orange{% endif %}"{% endif %}>
+  {{member.bezahlt_bis|default_if_none:""}}</td>
  <td>{{member.vereinsaustritt|default_if_none:""}}</td>
  <td>{{member.silent_key|default_if_none:""}}</td>
+ <td>
+  <form action="/vorstand/" method="POST">
+  <button name="jahresbeitrag" value="{{member.member_no}}" type="submit">bezahlt</button>
+  </form>
+ </td>
 </tr>
 {% endfor %}
 </table>

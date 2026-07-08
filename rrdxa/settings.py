@@ -136,3 +136,5 @@ RRDXA_ADMINS = [
         'DK2DQ',
         'DL9DAN',
         ]
+
+JAHRESBEITRAG = 12.0
