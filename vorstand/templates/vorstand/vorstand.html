@@ -23,12 +23,12 @@
  <th>Jahresbeitrag</th>
 </tr>
 {% for member in verein %}
-<tr>
+<tr {% if member.vereinsaustritt or member.silent_key %}style="background-color: grey;"{% endif %}>
  <td>{{member.member_no}}</td>
  <td><a href="/admin/rrmember/vereinsmitglied/{{member.member_no|lower}}/change/">{{member.call}}</a></td>
  <td>{{member.display_name|default_if_none:""}}</td>
  <td>{{member.vereinsbeitritt|default_if_none:""}}</td>
- <td {% if member.bezahlt_bis < next_year %}style="background-color: {% if member.bezahlt_bis < this_year %}red{% else %}orange{% endif %}"{% endif %}>
+ <td {% if member.vereinsbeitritt and not member.vereinsaustritt and not member.silent_key and member.bezahlt_bis < this_year %}style="background-color: {% if member.bezahlt_bis < last_year %}red{% else %}orange{% endif %}"{% endif %}>
   {{member.bezahlt_bis|default_if_none:""}}</td>
  <td>{{member.vereinsaustritt|default_if_none:""}}</td>
  <td>{{member.silent_key|default_if_none:""}}</td>

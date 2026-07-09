@@ -3,21 +3,27 @@
 {% block content %}
 <h1>Mitgliedsdaten</h1>
 
+{% if message %}
+<p><b>{{message}}</b></p>
+{% endif %}
+
 <ul>
 <li>Name: {{user.vereinsmitglied.display_name}}</li>
 <li>Call: {{user.vereinsmitglied.call}}</li>
+<li>Mitgliedsnummer: {{user.vereinsmitglied.member_no}}</li>
 {% if user.vereinsmitglied.vereinsbeitritt %}
 <li>Beitritt zur RRDXA e.V.: {{user.vereinsmitglied.vereinsbeitritt}}</li>
 <li>Beitrag bezahlt bis: {{user.vereinsmitglied.bezahlt_bis|default_if_none:"keine Beiträge bisher"}}</li>
 {% else %}
 <li>Du bist noch kein Mitglied des RRDXA e.V.</li>
+<li><form action="." method="POST">Ich möchte dem RRDXA e.V. beitreten. Der Jahresbeitrag beträgt {{jahresbeitrag}} €. <button name="beitreten" type="submit">Beitreten</button></li>
 {% endif %}
 </ul>
 
 <h2>Mitgliederservice</h2>
 
 <ul>
-{% if data.member_no %}
+{% if user.vereinsmitglied.member_no %}
 <li><a href="membership_certificate/">RRDXA-Mitgliedsurkunde</a></li>
 {% else %}
 <li>Für {{call}} wurde noch keine Mitgliedsnummer vergeben. Bitte beim Vorstand nachfragen!</li>

@@ -23,13 +23,13 @@ def v_index(request):
     verein = Vereinsmitglied.objects.all().order_by('call')
 
     today = date.today()
-    this_year = date(today.year, 1, 1)
-    next_year = date(today.year+1, 1, 1)
+    this_year = date(today.year, 12, 31)
+    last_year = date(today.year-1, 12, 31)
 
     context = {
             "verein": verein,
             "this_year": this_year,
-            "next_year": next_year,
+            "last_year": last_year,
             "message": message,
             }
     return render(request, 'vorstand/vorstand.html', context)

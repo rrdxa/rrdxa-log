@@ -8,39 +8,42 @@ import time
 from rrlog.auth import auth_required
 from rrlog.utils import namedtuplefetchall
 from .certificate import certificate
-
-def member_data(call):
-    with connection.cursor() as cursor:
-        cursor.execute("select call, first_name, display_name, member_no, admin from members where call = %s", [call])
-        data = namedtuplefetchall(cursor)
-        return data[0]
+from .models import Member, Vereinsmitglied
 
 @auth_required
 def v_index(request):
-    data = member_data(request.username)
+    member = Member.objects.get(call=request.username)
+    message = ""
+
+    if "beitreten" in request.POST:
+        mitglied = Vereinsmitglied.objects.get(member_no=member.member_no)
+        mitglied.vereinsbeitritt = datetime.date.today()
+        mitglied.save()
+        message = "Willkommen im RRDXA e.V.!"
 
     with connection.cursor() as cursor:
         cursor.execute("select member_no, call, display_name, callsigns, wpid from members where public and member_no is not null order by member_no", [])
         member_list = namedtuplefetchall(cursor)
 
     context = {
-            "call": data.call,
-            "data": data,
+            "call": member.call,
+            "data": member,
             "member_list": member_list,
+            "message": message,
             }
     return render(request, 'rrmember/member.html', context)
 
 @auth_required
 def v_membership_certificate(request):
-    data = member_data(request.username)
+    member = Member.objects.get(call=request.username)
     today = str(datetime.date.today())
 
-    if data.member_no is None:
-        return render(request, 'rrlog/generic.html', { 'message': f"{data.call} does not have a Member No yet" }, status=404)
+    if member.member_no is None:
+        return render(request, 'rrlog/generic.html', { 'message': f"{member.call} does not have a Member No yet" }, status=404)
 
-    pdf = certificate(data.call, data.display_name, today, data.member_no)
+    pdf = certificate(member.call, member.display_name, today, member.member_no)
     response = HttpResponse(pdf, content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="RRDXA_{data.call}.pdf"'
+    response['Content-Disposition'] = f'attachment; filename="RRDXA_{member.call}.pdf"'
     return response
 
 def comma_join(l):
@@ -71,7 +74,7 @@ def encode(key, value):
 
 @auth_required
 def v_mylog(request):
-    data = member_data(request.username)
+    member = Member.objects.get(call=request.username)
 
     with connection.cursor() as cursor:
         cursor.execute("""select
@@ -90,9 +93,9 @@ def v_mylog(request):
             exrx as srx_string,
             gridsquare,
             contest as contest_id
-        from log where coalesce(operator, station_callsign) = %s order by start""", [data.call])
+        from log where coalesce(operator, station_callsign) = %s order by start""", [member.call])
 
-        adi = [f"Log for {data.call} at logbook.rrdxa.org\n",
+        adi = [f"Log for {member.call} at logbook.rrdxa.org\n",
                f"Generated {time.asctime()}\n",
                f"Contains {cursor.rowcount} QSOs\n",
                "\n",
@@ -117,5 +120,5 @@ def v_mylog(request):
             adi.append("<eor>\n")
 
     response = HttpResponse("".join(adi), content_type='text/plain; charset=utf-8')
-    response['Content-Disposition'] = f'attachment; filename="{data.call}_rrdxa_logbook.adi"'
+    response['Content-Disposition'] = f'attachment; filename="{member.call}_rrdxa_logbook.adi"'
     return response
