@@ -47,7 +47,9 @@ limit 100
 """
 
 q_operator_stats = """
-select coalesce(operator, station_callsign) as operator,
+select
+  rank() over (order by count(*) + count(contest) desc) as rank,
+  coalesce(operator, station_callsign) as operator,
   count(distinct start::date) as days_active,
   count(*) as qsos,
   count(contest) as contest_qsos,

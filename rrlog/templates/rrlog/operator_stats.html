@@ -3,6 +3,7 @@
 <table border=0>
 <thead>
 <tr>
+ <th>#</th>
  <th>Operator</th>
  <th>days active</th>
  <th>QSOs</th>
@@ -19,6 +20,7 @@
 
 {% for op in operators %}
  <tr>
+ <td style="text-align: right;">{{op.rank}}</td>
  <td><b><a href="/log/call/{{op.operator|urlencode:''}}/?{% if month %}month={{month}}{% else %}{% if year %}year={{year}}{% endif %}{% endif %}{% if major_mode %}&major_mode={{major_mode}}{% endif %}">{{op.operator}}</a></b></td>
  <td>{{op.days_active}}</td>
  <td style="text-align: right;">{{op.qsos|intcomma}}</td>
