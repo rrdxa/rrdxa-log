@@ -26,10 +26,10 @@
  * (`OIDC_DEFAULT_MINIMAL_CAPABILITY` in
  * src/Http/Handlers/AuthorizeHandler.php) which excludes WP subscribers
  * — and our members are subscribers by default. We lower the bar to
- * `read` so any logged-in WP user (= any RRDXA member) can complete the
- * flow. Discovered 2026-08-21 when DA0RR (subscriber) was bounced by
- * AuthenticateHandler::handle()'s `current_user_can()` check; see
- * AGENTS.md "Tier-3 quirks" for the full story.
+ * `level_0`, which every WP logged-in user is guaranteed to have regardless
+ * of role-cap customization. (`read` would have been the obvious choice,
+ * but this site's Subscriber role has been customized via the Members
+ * plugin to drop `read`. See AGENTS.md "Tier-5 quirks".)
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -39,7 +39,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 add_filter( 'oidc_registered_clients', function () {
 	return array(
 		'logbook.rrdxa.org' => array(
-			'name'         => 'RRDXA Logbook (web)',
+			'name'         => 'RRDXA Logbook',
 			'secret'       => defined( 'OIDC_LOGBOOK_WEB_SECRET' ) ? OIDC_LOGBOOK_WEB_SECRET : '',
 			'redirect_uri' => 'https://logbook.rrdxa.org/oidc/callback/',
 			'grant_types'  => array( 'authorization_code', 'refresh_token' ),
@@ -49,11 +49,18 @@ add_filter( 'oidc_registered_clients', function () {
 } );
 
 // Lower the plugin's "must have at least this WP capability" gate from
-// `edit_posts` to `read`. With WP's default role mapping, every logged-in
-// user has `read`; only Editor / Author / Contributor / Administrator
+// `edit_posts` to `level_0`. With WP's default role mapping, every logged-in
+// user has `level_0`; only Editor / Author / Contributor / Administrator
 // have `edit_posts`. Our members register as subscribers and never need
 // write access to WP, so `edit_posts` would block every one of them.
+//
+// Why `level_0` and not `read`: this site's Subscriber role has been
+// customized via the Members plugin (members_user_has_cap_filter at
+// priority 10) to *remove* the `read` capability. `level_0` is the universal
+// "this user has any WP role" capability that WP_User::init() guarantees
+// for every logged-in user, and it survives role-cap customization.
+// Discovered 2026-08-21 — see AGENTS.md "Tier-5 quirks".
 add_filter( 'oidc_minimal_capability', function () {
-	return 'read';
+	return 'level_0';
 } );
 

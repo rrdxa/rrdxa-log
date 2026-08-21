@@ -329,6 +329,71 @@ the `AuthenticateHandler::handle()` permission gate still runs, and
 without the filter `current_user_can('edit_posts')` still fails for
 subscribers.
 
+#### Tier-5 quirks discovered during end-to-end test (2026-08-21)
+
+Even with the Tier-3 capability filter returning `'read'`, DA0RR
+(subscriber) still got the no-permission screen. Diagnostic debug
+filter (logging `is_user_logged_in()`, `wp_get_current_user()`, and
+`user_can($id, 'read')`) revealed:
+
+```
+[RRDXA-OIDC] allcaps[TRUE]=level_0,read_private_pages,upload_files,
+              wfls_show_login_security,subscriber
+[RRDXA-OIDC] user_has_cap callbacks: ... | 10:members_user_has_cap_filter
+```
+
+`read` is **not in DA0RR's effective capability list**. The Members
+plugin (Justin Tadlock) has a `members_user_has_cap_filter` callback at
+priority 10 that's customizing the Subscriber role and dropping `read`.
+The WordPress default Subscriber role includes `read`; someone ran
+Members on this site's role definition and unchecked it (likely a
+misunderstanding — `read` is WP's universal "this user can access the
+site" cap, not specifically "can read posts").
+
+**Fix (locked in 2026-08-21):** use `level_0` instead of `read` in the
+`oidc_minimal_capability` filter. `level_0` is the
+"this-user-has-any-WP-role" pseudo-capability that `WP_User::init()`
+guarantees for every logged-in user regardless of role-cap
+customization. Re-add `read` to the Subscriber role via
+WP admin → Users → Roles → Subscriber as a separate cleanup — Members
+plugin or `wp_capabilities` user meta may also need updating.
+
+#### Tier-6 quirks discovered during end-to-end test (2026-08-21)
+
+With the WP-side bugs (Tiers 1-5) fixed, the OIDC callback started
+reaching the JWKS-fetch step. That step then failed with a 404 on
+`https://rrdxa.org/.well-known/jwks.json`. Bisected: Wordfence was
+disabled (per user), but the response still depended on the request's
+`User-Agent` and `Accept` headers. Empirically:
+
+| Headers                                              | Result |
+|------------------------------------------------------|--------|
+| `curl`, `python-requests`, `Mozilla/5.0` alone       | 404    |
+| `Mozilla/5.0 Firefox/128.0` + `Accept: */*`          | 404    |
+| `Mozilla/5.0 Firefox/128.0` + `Accept: application/json` | 200 |
+| `Googlebot/2.1`                                      | 200    |
+
+Diagnosis: the OIDC plugin's `Router.php::get_current_route()` calls
+WordPress's `esc_url_raw()` on `$_SERVER['REQUEST_URI']`. The return
+value of `esc_url_raw()` for paths under `/.well-known/` depends on
+request context (specifically the Accept header), and only matches the
+registered route key `.well-known/jwks.json` when the client
+advertises JSON. Otherwise the route lookup misses, the plugin returns
+control to WP, and WP 404s. The `vary: User-Agent` response header
+confirms the response depends on UA, but the discriminator is actually
+Accept. None of this is documented; the OIDC plugin's tests don't
+cover the Accept-header interaction.
+
+**Fix (locked in 2026-08-21):** override
+`OIDCAuthenticationBackend.retrieve_matching_jwk()` in
+`rrmember/oidc_auth.py` to send `Accept: application/json`. Sending
+JSON Accept is the right thing for any OIDC client fetching JWKS
+anyway, so this isn't a hack — it's how the spec says you should
+fetch the key set. The plugin should probably accept the path as-is
+regardless of Accept, but that's an upstream issue. The
+`/wp-json/openid-connect/{authorize,token,userinfo}` endpoints go
+through WordPress's REST routing and aren't affected.
+
 ### Phase 2 — Django, OIDC RP alongside existing backend
 
 In this repo:

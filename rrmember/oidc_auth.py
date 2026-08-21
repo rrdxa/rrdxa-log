@@ -15,7 +15,7 @@ require ``email`` from the ID token and do not set ``User.email``.
 Django users will have empty emails after OIDC login; this is accepted
 because email is only used for password resets, which happen in WP.
 
-Four methods are overridden; the defaults are wrong for our setup:
+Methods overridden; the upstream defaults are wrong for our setup:
 
 - ``filter_users_by_claims`` defaults to filtering by ``email``. We
   filter by ``username`` so returning users match on call sign.
@@ -28,11 +28,21 @@ Four methods are overridden; the defaults are wrong for our setup:
 - ``update_user`` is a no-op by default. We refresh ``first_name`` and
   ``last_name`` on every login so BuddyPress profile changes propagate
   to Django.
+- ``retrieve_matching_jwk`` defaults to fetching JWKS without an
+  ``Accept`` header. The Automattic plugin's Router.php runs the path
+  through WordPress's ``esc_url_raw()`` whose return value depends on
+  the Accept header in non-obvious ways — without
+  ``Accept: application/json`` the request 404s. We always send it.
+  See AGENTS.md "Tier-6 quirks".
 
 ``is_staff`` defaults to ``False``; admins are promoted manually in
 ``manage.py shell`` after their first OIDC login (see AGENTS.md
 "Phase 3 — Hard cutover").
 """
+import jwt
+import requests
+from django.core.exceptions import SuspiciousOperation
+from django.utils.encoding import smart_str
 from mozilla_django_oidc.auth import OIDCAuthenticationBackend
 
 
@@ -70,3 +80,31 @@ class OIDCRPAuthenticationBackend(OIDCAuthenticationBackend):
         user.last_name = claims.get("family_name", user.last_name or "")
         user.save()
         return user
+
+    def retrieve_matching_jwk(self, token):
+        # Identical to the upstream implementation except for the
+        # Accept header. See the module docstring for why.
+        response_jwks = requests.get(
+            self.OIDC_OP_JWKS_ENDPOINT,
+            headers={"Accept": "application/json"},
+            verify=self.get_settings("OIDC_VERIFY_SSL", True),
+            timeout=self.get_settings("OIDC_TIMEOUT", None),
+            proxies=self.get_settings("OIDC_PROXY", None),
+        )
+        response_jwks.raise_for_status()
+        jwks = response_jwks.json()
+
+        jws = jwt.get_unverified_header(token)
+
+        key = None
+        for jwk in jwks["keys"]:
+            if self.get_settings("OIDC_VERIFY_KID", True) and jwk[
+                "kid"
+            ] != smart_str(jws["kid"]):
+                continue
+            if "alg" in jwk and jwk["alg"] != smart_str(jws["alg"]):
+                continue
+            key = jwk
+        if key is None:
+            raise SuspiciousOperation("Could not find a valid JWKS.")
+        return key
