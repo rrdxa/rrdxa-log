@@ -50,15 +50,85 @@ INSTALLED_APPS = [
     'vorstand',
 ]
 
+# OIDC RP. The package is installed under the user site-packages dir
+# (pip install --user mozilla-django-oidc) because apt does not package
+# it. We always import the app so management commands like
+# `manage.py shell` can still resolve OIDC_* settings without crashing
+# — the actual backend selection is gated on OIDC_ENABLED below.
+INSTALLED_APPS += ['mozilla_django_oidc']
+
 MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     #'django.middleware.csrf.CsrfViewMiddleware', # breaks log uploads
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    # Re-auths users silently via prompt=none once the id_token expires.
+    # Without this, users get bumped every hour (id_token lifetime).
+    # See AGENTS.md "Phase 2 — step 7".
+    'mozilla_django_oidc.middleware.SessionRefresh',
 ]
 
-AUTHENTICATION_BACKENDS = ["rrmember.auth.WordpressAuthBackend"]
+# --- Authentication backend selection ---
+#
+# OIDC_ENABLED flips between the legacy WordpressAuthBackend (which
+# verifies passwords against WP's user_pass column via passlib) and the
+# OIDC RP. The legacy backend stays installed while OIDC_ENABLED=False
+# so we can roll back without redeploying. Phase 3 removes
+# WordpressAuthBackend entirely; see AGENTS.md.
+#
+# TODO Phase 3: hardcode OIDCRPAuthenticationBackend here, delete
+# rrmember/auth.py's WordpressAuthBackend class, drop the passlib
+# dependency.
+OIDC_ENABLED = False
+
+if OIDC_ENABLED:
+    AUTHENTICATION_BACKENDS = [
+        "rrmember.oidc_auth.OIDCRPAuthenticationBackend",
+    ]
+else:
+    AUTHENTICATION_BACKENDS = [
+        "rrmember.auth.WordpressAuthBackend",
+    ]
+
+# --- OIDC RP settings ---
+#
+# Only consulted when OIDC_ENABLED=True. Kept here (rather than gated)
+# so `manage.py check` can validate the values regardless of the flag.
+#
+# `mozilla-django-oidc` does NOT auto-discover from the IdP's discovery
+# doc — every OIDC_OP_* endpoint must be set explicitly. The discovery
+# doc advertises authorization_endpoint = /wp-json/openid-connect/authorize
+# but the actual browser flow uses wp-login.php?action=openid-authenticate
+# (WP needs an authenticated session before authorizing the client).
+#
+# Quirks documented in AGENTS.md "Tier-2 quirks":
+# - scopes_supported = ["openid", "profile"] — no "email" scope, plugin
+#   does not emit email claim; OIDC_RP_SCOPES does NOT request email.
+# - JWKS omits "kid"; OIDC_VERIFY_KID=False skips the kid-check loop in
+#   mozilla_django_oidc.auth.retrieve_matching_jwk.
+if OIDC_ENABLED:
+    OIDC_RP_CLIENT_ID = "logbook.rrdxa.org"
+    # Must match OIDC_LOGBOOK_WEB_SECRET in wp-config.php. Set in
+    # /etc/logbook.rrdxa.org/oidc.env (chmod 0640, owner=myon:www-data)
+    # and read here at startup. See deploy notes — not yet deployed.
+    OIDC_RP_CLIENT_SECRET = "REPLACE_ME_AT_DEPLOY_TIME"
+    OIDC_RP_SIGN_ALGO = "RS256"
+
+    OIDC_OP_AUTHORIZATION_ENDPOINT = "https://rrdxa.org/wp-login.php?action=openid-authenticate"
+    OIDC_OP_TOKEN_ENDPOINT         = "https://rrdxa.org/wp-json/openid-connect/token"
+    OIDC_OP_USER_ENDPOINT          = "https://rrdxa.org/wp-json/openid-connect/userinfo"
+    OIDC_OP_JWKS_ENDPOINT          = "https://rrdxa.org/.well-known/jwks.json"
+
+    OIDC_RP_SCOPES = "openid profile"
+    OIDC_VERIFY_KID = False
+
+    OIDC_USE_NONCE = True
+    OIDC_USE_PKCE = True
+    OIDC_CREATE_USER = True
+
+    LOGIN_REDIRECT_URL = "/"
+    LOGIN_REDIRECT_URL_FAILURE = "/login-failed/"
 
 ROOT_URLCONF = 'rrdxa.urls'
 

@@ -28,5 +28,13 @@ urlpatterns = [
     path('log/', include('rrlog.urls')),
     path('member/', include('rrmember.urls')),
     path('vorstand/', include('vorstand.urls')),
+    # OIDC browser flow routes. The redirect_uri registered with the
+    # WP IdP must be exactly https://logbook.rrdxa.org/oidc/callback/
+    # (mozilla-django-oidc appends /callback/ to the include prefix).
+    # The OIDC URLs only respond when OIDC_ENABLED=True in settings.py;
+    # the package itself does not gate them, so leave the include in
+    # even with the flag off — visiting /oidc/authenticate/ will just
+    # trigger the default Django 404.
+    path('oidc/', include('mozilla_django_oidc.urls')),
     path('robots.txt', TemplateView.as_view(template_name="robots.txt", content_type="text/plain")),
 ]
