@@ -239,6 +239,96 @@ worth recording before phase 2 lands.
    which matches `RS256` correctly. If/when the plugin adds a `kid` to
    its JWKS, we can drop the override.
 
+#### Tier-3 quirks discovered during end-to-end browser test (2026-08-21)
+
+With OIDC_ENABLED=True on production and `WSGIApplicationGroup %{GLOBAL}`
+in Apache, the Django side now redirects browsers through the OIDC flow.
+But the first browser test with user DA0RR ended not at the Django
+callback but on a WP-styled "no permission" page. Diagnosed via curl:
+
+```
+$ curl -i -X POST https://rrdxa.org/wp-login.php \
+    -d "log=DA0RR&pwd=...&redirect_to=...&wp-submit=Anmelden&testcookie=1"
+HTTP/2 302
+location: https://rrdxa.org/wp-login.php?action=openid-authenticate&client_id=...
+$ curl -i "https://rrdxa.org/wp-login.php?action=openid-authenticate&..." \
+    -b cookies-from-previous
+HTTP/2 200
+<title>OIDC Connect ‹ Rhein Ruhr DX Association – RRDXA – WordPress</title>
+<p>Du hast nicht die erforderlichen Rechte, um OpenID Connect zu verwenden.</p>
+```
+
+That body is `src/Http/Handlers/AuthenticateHandler.php`'s
+`render_no_permission_screen()`. Looking at `handle()`:
+
+```php
+$has_permission = current_user_can( apply_filters(
+    'oidc_minimal_capability', OIDC_DEFAULT_MINIMAL_CAPABILITY
+) );
+```
+
+`OIDC_DEFAULT_MINIMAL_capability` is `'edit_posts'`. WP's default role
+mapping gives `edit_posts` to Editor / Author / Contributor /
+Administrator only — *not* Subscriber. RRDXA members register as
+subscribers (we don't need WP write access for anyone) so every one
+of them would hit this gate.
+
+**Decision (locked in 2026-08-21):** lower the bar to `read` via the
+`oidc_minimal_capability` filter in our MU-plugin
+(`docs/snippets/rrdxa-oidc-clients.php`). `'read'` is held by every
+logged-in user; since WP auth *is* our membership check, this is the
+correct gate. No theme/source edits; no DB changes. The Cancel button
+on the no-permission screen redirects back to Django's
+`/oidc/callback/?error=access_denied&...`, which is why the browser
+appeared to "end on WP admin" (the styling matches wp-admin) rather
+than completing the round-trip.
+
+#### Tier-4 quirks discovered during live flow test (2026-08-21)
+
+After the Tier-3 fix was applied (capability filter lowered to `read`),
+end-to-end browser login *still* failed — the user got logged in to WP
+but never reached Django. Diagnosed by tracing the full chain with
+curl + cookies. The smoking gun was in `Location:` header from
+`/oidc/authenticate/`:
+
+```
+Location: https://rrdxa.org/wp-login.php?action=openid-authenticate?response_type=code&scope=openid+profile&client_id=logbook.rrdxa.org&redirect_uri=…&state=…&nonce=…&code_challenge=…&code_challenge_method=S256
+```
+
+**Two `?`s.** The previous setting was
+`OIDC_OP_AUTHORIZATION_ENDPOINT = "https://rrdxa.org/wp-login.php?action=openid-authenticate"`.
+`mozilla_django_oidc.views.OIDCAuthenticationRequestView.get()` builds
+the redirect URL as:
+
+```python
+redirect_url = "{url}?{query}".format(url=self.OIDC_OP_AUTH_ENDPOINT, query=query)
+```
+
+Appending `?` to a URL that already ends in `?` produces `??`. WP's
+`wp-login.php` then sees `$_REQUEST['action'] = 'openid-authenticate?response_type=code'`
+(not matching any registered action), falls through to the default
+`login` action, shows the standard login form with
+`redirect_to` *unset*, and after successful login redirects to the
+default — `https://rrdxa.org/wp-admin/`. Hence "logged in to WP".
+
+**Fix (locked in 2026-08-21):** point
+`OIDC_OP_AUTHORIZATION_ENDPOINT` at the REST endpoint the discovery doc
+already advertises:
+`https://rrdxa.org/wp-json/openid-connect/authorize`. That URL has no
+`?` in its path, so the concatenation is clean. The plugin's
+`AuthorizeHandler::handle()` already handles the "not logged in"
+branch by `wp_safe_redirect()`-ing to
+`wp-login.php?action=openid-authenticate&…` with all OIDC params
+preserved — i.e. exactly the flow we wanted, just reached via the REST
+endpoint instead of starting there directly. This matches the OIDC
+spec's discovery doc and removes the need to special-case wp-login.php.
+
+The capability filter from Tier-3 is still required: when the
+AuthorizeHandler redirects to `wp-login.php?action=openid-authenticate&…`
+the `AuthenticateHandler::handle()` permission gate still runs, and
+without the filter `current_user_can('edit_posts')` still fails for
+subscribers.
+
 ### Phase 2 — Django, OIDC RP alongside existing backend
 
 In this repo:
@@ -248,20 +338,24 @@ In this repo:
 2. `rrdxa/settings.py`:
    - Add `"mozilla_django_oidc"` to `INSTALLED_APPS`.
    - Add the OIDC config block. **`mozilla-django-oidc` does not auto-discover
-     endpoints** from the IdP's `.well-known/openid-configuration` doc — every
-     `OIDC_OP_*` endpoint must be set explicitly. We set them manually because
-     the Automattic plugin's discovery doc advertises
-     `/wp-json/openid-connect/authorize` but the actual browser flow uses
-     `wp-login.php?action=openid-authenticate` (WP needs an authenticated
-     session before authorizing the client). Required settings:
+      endpoints** from the IdP's `.well-known/openid-configuration` doc — every
+      `OIDC_OP_*` endpoint must be set explicitly. We use the REST endpoint
+      that the discovery doc itself advertises (`/wp-json/openid-connect/authorize`).
+      That endpoint handles both branches: logged-in users go straight through,
+      not-logged-in users get redirected by `AuthorizeHandler` to
+      `wp-login.php?action=openid-authenticate&…` so WP can authenticate them
+      first. (Earlier we configured the `wp-login.php` URL directly, which
+      mozilla-django-oidc would concatenate with `?response_type=…&state=…` —
+      producing a malformed URL with two `?` and breaking the round-trip; see
+      "Tier-4 quirks" for the full story.) Required settings:
      ```python
      OIDC_RP_CLIENT_ID = "logbook.rrdxa.org"
      OIDC_RP_CLIENT_SECRET = ...   # from OIDC_LOGBOOK_WEB_SECRET
      OIDC_RP_SIGN_ALGO = "RS256"
-     OIDC_OP_AUTHORIZATION_ENDPOINT = "https://rrdxa.org/wp-login.php?action=openid-authenticate"
-     OIDC_OP_TOKEN_ENDPOINT         = "https://rrdxa.org/wp-json/openid-connect/token"
-     OIDC_OP_USER_ENDPOINT          = "https://rrdxa.org/wp-json/openid-connect/userinfo"
-     OIDC_OP_JWKS_ENDPOINT          = "https://rrdxa.org/.well-known/jwks.json"
+      OIDC_OP_AUTHORIZATION_ENDPOINT = "https://rrdxa.org/wp-json/openid-connect/authorize"
+      OIDC_OP_TOKEN_ENDPOINT         = "https://rrdxa.org/wp-json/openid-connect/token"
+      OIDC_OP_USER_ENDPOINT          = "https://rrdxa.org/wp-json/openid-connect/userinfo"
+      OIDC_OP_JWKS_ENDPOINT          = "https://rrdxa.org/.well-known/jwks.json"
       OIDC_RP_SCOPES                 = "openid profile"  # not "openid email" — plugin doesn't support email scope; see Tier-2 quirks
       OIDC_VERIFY_KID               = False             # JWKS omits kid field; mozilla-django-oidc's kid-check would KeyError; see Tier-2 quirks
       OIDC_USE_NONCE = True

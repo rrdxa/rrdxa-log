@@ -21,6 +21,15 @@
  * so any non-auth-code client must use `authorization_code` + PKCE with a
  * local browser callback — see AGENTS.md "Future work" for the three
  * candidate paths.
+ *
+ * Capability gate: the plugin defaults to requiring `edit_posts`
+ * (`OIDC_DEFAULT_MINIMAL_CAPABILITY` in
+ * src/Http/Handlers/AuthorizeHandler.php) which excludes WP subscribers
+ * — and our members are subscribers by default. We lower the bar to
+ * `read` so any logged-in WP user (= any RRDXA member) can complete the
+ * flow. Discovered 2026-08-21 when DA0RR (subscriber) was bounced by
+ * AuthenticateHandler::handle()'s `current_user_can()` check; see
+ * AGENTS.md "Tier-3 quirks" for the full story.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -38,3 +47,13 @@ add_filter( 'oidc_registered_clients', function () {
 		),
 	);
 } );
+
+// Lower the plugin's "must have at least this WP capability" gate from
+// `edit_posts` to `read`. With WP's default role mapping, every logged-in
+// user has `read`; only Editor / Author / Contributor / Administrator
+// have `edit_posts`. Our members register as subscribers and never need
+// write access to WP, so `edit_posts` would block every one of them.
+add_filter( 'oidc_minimal_capability', function () {
+	return 'read';
+} );
+

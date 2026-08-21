@@ -115,7 +115,7 @@ if OIDC_ENABLED:
     OIDC_RP_CLIENT_SECRET = "REPLACE_ME_AT_DEPLOY_TIME"
     OIDC_RP_SIGN_ALGO = "RS256"
 
-    OIDC_OP_AUTHORIZATION_ENDPOINT = "https://rrdxa.org/wp-login.php?action=openid-authenticate"
+    OIDC_OP_AUTHORIZATION_ENDPOINT = "https://rrdxa.org/wp-json/openid-connect/authorize"
     OIDC_OP_TOKEN_ENDPOINT         = "https://rrdxa.org/wp-json/openid-connect/token"
     OIDC_OP_USER_ENDPOINT          = "https://rrdxa.org/wp-json/openid-connect/userinfo"
     OIDC_OP_JWKS_ENDPOINT          = "https://rrdxa.org/.well-known/jwks.json"
