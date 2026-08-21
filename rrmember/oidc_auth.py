@@ -107,4 +107,8 @@ class OIDCRPAuthenticationBackend(OIDCAuthenticationBackend):
             key = jwk
         if key is None:
             raise SuspiciousOperation("Could not find a valid JWKS.")
-        return key
+        # `jwt.PyJWK` wraps the JWK dict so PyJWT can convert it to a
+        # cryptography key at decode time. Returning the raw dict here
+        # trips PyJWT's `prepare_key` with "Expecting a PEM-formatted
+        # key." — see AGENTS.md Tier-7 quirks.
+        return jwt.PyJWK(key)
