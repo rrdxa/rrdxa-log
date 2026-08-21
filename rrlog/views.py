@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.http import HttpResponse, FileResponse
+from django.http import HttpResponse, HttpResponseRedirect, FileResponse, JsonResponse
 from django.db import connection
 
 import datetime
@@ -7,7 +7,7 @@ import re
 
 from rrdxa import settings
 
-from rrlog.auth import basic_auth, auth_required
+from rrlog.auth import auth_required, _has_basic_auth
 from rrlog.upload import log_upload
 from rrlog.utils import namedtuplefetchall, band_sort
 from rrlog.summary import get_summary, post_summary
@@ -285,16 +285,15 @@ order by month, (week+8) % 8, dow, start"""
 
 @auth_required
 def v_events(request):
-    username = None
-
     if request.method == 'POST':
-        # authentication
-        status, message = basic_auth(request)
-        if not status:
-            response = render(request, 'rrlog/generic.html', { 'message': message }, status=401)
-            response['WWW-Authenticate'] = 'Basic realm="RRDXA Log Upload"'
-            return response
-        username = message
+        # ``request.username`` was set by ``auth_required`` (either via
+        # a verified Basic header for curl/programmatic submissions, or
+        # via the OIDC session cookie for browser submissions). The
+        # previous implementation called ``basic_auth`` a second time
+        # here, but ``auth_required`` already ran it — the second call
+        # was dead code that also 401'd browser POSTs without a Basic
+        # header. Rely on the decorator.
+        username = request.username
 
         with connection.cursor() as cursor:
             is_vhf = 'vhf' in request.POST
@@ -615,3 +614,34 @@ def v_members(request):
         'members': members,
     }
     return render(request, 'rrlog/members.html', context)
+
+
+@auth_required
+def v_whoami(request):
+    """Diagnostic endpoint: report the resolved callsign and which auth path
+    served the request.
+
+    Reaches this view only when ``auth_required`` has already populated
+    ``request.username``. The presence of an ``Authorization: Basic`` header
+    distinguishes the two paths the decorator accepts:
+
+    - ``Authorization: Basic`` present → ``basic_auth`` verified creds
+      against the FDW-backed ``members`` view (curl/programmatic client).
+    - absent → ``request.user`` was authenticated via an OIDC session
+      cookie set by ``mozilla_django_oidc`` on ``/oidc/callback/``
+      (browser client).
+
+    Returns 401 + ``WWW-Authenticate: Basic`` if no auth path applies
+    (OIDC disabled, no header → legacy Basic prompt).
+
+    curl smokes:
+        curl -u DL1ABC:secret …/log/whoami/
+            → {"username": "DL1ABC", "auth_method": "basic"}
+        curl --cookie sessionid=…  …/log/whoami/
+            → {"username": "DL1ABC", "auth_method": "session"}
+        curl -i  …/log/whoami/        # no auth at all
+            → 401 with WWW-Authenticate: Basic (legacy)
+            or 302 to /oidc/authenticate/?next=/log/whoami/ (OIDC on)
+    """
+    auth_method = "basic" if _has_basic_auth(request) else "session"
+    return JsonResponse({"username": request.username, "auth_method": auth_method})

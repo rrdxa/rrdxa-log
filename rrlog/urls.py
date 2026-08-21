@@ -24,5 +24,11 @@ urlpatterns = [
     path('edit/<int:upload_id>/', views.v_edit, name='edit'),
 
     path('members/', views.v_members, name='members'),
+
+    # Diagnostic probe: returns JSON {"username": "...", "auth_method": "basic|session"}.
+    # Reachable only when ``auth_required`` accepts the request — i.e. the
+    # caller already supplied Basic creds or an OIDC session cookie. Public
+    # callers get 401 Basic (legacy mode) or 302 → /oidc/authenticate/ (OIDC).
+    path('whoami/', views.v_whoami, name='whoami'),
 ]
 

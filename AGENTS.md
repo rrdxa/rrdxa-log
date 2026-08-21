@@ -363,6 +363,107 @@ Acceptance: with `OIDC_ENABLED=False`, the site behaves identically to today
 the flag and exercise the OIDC flow end-to-end without disturbing
 production.
 
+### Phase 2.5 — Auth-required bridge (2026-08-21)
+
+When `OIDC_ENABLED=True` was first enabled in production, the OIDC
+backend was active but **every member view still used the homebrew
+`@auth_required` decorator** (`rrlog/auth.py`), which only consulted
+HTTP Basic headers. Net effect: OIDC login worked in the background
+but no member view actually checked the resulting session. The user
+got the HTTP Basic prompt anyway.
+
+This phase makes `@auth_required` consult OIDC sessions first. The
+key insight: **the presence of an `Authorization` header is the
+signal for "programmatic client"**. A curl user opts in to Basic by
+sending `-u user:pass` (or equivalent); a browser user doesn't send
+the header at all. No `User-Agent` sniffing needed.
+
+#### Behaviour (`rrlog/auth.py::auth_required`)
+
+| `Authorization` header | OIDC session | `OIDC_ENABLED` | Result                          |
+| ---------------------- | ------------ | -------------- | ------------------------------- |
+| Valid Basic            | (any)        | (any)          | page served, `request.username` from Basic |
+| Invalid Basic          | (any)        | (any)          | `401 + WWW-Authenticate: Basic` — curl knows creds are wrong |
+| Absent                 | Present      | True           | page served, `request.username = request.user.username` |
+| Absent                 | Absent       | True           | `302 → /oidc/authenticate/?next=<orig>` |
+| Absent                 | (any)        | False          | `401 + WWW-Authenticate: Basic` (legacy mode, unchanged) |
+
+When **both** a Basic header and a session are present, Basic wins.
+A programmatic client explicitly opts in to credential-based auth by
+sending the header; honouring that header keeps the response
+consistent with what the client asked for (and avoids subtle
+impersonation if the session belongs to a different user).
+
+`basic_auth()` itself is unchanged — still the source of truth for
+Basic verification.
+
+#### `/log/whoami/` diagnostic endpoint
+
+`rrlog/views.py::v_whoami` (urlpattern `path('whoami/', ...)`) is a
+JSON probe gated by the same `@auth_required`. Returns:
+
+```json
+{"username": "<callsign>", "auth_method": "basic|session"}
+```
+
+curl smokes (post-cutover, OIDC on):
+
+```
+$ curl -i https://logbook.rrdxa.org/log/whoami/        # no auth
+HTTP/1.1 302 Found
+Location: /oidc/authenticate/?next=/log/whoami/
+
+$ curl -u DL1ABC:secret https://logbook.rrdxa.org/log/whoami/
+{"username": "DL1ABC", "auth_method": "basic"}
+
+$ curl -i -u DL1ABC:wrong https://logbook.rrdxa.org/log/whoami/
+HTTP/1.1 401 Unauthorized
+WWW-Authenticate: Basic realm="RRDXA Log Upload"
+
+$ curl --cookie sessionid=…  https://logbook.rrdxa.org/log/whoami/
+{"username": "DL1ABC", "auth_method": "session"}
+```
+
+This is the only honest way to verify both auth paths without
+rendering a full member page, and it survives future refactors of
+the views.
+
+#### `v_events` simplification
+
+`rrlog/views.py::v_events` previously called `basic_auth` a second
+time inside its POST branch, which was dead code (the `@auth_required`
+decorator already verified the Basic header) **and** would have 401'd
+any browser POST without a Basic header — defeating the OIDC flow.
+Removed the redundant call; the POST handler now reads
+`request.username` set by the decorator.
+
+#### Trade-off: browser POST with expired session
+
+If a browser user's OIDC session expires between GETting the events
+form and POSTing it, the `@auth_required` redirect kicks the browser
+to OIDC login, lands them back on `/log/event/` as a GET, and the
+POST data is lost. The user refills the form. SessionRefresh
+middleware normally keeps the session alive across GETs, so this only
+happens in the rare "form sits open across an id_token expiry"
+scenario. Acceptable for now; would need a "save POST to session and
+restore on callback" mechanism (mozilla-django-oidc does not provide
+one) to fix properly. Out of scope for this migration.
+
+#### Tests
+
+12 cases in `rrlog/tests/test_auth_required.py`:
+
+- 5 cases for the truth table above
+- 1 case for "Basic takes precedence over session" (priority)
+- 6 parametrised cases for `_has_basic_auth` (case-insensitivity,
+  Bearer ignored, empty/missing header)
+
+Plus a `rrlog/tests/test_urls.py` stub urlconf that mounts
+`/oidc/authenticate/`, `/oidc/callback/`, `/oidc/logout/` under the
+names `mozilla_django_oidc.urls` would use — needed so the wrapper's
+`reverse('oidc_authentication_init')` resolves in tests without
+loading the real OIDC settings.
+
 ### Phase 3 — Hard cutover (the chosen date)
 
 Browser login only. `rrlog/basic_auth` and the FDW stay.

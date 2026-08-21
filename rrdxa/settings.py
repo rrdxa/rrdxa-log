@@ -129,6 +129,13 @@ if OIDC_ENABLED:
 
     LOGIN_REDIRECT_URL = "/"
     LOGIN_REDIRECT_URL_FAILURE = "/login-failed/"
+    # ``redirect_to_login`` (used by ``auth_required`` when a browser hits
+    # a member view without an OIDC session) needs this to point at the
+    # mozilla-django-oidc login trigger. Hardcoded to match the path that
+    # ``path('oidc/', include('mozilla_django_oidc.urls'))`` mounts.
+    # Keeping it aligned also means any future @login_required use on a
+    # view Just Works.
+    LOGIN_URL = "/oidc/authenticate/"
 
 ROOT_URLCONF = 'rrdxa.urls'
 
