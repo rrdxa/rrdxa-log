@@ -285,16 +285,15 @@ order by month, (week+8) % 8, dow, start"""
 
 @auth_required
 def v_events(request):
-    if request.method == 'POST':
-        # ``request.username`` was set by ``auth_required`` (either via
-        # a verified Basic header for curl/programmatic submissions, or
-        # via the OIDC session cookie for browser submissions). The
-        # previous implementation called ``basic_auth`` a second time
-        # here, but ``auth_required`` already ran it — the second call
-        # was dead code that also 401'd browser POSTs without a Basic
-        # header. Rely on the decorator.
-        username = request.username
+    # ``request.username`` was set by ``auth_required`` (either via a
+    # verified Basic header for curl/programmatic submissions, or via
+    # the OIDC session cookie for browser submissions). The decorator
+    # handles auth — we don't re-check it here. This must be assigned
+    # at the top of the function, not inside the POST branch: the
+    # final ``return`` reads ``username`` for both GET and POST.
+    username = request.username
 
+    if request.method == 'POST':
         with connection.cursor() as cursor:
             is_vhf = 'vhf' in request.POST
             cursor.execute("insert into event (event, start, stop, author, vhf) values (%s, %s, %s, %s, %s)",
