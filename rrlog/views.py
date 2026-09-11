@@ -58,8 +58,8 @@ select
   count(distinct (call, band, major_mode)) as calls_band_mode,
   count(distinct dxcc)                           filter (where dxcc between 1 and 900) as dxccs,
   count(distinct (dxcc, band, major_mode))       filter (where dxcc between 1 and 900) as dxccs_band_mode,
-  count(distinct gridsquare) as grids,
-  count(distinct (gridsquare, band, major_mode)) filter (where gridsquare is not null) as grids_band_mode
+  count(distinct gridsquare::varchar(4)) as grids,
+  count(distinct (gridsquare::varchar(4), band, major_mode)) filter (where gridsquare is not null) as grids_band_mode
 from log
   join rrcalls on coalesce(operator, station_callsign) = rrcalls.rrcall
 where start >= %s::date and start < %s::date + %s::interval and band <> 'unknown' and major_mode <> 'unknown' {}
@@ -181,7 +181,7 @@ def v_dxcc(request, dxcc):
 
 @auth_required
 def v_grid(request, grid):
-    return generic_view(request, f"Log entries from gridsquare {grid}", ['gridsquare = %s'], [grid])
+    return generic_view(request, f"Log entries from gridsquare {grid}", ['gridsquare::varchar(4) = %s::varchar(4)'], [grid])
 
 @auth_required
 def v_contest(request, contest):
