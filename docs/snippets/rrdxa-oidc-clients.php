@@ -45,6 +45,13 @@ add_filter( 'oidc_registered_clients', function () {
 			'grant_types'  => array( 'authorization_code', 'refresh_token' ),
 			'scope'        => 'openid profile email',
 		),
+		'rrdxa.dl2tt.de' => array(
+			'name'         => 'RRDXA Live',
+			'secret'       => defined( 'OIDC_RRDXA_LIVE_SECRET' ) ? OIDC_RRDXA_LIVE_SECRET : '',
+			'redirect_uri' => 'https://rrdxa.dl2tt.de/oidc_callback.php',
+			'grant_types'  => array( 'authorization_code', 'refresh_token' ),
+			'scope'        => 'openid profile email',
+		),
 	);
 } );
 
