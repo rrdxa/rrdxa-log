@@ -352,7 +352,7 @@ def v_event(request, event):
         event_data = namedtuplefetchall(cursor)
 
     if not event_data:
-        return render(request, 'rrlog/generic.html', { 'message': "No such event" }, status=404)
+        return render(request, 'rrlog/generic.html', { 'message': "No such contest" }, status=404)
 
     context = {
         'title': event,
@@ -671,8 +671,13 @@ where id = %s
 
         # post to reflector when requested
         if request.POST.get('reflector'):
-            post_summary(data, summary, subject)
-            message += f"Mail auf Reflektor gesandt. "
+            try:
+                post_summary(data, summary, subject)
+                message += f"Mail auf Reflektor gesandt. "
+            except Exception as e:
+                # e.g. "Kein Contest zugeordnet": post_summary refuses to
+                # send without an event. Surface it instead of a 500.
+                message += f"{e}. "
 
         # get all events overlapping this upload
         cursor.execute("select *, start_str(start), stop_str(stop), event_id = %s as selected from event where %s <= stop and %s >= start",

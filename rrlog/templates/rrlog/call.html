@@ -4,12 +4,11 @@
 {% block content %}
 <h1>{{title}}</h1>
 
-<h2>Contests and Events</h2>
+<h2>Contests</h2>
 
 <table border=0>
 <thead>
 <tr>
- <th>Event</th>
  <th>contest</th>
  <th>station</th>
  <th>exch</th>
@@ -26,8 +25,7 @@
 
 {% for entry in entries %}
  <tr>
- <td><a href="/log/event/{{entry.event|urlencode:''}}/"><b>{{entry.event|default_if_none:''}}</b></a></td>
- <td><a href="/log/contest/{{entry.contest|urlencode:''}}/"><b>{{entry.contest|default_if_none:''}}</b></a></td>
+ <td>{% if entry.event %}<a href="/log/event/{{entry.event|urlencode:''}}/"><b>{{entry.event}}</b></a>{% elif entry.contest %}<a href="/log/contest/{{entry.contest|urlencode:''}}/"><b>{{entry.contest}}</b></a>{% endif %}</td>
  <td>
   <a href="/log/summary/{{entry.upload_id}}/">{{entry.station_callsign|default_if_none:''}}</a>
   {% if entry.operators %} ({{entry.operators}}){% endif %}

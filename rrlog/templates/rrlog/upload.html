@@ -67,7 +67,6 @@ Kein Logfile? <a href="/log/submit-score/">Score einreichen</a> ohne Log-Upload.
  <th>station callsign</th>
  <th>operator</th>
  <th>contest</th>
- <th>event</th>
  <th></th>
  <th>errors</th>
  <th></th>
@@ -83,8 +82,8 @@ Kein Logfile? <a href="/log/submit-score/">Score einreichen</a> ohne Log-Upload.
      {% if upload.filename %}<a href="/log/download/{{upload.id}}/">{{upload.filename}}</a>{% else %}(kein Logfile){% endif %}</td>
  <td><a href="/log/call/{{upload.station_callsign|urlencode:''}}/">{{upload.station_callsign|default_if_none:''}}</a></td>
  <td>{% if upload.operator != upload.station_callsign %}<a href="/log/call/{{upload.operator|urlencode:''}}/">{{upload.operator|default_if_none:''}}</a>{% endif %}</td>
- <td>{% if upload.contest %}<a href="/log/contest/{{upload.contest|urlencode:''}}/">{{upload.contest}}</a>{% endif %}</td>
- <td>{% if upload.event %}<a href="/log/event/{{upload.event|urlencode:''}}/">{{upload.event}}</a>{% elif upload.contest %}[<a href="/log/edit/{{upload.id}}/"><span style="color: red;">no event</span></a>]{% endif %}</td>
+ <td>{% if upload.contest %}<a href="/log/contest/{{upload.contest|urlencode:''}}/">{{upload.contest}}</a>{% endif %}
+  {% if upload.event %}{% if upload.contest %}<br>{% endif %}<a href="/log/event/{{upload.event|urlencode:''}}/">{{upload.event}}</a>{% elif upload.contest %}<br>[<a href="/log/edit/{{upload.id}}/"><span style="color: red;">Kein Contest zugeordnet</span></a>]{% endif %}</td>
  <td>{% if upload.contest %}[<a href="/log/summary/{{upload.id}}/">summary</a>]{% else %}[<a href="/log/edit/{{upload.id}}/">edit</a>]{% endif %}</td>
  <td>{{upload.error|default_if_none:''}}</td>
  <td>

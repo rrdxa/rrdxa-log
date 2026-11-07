@@ -14,8 +14,8 @@
  {% if data.grid_locator %}      <li>Locator:     {{data.grid_locator}}</li>{% endif %}
  <br>
 
- {% if data.contest %}           <li>Contest:     {{data.contest}}</li>{% endif %}
- {% if data.event %}             <li>Event:       <a href="/log/event/{{data.event|urlencode:''}}/">{{data.event}}</a></li>{% endif %}
+ {% if data.event %}             <li>Contest:     <a href="/log/event/{{data.event|urlencode:''}}/">{{data.event}}</a></li>
+ {% elif data.contest %}         <li>Contest:     {{data.contest}}</li>{% endif %}
  {% if data.category_operator %} <li>Category:    {{data.category_operator}}</li>{% endif %}
  {% if data.category_band %}     <li>Band:        {{data.category_band}}</li>{% endif %}
  {% if data.category_mode %}     <li>Mode:        {{data.category_mode}}</li>{% endif %}

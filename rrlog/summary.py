@@ -103,6 +103,11 @@ def post_summary(data, summary, subject, send=True):
     if data is None:
         return "No data found"
 
+    # Refuse to mail the reflector for entries that are not assigned to an
+    # event: without one, the mail would be filed under the wrong contest.
+    if send and not data.event:
+        raise Exception("Kein Contest zugeordnet, Mail wurde nicht gesandt")
+
     # build content
     mail = f"{subject}\n\n"
 
@@ -114,8 +119,7 @@ def post_summary(data, summary, subject, send=True):
     if data.grid_locator:         mail += f"Locator:     {data.grid_locator}\n"
     mail += "\n"
 
-    if data.event:                mail += f"Event:       {data.event}\n"
-    if data.contest:              mail += f"Contest:     {data.contest}\n"
+    if data.event:                mail += f"Contest:     {data.event}\n"
     if data.category_operator:    mail += f"Category:    {data.category_operator}\n"
     if data.category_band:        mail += f"Band:        {data.category_band}\n"
     if data.category_mode:        mail += f"Mode:        {data.category_mode}\n"
@@ -146,7 +150,7 @@ def post_summary(data, summary, subject, send=True):
         msg = EmailMessage()
         msg['From'] = Address(display_name=f"{data.uploader} via rrdxa.org",  addr_spec="noreply@rrdxa.org")
         msg['Reply-To'] = Address(display_name=f"RRDXA",  addr_spec="rrdxa@mailman.qth.net")
-        msg['To'] = Address(display_name=f"{data.contest or data.event or ''} score submission", addr_spec="rrdxa@mailman.qth.net")
+        msg['To'] = Address(display_name=f"{data.event} score submission", addr_spec="rrdxa@mailman.qth.net")
         msg['Subject'] = subject
         msg['X-Callsign'] = data.station_callsign
         msg['X-Contest'] = data.contest

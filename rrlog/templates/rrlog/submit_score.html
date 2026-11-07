@@ -19,7 +19,7 @@ function extrafields(newstyle) {
 
 <p>
 Use this form to submit a contest entry without uploading a log file.
-The entry will appear in the event standings with the QSO count and
+The entry will appear in the contest standings with the QSO count and
 claimed score entered here.
 </p>
 
@@ -31,9 +31,9 @@ claimed score entered here.
 <table>
 <tr><td>Callsign     </td><td><input name="station_callsign" value="{{username}}" required></td></tr>
 <tr><td>Operators    </td><td><input name="operators" size="80" placeholder="operators"></td></tr>
-<tr><td>Event        </td>
+<tr><td>Contest      </td>
   <td><select name="event_id" required>
-    <option value="">-- select event --</option>
+    <option value="">-- select contest --</option>
     {% for event in eventlist %}
     {% ifchanged event.month_str %}
     {% if not forloop.first %}</optgroup>{% endif %}
@@ -43,7 +43,7 @@ claimed score entered here.
     {% endfor %}
     {% if eventlist %}</optgroup>{% endif %}
     </select>
-    [<a href="/log/event/#new">Create new event</a>]
+    [<a href="/log/event/#new">Create new contest</a>]
   </td></tr>
 <tr><td>Category-Operator</td> <td><input name="category_operator" placeholder="class"> SINGLE-OP/MULTI-OP/CHECKLOG </td></tr>
 <tr><td>Category-Band</td><td><input name="category_band" placeholder="band"> ALL/80M/40M/... </td></tr>
@@ -60,7 +60,7 @@ claimed score entered here.
 <tr class="extraonly"><td>Club         </td><td><input name="club" placeholder="club"></td></tr>
 <tr class="extraonly"><td>Location     </td><td><input name="location" placeholder="location"> DX/... </td></tr>
 <tr class="extraonly"><td>Grid-Locator </td><td><input name="grid_locator" placeholder="locator"></td></tr>
-<tr class="extraonly"><td>Contest      </td><td><input name="contest" placeholder="contest"> defaults to the event's Cabrillo name</td></tr>
+<tr class="extraonly"><td>Cabrillo name</td><td><input name="contest" placeholder="cabrillo name"> defaults to the selected contest's Cabrillo name</td></tr>
 <tr class="extraonly"><td>Exchange     </td><td><input name="exchange" placeholder="exchange"> 001/14/28/...</td></tr>
 <tr><td>Soapbox</td><td><textarea name="soapbox" cols="80" rows="20" placeholder="Soapbox - write about your contest story
 

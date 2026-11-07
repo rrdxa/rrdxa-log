@@ -24,8 +24,8 @@ function extrafields(newstyle) {
 <tr class="extraonly"><td>Club         </td><td><input name="club" placeholder="club" value="{{data.club|default_if_none:''}}"></td></tr>
 <tr class="extraonly"><td>Location     </td><td><input name="location" placeholder="location" value="{{data.location|default_if_none:''}}"> DX/... </td></tr>
 <tr class="extraonly"><td>Grid-Locator </td><td><input name="grid_locator" placeholder="locator" value="{{data.grid_locator|default_if_none:''}}"></td></tr>
-<tr class="extraonly"><td>Contest      </td><td><input name="" placeholder="contest" value="{{data.contest|default_if_none:''}}"></td></tr>
-<tr><td>{% if data.event %}<a href="/log/event/{{data.event}}/">[<b>Event</b>]</a>{% else %}Event{% endif %}</td>
+<tr class="extraonly"><td>Cabrillo name</td><td><input name="contest" placeholder="cabrillo name" value="{{data.contest|default_if_none:''}}"></td></tr>
+<tr><td>{% if data.event %}<a href="/log/event/{{data.event}}/">[<b>Contest</b>]</a>{% else %}Contest{% endif %}</td>
   <td><select name="event_id" id="type">
     <option value="">--None--</option>
     {% for event in eventlist %}
@@ -33,7 +33,7 @@ function extrafields(newstyle) {
     {% endfor %}
     </optgroup>
     </select>
-    [<a href="/log/event/#new">Create new event</a>]
+    [<a href="/log/event/#new">Create new contest</a>]
   </td></tr>
 <tr class="extraonly"><td>Category-Operator</td> <td><input name="category_operator" placeholder="class" value="{{data.category_operator|default_if_none:''}}"> SINGLE-OP/MULTI-OP/CHECKLOG </td></tr>
 <tr class="extraonly"><td>Category-Band</td><td><input name="category_band" placeholder="band" value="{{data.category_band|default_if_none:''}}"> ALL/80M/40M/... </td></tr>
