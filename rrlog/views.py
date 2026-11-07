@@ -488,10 +488,13 @@ def v_upload(request):
     # actual page
     message = None
     if request.method == 'POST' and 'logfile' in request.FILES:
-        upload_id, contest, message = log_upload(connection, request, username)
+        try:
+            upload_id, contest, message = log_upload(connection, request, username)
 
-        if upload_id and contest:
-            return redirect('edit', upload_id=upload_id)
+            if upload_id and contest:
+                return redirect('edit', upload_id=upload_id)
+        except Exception as e:
+            message = str(e)
 
     elif request.method == 'POST' and 'delete' in request.POST:
         upload_id = request.POST['delete']
