@@ -1,4 +1,5 @@
 create table rrdxa.schedule (
+    id serial primary key,
     cabrillo_name text not null,
     prefix text not null,
     dateformat text not null default 'YYYY',

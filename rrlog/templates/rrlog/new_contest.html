@@ -43,12 +43,15 @@ Negative week numbers mean "at least this many days before the end of the month"
  <th>stop</th>
  <th>VHF</th>
  <th>Comment</th>
+ {% if user_is_admin %}
+ <th>Edit</th>
+ {% endif %}
 </tr>
 </thead>
 
 {% for schedule in schedules %}
  {% ifchanged schedule.month_str %}
- <tr><th colspan="11" style="text-align: left;">{{schedule.month_str}}</th></tr>
+ <tr><th colspan="{% if user_is_admin %}12{% else %}11{% endif %}" style="text-align: left;">{{schedule.month_str}}</th></tr>
  {% endifchanged %}
  <tr>
  <td><span style="{% if schedule.vhf %}color: red;{% endif %}">{{schedule.cabrillo_name}}</span></td>
@@ -62,6 +65,9 @@ Negative week numbers mean "at least this many days before the end of the month"
  <td style="text-align: right;">{{schedule.stop}}</td>
  <td style="text-align: center;">{% if schedule.vhf %}✔{% endif %}</td>
  <td>{{schedule.comment|default_if_none:''}}</td>
+ {% if user_is_admin %}
+ <td>[<a href="/admin/rrlog/schedule/{{schedule.id}}/change/">edit</a>]</td>
+ {% endif %}
  </tr>
 {% endfor %}
 </table>

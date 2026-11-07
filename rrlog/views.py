@@ -269,6 +269,7 @@ def v_challenge(request, year=2024):
     return render(request, 'rrlog/challenge.html', context)
 
 q_schedules = """select
+ schedule.id,
  schedule.cabrillo_name,
  schedule.prefix, schedule.dateformat,
  schedule.day,
@@ -371,6 +372,7 @@ def v_new_contest(request):
         # "CQ-WW-SSB" -> "CQ-WW-SSB 2026", matching the schedule's naming.
         'name_default': f"{upload[2]} {start_date.year}" if upload and upload[2] else None,
         'cabrillo_default': upload[2] if upload else None,
+        'user_is_admin': username in settings.RRDXA_ADMINS,
     }
     return render_with_username_cookie(request, 'rrlog/new_contest.html', context, username)
 
