@@ -7,6 +7,7 @@ begin;
 \ir contest.sql
 \ir log.sql
 \ir schedule.sql
+\copy rrdxa.schedule from data/contest-schedule.data (format csv, header)
 \ir ../dxchallenge/bandpoints.sql
 commit;
 

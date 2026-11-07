@@ -1,0 +1,3 @@
+#!/bin/sh
+
+psql -X -c '\copy (select * from rrdxa.schedule order by month, (week+8) % 8, day, dow, cabrillo_name) to data/contest-schedule.data (format csv, header)' service=rrdxa

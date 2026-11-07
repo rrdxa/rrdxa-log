@@ -42,12 +42,13 @@ Negative week numbers mean "at least this many days before the end of the month"
  <th>days</th>
  <th>stop</th>
  <th>VHF</th>
+ <th>Comment</th>
 </tr>
 </thead>
 
 {% for schedule in schedules %}
  {% ifchanged schedule.month_str %}
- <tr><th colspan="10" style="text-align: left;">{{schedule.month_str}}</th></tr>
+ <tr><th colspan="11" style="text-align: left;">{{schedule.month_str}}</th></tr>
  {% endifchanged %}
  <tr>
  <td><span style="{% if schedule.vhf %}color: red;{% endif %}">{{schedule.cabrillo_name}}</span></td>
@@ -60,6 +61,7 @@ Negative week numbers mean "at least this many days before the end of the month"
  <td style="text-align: right;">{{schedule.days}}</td>
  <td style="text-align: right;">{{schedule.stop}}</td>
  <td style="text-align: center;">{% if schedule.vhf %}✔{% endif %}</td>
+ <td>{{schedule.comment|default_if_none:''}}</td>
  </tr>
 {% endfor %}
 </table>

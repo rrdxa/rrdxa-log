@@ -279,7 +279,8 @@ q_schedules = """select
  schedule.days,
  to_char(schedule.stop, 'HH24:MI') stop,
  schedule.vhf,
- coalesce(to_char('2023-12-01'::date + schedule.month * '1month'::interval, 'FMMonth'), 'Other') as month_str
+ coalesce(to_char('2023-12-01'::date + schedule.month * '1month'::interval, 'FMMonth'), 'Other') as month_str,
+ comment
 from schedule
 order by month, (week+8) % 8, dow, start"""
 
