@@ -25,7 +25,7 @@ function extrafields(newstyle) {
 <tr class="extraonly"><td>Location     </td><td><input name="location" placeholder="location" value="{{data.location|default_if_none:''}}"> DX/... </td></tr>
 <tr class="extraonly"><td>Grid-Locator </td><td><input name="grid_locator" placeholder="locator" value="{{data.grid_locator|default_if_none:''}}"></td></tr>
 <tr class="extraonly"><td>Contest      </td><td><input name="" placeholder="contest" value="{{data.contest|default_if_none:''}}"></td></tr>
-<tr><td>{% if data.event %}<a href="/log/event/{{data.event}}/">Event</a>{% else %}Event{% endif %}</td>
+<tr><td>{% if data.event %}<a href="/log/event/{{data.event}}/">[<b>Event</b>]</a>{% else %}Event{% endif %}</td>
   <td><select name="event_id" id="type">
     <option value="">--None--</option>
     {% for event in eventlist %}
@@ -94,9 +94,6 @@ Summary and soapbox will be mailed to the RRDXA reflector.">{{data.soapbox|defau
 </tr>
 {% endfor %}
 </table>
-
-{% else %}
-No QSO data found
 {% endif %}
 
 {% include 'rrlog/qsos.html' with with_time=True dupecheck=True event_start=data.event_start event_stop=data.event_stop %}

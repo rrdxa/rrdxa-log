@@ -603,7 +603,7 @@ def v_summary(request, upload_id):
         'title': subject,
         'upload_id': upload_id,
         'data': data,
-        'summary': summary,
+        'summary': summary if len(summary) > 1 else None,  # only the summary line at the bottom present
         'qsos': qsos,
         'username': username,
         'edit': data and username in [data.uploader] + settings.RRDXA_ADMINS
@@ -683,7 +683,7 @@ where id = %s
         'title': subject,
         'upload_id': upload_id,
         'data': data,
-        'summary': summary,
+        'summary': summary if len(summary) > 1 else None,  # only the summary line at the bottom present
         'qsos': qsos,
         'username': username,
         'eventlist': eventlist,
