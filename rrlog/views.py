@@ -465,10 +465,10 @@ def v_upload(request):
     }
     return render_with_username_cookie(request, 'rrlog/upload.html', context, username)
 
-q_submit_events = """select event_id, event, start_str(start) start_str, stop_str(stop) stop_str
+q_submit_events = """select event_id, event, month_str(start) month_str, start_str(start) start_str, stop_str(stop) stop_str
 from event
 order by start desc
-limit 200"""
+limit 500"""
 
 def _int_or_none(value):
     value = (value or '').strip()

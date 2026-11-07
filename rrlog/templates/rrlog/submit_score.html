@@ -35,8 +35,13 @@ claimed score entered here.
   <td><select name="event_id" required>
     <option value="">-- select event --</option>
     {% for event in eventlist %}
+    {% ifchanged event.month_str %}
+    {% if not forloop.first %}</optgroup>{% endif %}
+    <optgroup label="{{event.month_str}}">
+    {% endifchanged %}
     <option value="{{event.event_id}}">{{event.event}} -- {{event.start_str}}-{{event.stop_str}}</option>
     {% endfor %}
+    {% if eventlist %}</optgroup>{% endif %}
     </select>
     [<a href="/log/event/#new">Create new event</a>]
   </td></tr>
