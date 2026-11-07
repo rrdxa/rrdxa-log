@@ -16,9 +16,5 @@
 
 {% include 'rrlog/operator_stats.html' with operators=current_year_stats year=current_year %}
 
-<h2>Previous year {{previous_year}} [<a href="/log/year/{{previous_year}}/">view</a>]</h2>
-
-{% include 'rrlog/operator_stats.html' with operators=previous_year_stats year=previous_year %}
-
 {% endblock %}
 

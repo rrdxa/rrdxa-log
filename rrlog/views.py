@@ -102,7 +102,7 @@ def v_index(request):
 
 @auth_required
 def v_mao(request):
-    limit = 100
+    limit = 200
 
     with connection.cursor() as cursor:
         today = datetime.date.today()
@@ -118,10 +118,6 @@ def v_mao(request):
         cursor.execute(q_operator_stats.format(''), [date, date, '1 year', limit])
         current_year_stats = namedtuplefetchall(cursor)
 
-        date = f"{today.year-1}-01-01"
-        cursor.execute(q_operator_stats.format(''), [date, date, '1 year', limit])
-        previous_year_stats = namedtuplefetchall(cursor)
-
     context = {
             'title': 'Logbook',
             'current_month': f"{today.year}-{today.month:02}",
@@ -130,8 +126,6 @@ def v_mao(request):
             'previous_month_stats': previous_month_stats,
             'current_year': today.year,
             'current_year_stats': current_year_stats,
-            'previous_year': today.year - 1,
-            'previous_year_stats': previous_year_stats,
             'urlpath': '/log/logbook/',
             }
     return render(request, 'rrlog/mao.html', context)
