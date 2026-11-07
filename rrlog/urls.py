@@ -12,6 +12,7 @@ urlpatterns = [
     path('dxcc/<path:dxcc>/', views.v_dxcc, name='dxcc'),
     path('event/', views.v_events, name='events'),
     path('event/<path:event>/', views.v_event, name='event'),
+    path('new-contest/', views.v_new_contest, name='new_contest'),
     path('grid/<str:grid>/', views.v_grid, name='grid'),
     path('log/<int:log>/', views.v_log, name='log'),
     path('mao/', views.v_mao, name='mao'),

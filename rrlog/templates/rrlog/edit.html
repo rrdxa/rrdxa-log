@@ -33,7 +33,7 @@ function extrafields(newstyle) {
     {% endfor %}
     </optgroup>
     </select>
-    [<a href="/log/event/#new">Create new contest</a>]
+    [<a href="/log/new-contest/?from_upload={{upload_id}}">Create new contest</a>]
   </td></tr>
 <tr class="extraonly"><td>Category-Operator</td> <td><input name="category_operator" placeholder="class" value="{{data.category_operator|default_if_none:''}}"> SINGLE-OP/MULTI-OP/CHECKLOG </td></tr>
 <tr class="extraonly"><td>Category-Band</td><td><input name="category_band" placeholder="band" value="{{data.category_band|default_if_none:''}}"> ALL/80M/40M/... </td></tr>

@@ -2,7 +2,7 @@
 {% load humanize %}
 
 {% block content %}
-<h1>Contests</h1>
+<h1>Contests [<a href="/log/new-contest/">Create new contest</a>]</h1>
 
 <table border=0>
 <thead>
@@ -25,63 +25,6 @@
  <td style="text-align: center;">{% if event.vhf %}✔{% endif %}</td>
  <td style="text-align: right;"><b>{{event.count|intcomma}}</b></td>
  <td>{{event.start_str}} - {{event.stop_str}}</td>
- </tr>
-{% endfor %}
-</table>
-
-<h2>Create New Contest<a name="new"></a></h2>
-
-<form action="/log/event/" method="POST" enctype="multipart/form-data">
-<table border=0>
-<tr><td>Contest name</td> <td><input name="event"> Name for this contest <b>including year</b>, e.g. <tt>CQ-WW-CW 2023</tt> </td></tr>
-<!--<tr><td>Cabrillo name </td> <td><input name="cabrillo_name"> Cabrillo contest name, e.g. <tt>CQ-WW-CW</tt> </td></tr>-->
-<tr><td>Contest start</td> <td><input name="start" value="{{today}} xx:00"> UTC</td></tr>
-<tr><td>Contest end</td> <td><input name="end" value="{{today}} xx:00"> UTC</td> </tr>
-<tr><td>UKW</td> <td><input type="checkbox" name="vhf"> This is a VHF/UHF/SHF+ contest</td> </tr>
-<tr><td></td> <td><button type="submit">Create</button></td></tr>
-</table>
-</form>
-
-<h2>Scheduled Contests</h2>
-
-<div>
-The system knows about some recurring contests. These will be created on the day they start.
-Negative week numbers mean "at least this many days before the end of the month".
-</div>
-
-<br>
-
-<table border=0>
-<thead>
-<tr>
- <th>Cabrillo</th>
- <th>Contest template</th>
- <th>day</th>
- <th>month</th>
- <th>week</th>
- <th>dow</th>
- <th>start</th>
- <th>days</th>
- <th>stop</th>
- <th>VHF</th>
-</tr>
-</thead>
-
-{% for schedule in schedules %}
- {% ifchanged schedule.month_str %}
- <tr><th colspan="10" style="text-align: left;">{{schedule.month_str}}</th></tr>
- {% endifchanged %}
- <tr>
- <td><span style="{% if schedule.vhf %}color: red;{% endif %}">{{schedule.cabrillo_name}}</span></td>
- <td>{{schedule.prefix}} {{schedule.dateformat}}</td>
- <td style="text-align: right;">{{schedule.day|default_if_none:''}}</td>
- <td style="text-align: right;">{{schedule.month|default_if_none:''}}</td>
- <td style="text-align: right;">{{schedule.week|default_if_none:''}}</td>
- <td style="text-align: right;">{{schedule.dow|default_if_none:''}}</td>
- <td style="text-align: right;">{{schedule.start}}</td>
- <td style="text-align: right;">{{schedule.days}}</td>
- <td style="text-align: right;">{{schedule.stop}}</td>
- <td style="text-align: center;">{% if schedule.vhf %}✔{% endif %}</td>
  </tr>
 {% endfor %}
 </table>

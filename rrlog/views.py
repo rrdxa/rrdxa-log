@@ -285,35 +285,92 @@ order by month, (week+8) % 8, dow, start"""
 
 @auth_required
 def v_events(request):
-    # ``request.username`` was set by ``auth_required`` (either via a
-    # verified Basic header for curl/programmatic submissions, or via
-    # the OIDC session cookie for browser submissions). The decorator
-    # handles auth — we don't re-check it here. This must be assigned
-    # at the top of the function, not inside the POST branch: the
-    # final ``return`` reads ``username`` for both GET and POST.
+    # ``request.username`` was set by ``auth_required``; the final return
+    # passes it on to ``render_with_username_cookie``.
     username = request.username
-
-    if request.method == 'POST':
-        with connection.cursor() as cursor:
-            is_vhf = 'vhf' in request.POST
-            cursor.execute("insert into event (event, start, stop, author, vhf) values (%s, %s, %s, %s, %s)",
-                           [request.POST['event'], request.POST['start'], request.POST['end'], username, is_vhf])
-            connection.commit()
 
     with connection.cursor() as cursor:
         cursor.execute(q_events, [0, 1000])
         events = namedtuplefetchall(cursor)
+
+    context = {
+        'events': events,
+    }
+    return render_with_username_cookie(request, 'rrlog/events.html', context, username)
+
+@auth_required
+def v_new_contest(request):
+    """Create a contest (an ``event`` row).
+
+    Reached from an upload's edit page as ``?from_upload=<id>``: the new
+    contest is then seeded from that upload and, on success, assigned to
+    it before we go back to its edit page.
+    """
+    username = request.username
+
+    from_upload = request.POST.get('from_upload') or request.GET.get('from_upload')
+    if not (from_upload and re.match(r'^\d+$', from_upload)):
+        from_upload = None
+    else:
+        from_upload = int(from_upload)
+
+    if request.method == 'POST':
+        with connection.cursor() as cursor:
+            is_vhf = 'vhf' in request.POST
+            cursor.execute("insert into event (event, cabrillo_name, start, stop, author, vhf) "
+                           "values (%s, %s, %s, %s, %s, %s) returning event_id",
+                           [request.POST['event'], request.POST.get('cabrillo_name') or None,
+                            request.POST['start'], request.POST['end'], username, is_vhf])
+            (event_id,) = cursor.fetchone()
+            connection.commit()
+
+            if from_upload:
+                # Assign the new contest to the upload we came from, but
+                # only if it is the user's own (admins may edit any).
+                q = "update upload set event_id = %s where id = %s"
+                params = [event_id, from_upload]
+                if username not in settings.RRDXA_ADMINS:
+                    q += " and uploader = %s"
+                    params.append(username)
+                cursor.execute(q, params)
+                if cursor.rowcount:
+                    return redirect('edit', upload_id=from_upload)
+
+        return redirect('event', event=request.POST['event'])
+
+    with connection.cursor() as cursor:
         cursor.execute(q_schedules)
         schedules = namedtuplefetchall(cursor)
 
-    today = str(datetime.date.today())
+        # Seed the form from the upload we came from.
+        upload = None
+        if from_upload:
+            q = "select start, stop, contest from upload where id = %s"
+            params = [from_upload]
+            if username not in settings.RRDXA_ADMINS:
+                q += " and uploader = %s"
+                params.append(username)
+            cursor.execute(q, params)
+            upload = cursor.fetchone()
+            if upload is None:
+                from_upload = None # not ours, or gone: ignore the parameter
+
+    today = datetime.date.today()
+    start_date = upload[0].date() if upload and upload[0] else today
+    stop_date = upload[1].date() if upload and upload[1] else today
 
     context = {
-        'today': today,
-        'events': events,
         'schedules': schedules,
+        'from_upload': from_upload,
+        # isoformat: the template appends " xx:00", so this must stay a
+        # plain YYYY-MM-DD string (a date object would be localised).
+        'start_default': start_date.isoformat(),
+        'stop_default': stop_date.isoformat(),
+        # "CQ-WW-SSB" -> "CQ-WW-SSB 2026", matching the schedule's naming.
+        'name_default': f"{upload[2]} {start_date.year}" if upload and upload[2] else None,
+        'cabrillo_default': upload[2] if upload else None,
     }
-    return render_with_username_cookie(request, 'rrlog/events.html', context, username)
+    return render_with_username_cookie(request, 'rrlog/new_contest.html', context, username)
 
 q_event = """
 with uploads as (
