@@ -6,6 +6,9 @@
 
 <div>
 {{event.start}} - {{event.stop}}
+{% if user_is_admin %}
+[<a href="/admin/rrlog/event/{{event.event_id}}/change/">Contest bearbeiten</a>]
+{% endif %}
 </div>
 
 <table border=0>

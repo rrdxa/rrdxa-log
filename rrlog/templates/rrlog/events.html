@@ -11,12 +11,13 @@
  <th>UKW</th>
  <th>logs</th>
  <th>time</th>
+ <th>edit</th>
 </tr>
 </thead>
 
 {% for event in events %}
  {% ifchanged event.month_str %}
- <tr><th colspan="4" style="text-align: left;">{{event.month_str}}</th></tr>
+ <tr><th colspan="{% if user_is_admin %}5{% else %}4{% endif %}" style="text-align: left;">{{event.month_str}}</th></tr>
  {% endifchanged %}
  <tr>
  <td><a href="/log/event/{{event.event|urlencode:''}}/">
@@ -25,6 +26,7 @@
  <td style="text-align: center;">{% if event.vhf %}✔{% endif %}</td>
  <td style="text-align: right;"><b>{{event.count|intcomma}}</b></td>
  <td>{{event.start_str}} - {{event.stop_str}}</td>
+ {% if user_is_admin %}<td>[<a href="/admin/rrlog/event/{{event.event_id}}/change/">edit</a>]</td>{% endif %}
  </tr>
 {% endfor %}
 </table>

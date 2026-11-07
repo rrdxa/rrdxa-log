@@ -2,7 +2,7 @@ from django.db import models
 
 class Event(models.Model):
     event_id = models.IntegerField(primary_key=True)
-    cabrillo_name = models.CharField()
+    cabrillo_name = models.CharField(null=True, blank=True)
     event = models.CharField()
     start = models.DateTimeField()
     stop = models.DateTimeField()

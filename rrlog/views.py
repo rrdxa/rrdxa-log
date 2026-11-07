@@ -25,7 +25,7 @@ order by start {} limit {}
 """
 
 q_events = """
-select event, cabrillo_name, vhf,
+select e.event_id, event, cabrillo_name, vhf,
 month_str(e.start), start_str(e.start), stop_str(e.stop),
 count(u)
 from event e left join upload u on e.event_id = u.event_id
@@ -295,6 +295,7 @@ def v_events(request):
 
     context = {
         'events': events,
+        'user_is_admin': username in settings.RRDXA_ADMINS,
     }
     return render_with_username_cookie(request, 'rrlog/events.html', context, username)
 
@@ -405,7 +406,7 @@ def v_event(request, event):
         cursor.execute(q_event, [event])
         entries = namedtuplefetchall(cursor)
 
-        cursor.execute("select event, start_str(start) start, stop_str(stop) stop, vhf from event where event = %s", [event])
+        cursor.execute("select event_id, event, start_str(start) start, stop_str(stop) stop, vhf from event where event = %s", [event])
         event_data = namedtuplefetchall(cursor)
 
     if not event_data:
@@ -415,6 +416,7 @@ def v_event(request, event):
         'title': event,
         'event': event_data[0],
         'entries': entries,
+        'user_is_admin': request.username in settings.RRDXA_ADMINS,
     }
     return render(request, 'rrlog/event.html', context)
 
