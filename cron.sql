@@ -1,6 +1,9 @@
 -- delete uploads that have no QSOs
+-- Manual score submissions (no log file) have no rows in rrdxa.log either,
+-- but must be kept: only the submit-score form leaves filename NULL.
 delete from rrdxa.upload where ts < now() - '4 week'::interval and
-id not in (with recursive upload_ids as (
+    filename is not null and
+    id not in (with recursive upload_ids as (
         select min(upload) from rrdxa.log
         union all
         select (select min(upload) from rrdxa.log where upload > upload_ids.min) from upload_ids where upload_ids.min is not null

@@ -1,0 +1,67 @@
+{% extends 'rrlog/rrdxa.html' %}
+{% load humanize %}
+
+{% block header %}
+<script>
+function extrafields(newstyle) {
+  const extraonlyelements = document.querySelectorAll('.extraonly');
+  extraonlyelements.forEach(element => {
+    element.style.display = newstyle;
+  });
+}
+</script>
+{% endblock %}
+
+{% block bodyopts %} onload="extrafields('none')" {% endblock %}
+
+{% block content %}
+<h1>Submit Contest Score</h1>
+
+<p>
+Use this form to submit a contest entry without uploading a log file.
+The entry will appear in the event standings with the QSO count and
+claimed score entered here.
+</p>
+
+{% if message %}
+<div><b>{{message}}</b></div>
+{% endif %}
+
+<form action="/log/submit-score/" method="POST">
+<table>
+<tr><td>Callsign     </td><td><input name="station_callsign" value="{{username}}" required></td></tr>
+<tr><td>Operators    </td><td><input name="operators" size="80" placeholder="operators"></td></tr>
+<tr><td>Event        </td>
+  <td><select name="event_id" required>
+    <option value="">-- select event --</option>
+    {% for event in eventlist %}
+    <option value="{{event.event_id}}">{{event.event}} -- {{event.start_str}}-{{event.stop_str}}</option>
+    {% endfor %}
+    </select>
+    [<a href="/log/event/#new">Create new event</a>]
+  </td></tr>
+<tr><td>Category-Operator</td> <td><input name="category_operator" placeholder="class"> SINGLE-OP/MULTI-OP/CHECKLOG </td></tr>
+<tr><td>Category-Band</td><td><input name="category_band" placeholder="band"> ALL/80M/40M/... </td></tr>
+<tr><td>Category-Mode</td><td><input name="category_mode" placeholder="mode"> MIXED/CW/PHONE/RTTY/DIGI/FM/... </td></tr>
+<tr><td>Category-Power</td><td><input name="category_power" placeholder="power"> HIGH/LOW/QRP </td></tr>
+<tr><td>Category-Assisted</td><td><input name="category_assisted" placeholder="assisted"> ASSISTED/NON-ASSISTED </td></tr>
+<tr><td>Category-Overlay</td><td><input name="category_overlay" placeholder="overlay"> CLASSIC/ROOKIE/TB-WIRES/YOUTH/... </td></tr>
+<tr><td>Category-Time</td><td><input name="category_time" placeholder="time"> 6-HOURS/12-HOURS/24-HOURS/... </td></tr>
+<tr><td>Category-Transmitter</td><td><input name="category_transmitter" placeholder="transmitter"> ONE/TWO/LIMITED/UNLIMITED/SWL </td></tr>
+<tr><td>Category-Station</td><td><input name="category_station" placeholder="station"> FIXED/MOBILE/PORTABLE/... </td></tr>
+<tr><td>Claimed Score</td><td><input name="claimed_score" placeholder="score">
+                              <input type="button" onclick="extrafields('table-row')" value="weitere Felder"></td></tr>
+<tr><td>QSOs</td><td><input name="qsos" placeholder="number of QSOs"></td></tr>
+<tr class="extraonly"><td>Club         </td><td><input name="club" placeholder="club"></td></tr>
+<tr class="extraonly"><td>Location     </td><td><input name="location" placeholder="location"> DX/... </td></tr>
+<tr class="extraonly"><td>Grid-Locator </td><td><input name="grid_locator" placeholder="locator"></td></tr>
+<tr class="extraonly"><td>Contest      </td><td><input name="contest" placeholder="contest"> defaults to the event's Cabrillo name</td></tr>
+<tr class="extraonly"><td>Exchange     </td><td><input name="exchange" placeholder="exchange"> 001/14/28/...</td></tr>
+<tr><td>Soapbox</td><td><textarea name="soapbox" cols="80" rows="20" placeholder="Soapbox - write about your contest story
+
+Summary and soapbox will be mailed to the RRDXA reflector."></textarea></td></tr>
+<tr><td>Mail auf den Reflektor</td> <td><input type="checkbox" name="reflector"></td></tr>
+<tr><td></td><td><button type="submit">Submit</button></td></tr>
+</table>
+</form>
+{% endblock %}

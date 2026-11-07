@@ -46,7 +46,13 @@ function extrafields(newstyle) {
 <tr class="extraonly"><td>Exchange</td><td><input name="exchange" placeholder="exchange" value="{{data.exchange|default_if_none:''}}"> 001/14/28/...</td></tr>
 <tr><td>Claimed Score</td><td><input name="claimed_score" placeholder="score" value="{{data.claimed_score|default_if_none:''}}">
                               <input type="button" onclick="extrafields('table-row')" value="weitere Felder"></td></tr>
-<tr class="extraonly"><td>QSOs</td><td>{{data.qsos|default_if_none:''}} ({{data.upload_start|date:'d.m.Y H:i'}} - {{data.upload_stop|date:'d.m.Y H:i'}})</td></tr>
+<tr{% if data.filename %} class="extraonly"{% endif %}><td>QSOs</td><td>
+{% if data.filename %}
+{{data.qsos|default_if_none:''}} ({{data.upload_start|date:'d.m.Y H:i'}} - {{data.upload_stop|date:'d.m.Y H:i'}})
+{% else %}
+<input name="qsos" value="{{data.qsos|default_if_none:''}}">
+{% endif %}
+</td></tr>
 <tr><td>Soapbox</td><td><textarea name="soapbox" cols="80" rows="20" placeholder="Soapbox - write about your contest story
 
 If the Cabrillo file already contains a soapbox, this entry and the soapbox

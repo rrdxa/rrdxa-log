@@ -9,7 +9,7 @@ from rrdxa import settings
 
 from rrlog.auth import auth_required, _has_basic_auth
 from rrlog.upload import log_upload
-from rrlog.utils import namedtuplefetchall, band_sort
+from rrlog.utils import namedtuplefetchall, band_sort, upper
 from rrlog.summary import get_summary, post_summary
 
 q_log = """
@@ -465,6 +465,105 @@ def v_upload(request):
     }
     return render_with_username_cookie(request, 'rrlog/upload.html', context, username)
 
+q_submit_events = """select event_id, event, start_str(start) start_str, stop_str(stop) stop_str
+from event
+order by start desc
+limit 200"""
+
+def _int_or_none(value):
+    value = (value or '').strip()
+    return int(value) if re.match(r'^\d+$', value) else None
+
+@auth_required
+def v_submit_score(request):
+    """Create a contest entry without a log file.
+
+    The row is a normal ``upload`` row with ``filename``/``adif`` left
+    NULL. That is also how cron.sql tells these apart from real uploads
+    (see the "delete uploads that have no QSOs" rule there).
+    """
+    username = request.username
+    message = None
+
+    if request.method == 'POST':
+        station_callsign = upper(request.POST.get('station_callsign')) or None
+        event_id = request.POST.get('event_id') or None
+
+        if not station_callsign:
+            message = "Callsign is required."
+        elif not event_id or not re.match(r'^\d+$', event_id):
+            message = "Please select an event."
+        else:
+            with connection.cursor() as cursor:
+                cursor.execute("select cabrillo_name, start, stop from event where event_id = %s", [event_id])
+                event = cursor.fetchone()
+                if event is None:
+                    message = "Unknown event."
+                else:
+                    cabrillo_name, start, stop = event
+
+                    # A callsign can only have one entry per event; the new
+                    # submission replaces the previous one (same rule as v_edit).
+                    cursor.execute("update upload set event_id = null where event_id = %s and station_callsign = %s",
+                                   [event_id, station_callsign])
+
+                    cursor.execute("""\
+insert into upload
+(uploader, station_callsign, operators, event_id, contest, start, stop,
+ category_operator, category_assisted, category_band, category_mode,
+ category_overlay, category_power, category_station, category_time,
+ category_transmitter, claimed_score, qsos, soapbox, club, location,
+ grid_locator, exchange)
+values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+returning id""",
+                                   [username,
+                                    station_callsign,
+                                    upper(request.POST.get('operators')) or None,
+                                    event_id,
+                                    request.POST.get('contest') or cabrillo_name,
+                                    start, stop,
+                                    request.POST.get('category_operator') or None,
+                                    request.POST.get('category_assisted') or None,
+                                    request.POST.get('category_band') or None,
+                                    request.POST.get('category_mode') or None,
+                                    request.POST.get('category_overlay') or None,
+                                    request.POST.get('category_power') or None,
+                                    request.POST.get('category_station') or None,
+                                    request.POST.get('category_time') or None,
+                                    request.POST.get('category_transmitter') or None,
+                                    _int_or_none(request.POST.get('claimed_score')),
+                                    _int_or_none(request.POST.get('qsos')),
+                                    request.POST.get('soapbox') or None,
+                                    request.POST.get('club') or None,
+                                    request.POST.get('location') or None,
+                                    request.POST.get('grid_locator') or None,
+                                    request.POST.get('exchange') or None])
+                    (upload_id,) = cursor.fetchone()
+
+                    if request.POST.get('reflector'):
+                        # Best effort: the entry is already saved, so a mail
+                        # failure must not prevent the redirect. The checkbox
+                        # on the edit page can be used to retry.
+                        try:
+                            data, summary, subject = get_summary(cursor, upload_id)
+                            post_summary(data, summary, subject)
+                        except Exception:
+                            pass
+
+                    return redirect('edit', upload_id=upload_id)
+
+    with connection.cursor() as cursor:
+        cursor.execute(q_submit_events)
+        eventlist = namedtuplefetchall(cursor)
+
+    context = {
+        'title': "Submit contest score",
+        'message': message,
+        'eventlist': eventlist,
+        'username': username,
+    }
+    return render(request, 'rrlog/submit_score.html', context)
+
 @auth_required
 def v_download(request, upload_id):
     username = request.username
@@ -476,7 +575,11 @@ def v_download(request, upload_id):
             q_download += " and uploader = %s"
             params.append(username)
         cursor.execute(q_download, params)
-        adif, filename = cursor.fetchone()
+        row = cursor.fetchone()
+        if row is None or row[0] is None:
+            # No such upload, or a manual score submission with no log file.
+            return HttpResponse(status=404)
+        adif, filename = row
 
     response = HttpResponse(adif, content_type='text/plain; charset=utf-8')
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
@@ -526,7 +629,7 @@ def v_edit(request, upload_id):
                 return redirect('upload')
 
             set_fields, params = [], []
-            for field in 'station_callsign', 'operator', 'contest', 'operators', 'club', 'category_operator', 'category_assisted', 'category_band', 'category_mode', 'category_overlay', 'category_power', 'category_station', 'category_time', 'category_transmitter', 'location', 'grid_locator', 'soapbox', 'claimed_score', 'computed_score', 'event_id', 'exchange':
+            for field in 'station_callsign', 'operator', 'contest', 'operators', 'club', 'category_operator', 'category_assisted', 'category_band', 'category_mode', 'category_overlay', 'category_power', 'category_station', 'category_time', 'category_transmitter', 'location', 'grid_locator', 'soapbox', 'claimed_score', 'qsos', 'computed_score', 'event_id', 'exchange':
                 if field in request.POST:
                     set_fields.append(field)
                     params.append(request.POST[field] or None)
@@ -551,11 +654,15 @@ def v_edit(request, upload_id):
                 cursor.execute("select start, stop from event where event_id = %s", [request.POST['event_id']])
                 start, stop = cursor.fetchone()
                 if start and stop:
+                    # Only recompute from the log when this upload actually
+                    # has QSOs. Manual score submissions (no log file) keep
+                    # the qsos value the user entered.
                     cursor.execute("""\
 update upload set qsos =
     (select count(distinct (call, band, major_mode, mode, submode)) from log
      where start between %s and %s and upload = %s)
-where id = %s""", [start, stop, upload_id, upload_id])
+where id = %s
+  and exists (select 1 from log where upload = %s)""", [start, stop, upload_id, upload_id, upload_id])
 
     with connection.cursor() as cursor:
         cursor.execute(q_log_dupecheck.format('where upload = %s', 'asc', 10000), [upload_id])

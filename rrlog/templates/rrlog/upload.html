@@ -49,6 +49,12 @@ function logfile_changed (filename) {
 </form>
 </div>
 
+<h2>Score einreichen</h2>
+
+<div>
+Kein Logfile? <a href="/log/submit-score/">Score einreichen</a> ohne Log-Upload.
+</div>
+
 <h1>Uploads</h1>
 
 <table border=0>
@@ -74,7 +80,7 @@ function logfile_changed (filename) {
  <td>{{upload.ts_str}}</td>
  <td style="text-align: right;">{{upload.qsos|default_if_none:'-'|intcomma}}</td>
  <td><a href="/log/logbook/?upload={{upload.id}}">{{upload.start_str|default_if_none:''}}-{{upload.stop_str|default_if_none:''}}</a><br>
-     <a href="/log/download/{{upload.id}}/">{{upload.filename|default_if_none:'logfile'}}</a></td>
+     {% if upload.filename %}<a href="/log/download/{{upload.id}}/">{{upload.filename}}</a>{% else %}(kein Logfile){% endif %}</td>
  <td><a href="/log/call/{{upload.station_callsign|urlencode:''}}/">{{upload.station_callsign|default_if_none:''}}</a></td>
  <td>{% if upload.operator != upload.station_callsign %}<a href="/log/call/{{upload.operator|urlencode:''}}/">{{upload.operator|default_if_none:''}}</a>{% endif %}</td>
  <td>{% if upload.contest %}<a href="/log/contest/{{upload.contest|urlencode:''}}/">{{upload.contest}}</a>{% endif %}</td>

@@ -19,6 +19,7 @@ urlpatterns = [
     path('year/<int:year>/', views.v_year, name='year'),
 
     path('upload/', views.v_upload, name='upload'),
+    path('submit-score/', views.v_submit_score, name='submit_score'),
     path('download/<int:upload_id>/', views.v_download, name='download'),
     path('summary/<int:upload_id>/', views.v_summary, name='summary'),
     path('edit/<int:upload_id>/', views.v_edit, name='edit'),
