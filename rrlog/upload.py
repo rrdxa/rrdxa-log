@@ -1,6 +1,7 @@
 from rrlog.utils import upper
 from rrlog.adif_upload import adif_upload
 from rrlog.cabrillo_upload import cabrillo_upload
+from rrlog.edi_upload import edi_upload
 
 def log_upload(connection, request, username):
     data = request.POST
@@ -14,8 +15,11 @@ def log_upload(connection, request, username):
     elif 'START-OF-LOG' in upper_content:
         logtype = 'cabrillo'
         contest = True
+    elif '[REG1TEST;' in upper_content:
+        logtype = 'edi'
+        contest = True
     else:
-        return None, False, "Supported log types are ADIF and Cabrillo, this seems like neither of them"
+        return None, False, "Supported log types are ADIF, Cabrillo and EDI, this seems like none of them"
 
     station_callsign = upper(data.get('station_callsign')) or None
     operator = upper(data.get('operator')) or None
@@ -30,6 +34,8 @@ def log_upload(connection, request, username):
                 num_qsos = adif_upload(cursor, content, station_callsign, operator, upload_id, contest)
             elif logtype == 'cabrillo':
                 num_qsos = cabrillo_upload(cursor, content, upload_id)
+            elif logtype == 'edi':
+                num_qsos = edi_upload(cursor, content, upload_id)
 
         except Exception as e:
             cursor.execute("update upload set error = %s where id = %s", [str(e), upload_id])
