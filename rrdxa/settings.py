@@ -12,8 +12,45 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 
 from pathlib import Path
 
+from django.core.exceptions import ImproperlyConfigured
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+# OIDC_ENABLED selects the authentication backend and middleware below.
+# Default off; settings_local.py (imported next) may set it to True.
+OIDC_ENABLED = False
+
+
+# --- Local settings overrides ---
+#
+# Deployment- and machine-specific values (SECRET_KEY, database
+# credentials, OIDC_ENABLED, the OIDC client secret, DEBUG, ...) live in
+# rrdxa/settings_local.py, which is *not* tracked by git (see .gitignore).
+#
+# The file is imported twice: here, so that structural flags it sets
+# (notably OIDC_ENABLED, which selects the auth backend and middleware
+# below) are visible while this module is being evaluated, and again at
+# the very end, so that every value it defines wins over the defaults in
+# this file. Importing a module twice is free — it is cached.
+#
+# Because of the early import, settings_local.py must not import from
+# rrdxa.settings (that would be a circular import).
+#
+# The file is deliberately required rather than optional: a missing file
+# would let Django start with the placeholder SECRET_KEY and OIDC client
+# secret below, which is worse than refusing to start.
+_local_settings = Path(__file__).resolve().parent / 'settings_local.py'
+if not _local_settings.is_file():
+    raise ImproperlyConfigured(
+        "rrdxa/settings_local.py is missing. It holds this deployment's "
+        "local overrides (SECRET_KEY, database credentials, OIDC_ENABLED, "
+        "OIDC client secret, ...) and is not tracked by git. Create it "
+        "before starting Django."
+    )
+from rrdxa.settings_local import *  # noqa: E402,F401,F403
+del _local_settings
 
 
 # Quick-start development settings - unsuitable for production
@@ -63,10 +100,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     #'django.middleware.csrf.CsrfViewMiddleware', # breaks log uploads
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    # Re-auths users silently via prompt=none once the id_token expires.
-    # Without this, users get bumped every hour (id_token lifetime).
-    # See AGENTS.md "Phase 2 — step 7".
-    'mozilla_django_oidc.middleware.SessionRefresh',
 ]
 
 # --- Authentication backend selection ---
@@ -80,7 +113,9 @@ MIDDLEWARE = [
 # TODO Phase 3: hardcode OIDCRPAuthenticationBackend here, delete
 # rrmember/auth.py's WordpressAuthBackend class, drop the passlib
 # dependency.
-OIDC_ENABLED = False
+#
+# OIDC_ENABLED itself is set above (default) and may be overridden by
+# settings_local.py.
 
 if OIDC_ENABLED:
     AUTHENTICATION_BACKENDS = [
@@ -90,6 +125,16 @@ else:
     AUTHENTICATION_BACKENDS = [
         "rrmember.auth.WordpressAuthBackend",
     ]
+
+if OIDC_ENABLED:
+    # Re-auths users silently via prompt=none once the id_token expires.
+    # Without this, users get bumped every hour (id_token lifetime).
+    # See AGENTS.md "Phase 2 — step 7".
+    #
+    # Only installed when OIDC is on: the middleware reads
+    # OIDC_OP_AUTHORIZATION_ENDPOINT (and friends) at request time, and
+    # those are only defined in the OIDC block below when the flag is set.
+    MIDDLEWARE += ['mozilla_django_oidc.middleware.SessionRefresh']
 
 # --- OIDC RP settings ---
 #
@@ -215,3 +260,10 @@ RRDXA_ADMINS = [
         ]
 
 JAHRESBEITRAG = 12.0
+
+# Re-apply the local overrides so that every value settings_local.py
+# defines wins over the defaults set above. (The early import at the top
+# of this file only exists so OIDC_ENABLED can influence the conditionals
+# that run in between.)
+from rrdxa.settings_local import *  # noqa: E402,F401,F403
+
