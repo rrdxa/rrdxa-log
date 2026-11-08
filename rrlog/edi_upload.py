@@ -28,8 +28,11 @@ modes = {
 bands = {
     '50 MHZ': '6m',
     '70 MHZ': '4m',
+    '144 MHZ': '2m',
     '145 MHZ': '2m',
+    '432 MHZ': '70cm',
     '435 MHZ': '70cm',
+    '1.2 GHZ': '23cm',
     '1.3 GHZ': '23cm',
     '2.3 GHZ': '13cm',
     '3.4 GHZ': '9cm',
